@@ -22,7 +22,7 @@
 | Rule | Value |
 |---|---|
 | Focus → level rate | **5 minutes of focus = 1 level** |
-| Daily level | `floor(todayFocusMinutes / 5)` — resets at **midnight local time** |
+| Daily level | `min(100, floor(todayFocusMinutes / 5))` — resets at **midnight local time**. Caps at **100** (500 min = 8h20m, a perfect deep-work day) |
 | History | Previous days kept forever (date, level reached, total focus time) |
 | Hero (lifetime) level | Sum of all levels ever earned; never resets; shown as a badge |
 | Daily class | Based on **today's** level (see §3); resets at midnight with the level |
@@ -45,17 +45,25 @@ Other apps open = sleeping (user is doomscrolling — no EXP for that).
 
 Class is derived from **today's** level. Everyone wakes up a Novice.
 
-| Daily level | Class | Focus time required |
+| Daily level | Class | Focus time |
 |---|---|---|
-| 0–10 | Novice | 0–50 min |
-| 11–20 | Squire | 55–100 min |
-| 21–30 | Swordsman | 105–150 min |
-| 31–40 | Knight | 155–200 min |
-| 41–50 | Crusader | 205–250 min |
-| 51–60 | Champion | 255–300 min |
-| 61+ | Legend | 305+ min |
+| 1–10 | Novice | up to 50 min |
+| 11–20 | Squire | ~1–1.7 hrs |
+| 21–30 | Swordsman | ~1.7–2.5 hrs |
+| 31–40 | Knight | ~2.6–3.3 hrs |
+| 41–50 | Crusader | ~3.4–4.2 hrs |
+| 51–60 | Champion | ~4.2–5 hrs |
+| 61–70 | Paladin | ~5–5.8 hrs |
+| 71–80 | Hero | ~5.9–6.7 hrs |
+| 81–90 | Legend | ~6.8–7.5 hrs |
+| 91–100 | Mythic | ~7.6–8.3 hrs (the daily cap) |
 
-Class is a **label only** — no stats, no abilities, no unlocks. Reaching "Knight" (the app's namesake) at 31 levels (~2.6 hrs) is the aspirational daily milestone.
+(Level 0, before any focus, is also Novice — everyone wakes up a Novice.)
+
+Class is a **label only** — no stats, no abilities, no unlocks. The escalation is intentional:
+ranks 1–4 are normal days (most users live here), 5–7 are serious study/work days, 8–9 are
+exam-week territory, and **Mythic** (level 100 = 8h20m) is the once-in-a-blue-moon flex worth
+screenshotting. Reaching "Knight" at level 31 (~2.6 hrs) is the aspirational everyday milestone.
 
 ---
 

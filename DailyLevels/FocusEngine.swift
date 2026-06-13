@@ -85,9 +85,13 @@ final class FocusEngine {
         return max(0, Int(now.timeIntervalSince(s)))
     }
 
-    /// 0...1 fill of the progress bar = seconds into the current level.
+    /// True once the daily level cap (100 = Mythic) is reached — the UI shows a max state.
+    var isMaxLevel: Bool { level >= LevelMath.maxLevel }
+
+    /// 0...1 fill of the progress bar = seconds into the current level (full at the cap).
     var levelProgress: Double {
-        Double(todaySeconds % LevelMath.secondsPerLevel) / Double(LevelMath.secondsPerLevel)
+        guard !isMaxLevel else { return 1.0 }
+        return Double(todaySeconds % LevelMath.secondsPerLevel) / Double(LevelMath.secondsPerLevel)
     }
     /// True at the instant a level completes — UI shows "Level up!" instead of "0 min" (SPEC §4).
     var isLevelUpMoment: Bool {
@@ -181,6 +185,43 @@ final class FocusEngine {
         ticker?.invalidate()
         ticker = nil
     }
+
+#if DEBUG
+    // MARK: Debug helpers (compiled out of Release; triggered only by launch arguments)
+
+    /// Honors `-seedDemoData` and `-autoStart` launch args so the populated / grinding
+    /// screen can be inspected and screenshotted without touching real usage.
+    func applyDebugLaunchArguments() {
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-seedDemoData") { seedDemoData() }
+        if args.contains("-autoStart") { debugStartGrinding(secondsAgo: 150) }
+    }
+
+    private func seedDemoData() {
+        // Wipe any existing sessions so the demo is repeatable.
+        if let all = try? context.fetch(FetchDescriptor<FocusSession>()) {
+            all.forEach { context.delete($0) }
+        }
+        // Past 6 days (levels 3,7,5,9,5,8) + today 20 min (Level 4), echoing the mockup.
+        let minutesByDaysAgo: [Int: Int] = [6: 15, 5: 35, 4: 25, 3: 45, 2: 25, 1: 40, 0: 20]
+        for (daysAgo, minutes) in minutesByDaysAgo {
+            let day = calendar.date(byAdding: .day, value: -daysAgo, to: startOfToday)!
+            let start = calendar.date(byAdding: .hour, value: 9, to: day)!
+            let end = start.addingTimeInterval(Double(minutes * 60))
+            context.insert(FocusSession(startAt: start, endAt: end, durationSeconds: minutes * 60))
+        }
+        try? context.save()
+        reloadSessions()
+    }
+
+    private func debugStartGrinding(secondsAgo: TimeInterval) {
+        activeStart = Date().addingTimeInterval(-secondsAgo)
+        now = Date()
+        mode = .grinding
+        classifier.isActive = true
+        startTicker()
+    }
+#endif
 
     // MARK: Lock classifier wiring (SPEC §6)
     private func wireClassifier() {

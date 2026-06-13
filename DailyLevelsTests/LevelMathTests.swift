@@ -29,6 +29,14 @@ final class LevelMathTests: XCTestCase {
         XCTAssertEqual(LevelMath.level(forFocusMinutes: -3), 0)
     }
 
+    func testLevelCapsAt100() {
+        // 500 min = 8h20m = the daily cap.
+        XCTAssertEqual(LevelMath.level(forFocusMinutes: 495), 99)
+        XCTAssertEqual(LevelMath.level(forFocusMinutes: 500), 100)
+        XCTAssertEqual(LevelMath.level(forFocusMinutes: 505), 100)   // never exceeds 100
+        XCTAssertEqual(LevelMath.level(forFocusMinutes: 5000), 100)
+    }
+
     func testMinutesIntoLevel() {
         XCTAssertEqual(LevelMath.minutesIntoLevel(0), 0)
         XCTAssertEqual(LevelMath.minutesIntoLevel(3), 3)

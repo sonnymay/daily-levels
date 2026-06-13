@@ -4,18 +4,22 @@
 //
 //  Daily class ladder (SPEC §3). A *label only* — no stats, no abilities.
 //  Derived from TODAY's level; resets at midnight with the level.
+//  Ten bands of 10 levels each, topping out at Mythic (level 91–100).
 //
 
 import Foundation
 
 enum KnightClass: String, CaseIterable {
-    case novice    = "Novice"     // level 0–10
-    case squire    = "Squire"     // level 11–20
-    case swordsman = "Swordsman"  // level 21–30
-    case knight    = "Knight"     // level 31–40
-    case crusader  = "Crusader"   // level 41–50
-    case champion  = "Champion"   // level 51–60
-    case legend    = "Legend"     // level 61+
+    case novice    = "Novice"     // level 0–10   (up to 50 min)
+    case squire    = "Squire"     // level 11–20  (~1–1.7 hrs)
+    case swordsman = "Swordsman"  // level 21–30  (~1.7–2.5 hrs)
+    case knight    = "Knight"     // level 31–40  (~2.6–3.3 hrs)
+    case crusader  = "Crusader"   // level 41–50  (~3.4–4.2 hrs)
+    case champion  = "Champion"   // level 51–60  (~4.2–5 hrs)
+    case paladin   = "Paladin"    // level 61–70  (~5–5.8 hrs)
+    case hero      = "Hero"       // level 71–80  (~5.9–6.7 hrs)
+    case legend    = "Legend"     // level 81–90  (~6.8–7.5 hrs)
+    case mythic    = "Mythic"     // level 91–100 (~7.6–8.3 hrs, the daily cap)
 
     /// Map a daily level to its class. Boundaries are inclusive on the upper end
     /// of each band (e.g. level 10 = Novice, level 11 = Squire).
@@ -28,7 +32,10 @@ enum KnightClass: String, CaseIterable {
         case ..<41: return .knight
         case ..<51: return .crusader
         case ..<61: return .champion
-        default:    return .legend
+        case ..<71: return .paladin
+        case ..<81: return .hero
+        case ..<91: return .legend
+        default:    return .mythic   // 91+ (level is capped at 100, see LevelMath)
         }
     }
 }

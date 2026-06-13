@@ -65,6 +65,7 @@ Last verified: **BUILD SUCCEEDED**, **10/10 tests pass**, app launches and rende
 ## Decisions
 
 - Native SwiftUI only, **zero third-party deps**. Name "Daily Levels"; bundle `com.santipapmay.DailyLevels`; iOS 17.0.
+- **Class ladder (SPEC §3): 10 bands of 10 levels** — Novice, Squire, Swordsman, Knight, Crusader, Champion, Paladin, Hero, Legend, **Mythic**. Daily **level caps at 100** (500 min = 8h20m); UI shows a "Max level — Mythic!" state at the cap. DEBUG `-seedDemoData`/`-autoStart` launch args populate/auto-grind for screenshots.
 - Project file hand-written (no xcodegen) using Xcode 26 **file-system-synchronized groups** — new
   `.swift` files under `DailyLevels/` or `DailyLevelsTests/` are auto-included; you rarely touch `project.pbxproj`.
 - iOS 17 patterns used: `@Observable` + `@Environment(Type.self)` (modern replacement for ObservableObject/@EnvironmentObject); SwiftData `@Model`/`ModelContainer`.

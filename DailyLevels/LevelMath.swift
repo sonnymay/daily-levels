@@ -13,9 +13,12 @@ enum LevelMath {
     static let minutesPerLevel = 5
     static let secondsPerLevel = minutesPerLevel * 60   // 300
 
-    /// Daily level = floor(focusMinutes / 5).
+    /// SPEC §2/§3: daily level caps at 100 = 500 min = 8h20m (Mythic). A perfect deep-work day.
+    static let maxLevel = 100
+
+    /// Daily level = floor(focusMinutes / 5), clamped to 0...maxLevel.
     static func level(forFocusMinutes minutes: Int) -> Int {
-        max(0, minutes / minutesPerLevel)
+        min(maxLevel, max(0, minutes / minutesPerLevel))
     }
 
     /// Whole minutes accumulated *into* the current (unfinished) level: 0...4.

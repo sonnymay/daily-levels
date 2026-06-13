@@ -99,22 +99,39 @@ private struct ProgressSection: View {
             .animation(.easeInOut(duration: 0.3), value: engine.levelProgress)
 
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("\(engine.todayMinutes) min focused today")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
-                    Text(engine.isGrinding
-                         ? "Current session \(Format.clock(engine.currentSessionSeconds))"
-                         : "Ready to focus")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.gray)
+
+                    if engine.isGrinding {
+                        Text("Current session")
+                            .font(.caption)
+                            .foregroundStyle(Theme.gray)
+                        // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
+                        // width so the timer doesn't shift left/right as the seconds tick.
+                        Text(Format.clock(engine.currentSessionSeconds))
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(Theme.ink)
+                    } else {
+                        Text("Ready to focus")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.gray)
+                    }
                 }
                 Spacer()
-                Text(engine.isLevelUpMoment ? "Level up!" : "Next level in \(engine.minutesToNextLevel) min")
+                Text(progressLabel)
                     .font(.subheadline)
-                    .foregroundStyle(engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray)
+                    .foregroundStyle(engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray)
             }
         }
+    }
+
+    private var progressLabel: String {
+        if engine.isMaxLevel { return "Max level — Mythic!" }
+        if engine.isLevelUpMoment { return "Level up!" }
+        return "Next level in \(engine.minutesToNextLevel) min"
     }
 }
 

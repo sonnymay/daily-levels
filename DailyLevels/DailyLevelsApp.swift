@@ -19,8 +19,12 @@ struct DailyLevelsApp: App {
         // on-device store can't open, the app genuinely can't function.
         let container = try! ModelContainer(for: FocusSession.self)
         self.container = container
+        let engine = FocusEngine(context: container.mainContext)
+        #if DEBUG
+        engine.applyDebugLaunchArguments()   // no-op unless -seedDemoData / -autoStart passed
+        #endif
         // `_engine = State(...)` is how you seed a @State value from inside init.
-        _engine = State(initialValue: FocusEngine(context: container.mainContext))
+        _engine = State(initialValue: engine)
     }
 
     var body: some Scene {
