@@ -6,20 +6,43 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AB00000000000000000000E2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB00000000000000000000A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB00000000000000000000A5;
+			remoteInfo = DailyLevels;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AB00000000000000000000A4 /* DailyLevels */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DailyLevels;
 			sourceTree = "<group>";
 		};
+		AB00000000000000000000C4 /* DailyLevelsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DailyLevelsTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFileReference section */
 		AB00000000000000000000A6 /* DailyLevels.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyLevels.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB00000000000000000000C6 /* DailyLevelsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyLevelsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AB00000000000000000000A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB00000000000000000000C8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				AB00000000000000000000A4 /* DailyLevels */,
+				AB00000000000000000000C4 /* DailyLevelsTests */,
 				AB00000000000000000000A3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				AB00000000000000000000A6 /* DailyLevels.app */,
+				AB00000000000000000000C6 /* DailyLevelsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,6 +93,27 @@
 			productReference = AB00000000000000000000A6 /* DailyLevels.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AB00000000000000000000C5 /* DailyLevelsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB00000000000000000000D2 /* Build configuration list for PBXNativeTarget "DailyLevelsTests" */;
+			buildPhases = (
+				AB00000000000000000000C7 /* Sources */,
+				AB00000000000000000000C8 /* Frameworks */,
+				AB00000000000000000000C9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB00000000000000000000E1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AB00000000000000000000C4 /* DailyLevelsTests */,
+			);
+			name = DailyLevelsTests;
+			productName = DailyLevelsTests;
+			productReference = AB00000000000000000000C6 /* DailyLevelsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -80,6 +126,10 @@
 				TargetAttributes = {
 					AB00000000000000000000A5 = {
 						CreatedOnToolsVersion = 26.5;
+					};
+					AB00000000000000000000C5 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = AB00000000000000000000A5;
 					};
 				};
 			};
@@ -98,12 +148,20 @@
 			projectRoot = "";
 			targets = (
 				AB00000000000000000000A5 /* DailyLevels */,
+				AB00000000000000000000C5 /* DailyLevelsTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AB00000000000000000000A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB00000000000000000000C9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -120,7 +178,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB00000000000000000000C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB00000000000000000000E1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB00000000000000000000A5 /* DailyLevels */;
+			targetProxy = AB00000000000000000000E2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AB00000000000000000000B3 /* Debug */ = {
@@ -300,6 +373,42 @@
 			};
 			name = Release;
 		};
+		AB00000000000000000000D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.santipapmay.DailyLevelsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyLevels.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DailyLevels";
+			};
+			name = Debug;
+		};
+		AB00000000000000000000D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.santipapmay.DailyLevelsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyLevels.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DailyLevels";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -317,6 +426,15 @@
 			buildConfigurations = (
 				AB00000000000000000000B5 /* Debug */,
 				AB00000000000000000000B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB00000000000000000000D2 /* Build configuration list for PBXNativeTarget "DailyLevelsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB00000000000000000000D5 /* Debug */,
+				AB00000000000000000000D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

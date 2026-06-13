@@ -4,67 +4,83 @@
 > 1 level; resets at midnight; light-RPG visuals as motivation (NOT a game). One screen.
 >
 > **Source of truth:** [`SPEC.md`](SPEC.md) — read it fully before changing anything.
-> (SPEC's working title was "Minute Knight"; the app is now named **Daily Levels**. Mechanics unchanged.)
+> (SPEC's working title was "Minute Knight"; the app is named **Daily Levels**. Mechanics unchanged.)
 
 ## Phase status
 
 | Phase | Scope (SPEC §) | Status |
 |---|---|---|
-| **1. Lock-detection probe** | §6, §8 — prove LOCKED vs APP SWITCH on hardware | ✅ Built, builds clean. **Awaiting user hardware verification (tests A–D).** |
-| **2. Engine** | §5 — sessions, level math, daily class, midnight split/reset, SwiftData, unit tests | ⛔ Not started — blocked on Phase 1 hardware pass |
-| **3. Main screen** | §4 — single screen per mockup, static hero placeholder | ⛔ Not started |
-| 4. Sprites · 5. Polish | §8 | Later |
+| **1. Lock-detection probe** | §6, §8 | ✅ Logic ported into the app. **Hardware A–D test still unverified** (user chose to proceed). |
+| **2. Engine** | §5 — sessions, level math, daily class, midnight split/reset, SwiftData, unit tests | ✅ Done. 10 unit tests pass. |
+| **3. Main screen** | §4 — single screen per mockup, placeholder hero | ✅ Done. Builds + renders on simulator. |
+| 4. Sprites · 5. Polish | §8 | Next. Hero panel is a drop-in target for video loops (see below). |
 
-**Current gate:** Phase 1 is a go/no-go gate. Do NOT start Phase 2 until the user confirms
-tests A–D classify correctly on a physical iPhone (see [`TESTING.md`](TESTING.md)).
+> ⚠️ **Unverified gate:** Phase 1's lock detection was never confirmed on a physical iPhone.
+> The whole "phone-locked = keep grinding" behavior rides on it. The risky logic is isolated in
+> [`LockClassifier.swift`](DailyLevels/LockClassifier.swift) so if hardware testing fails, only
+> that file changes. Run [`TESTING.md`](TESTING.md) on a real device to close the gate.
 
-## Layout
+## Architecture
 
 ```
-Daily Levels/
-├── DailyLevels.xcodeproj/         # hand-written project (no xcodegen)
-│   ├── project.pbxproj            # objectVersion 77, file-system-synchronized group
-│   └── xcshareddata/xcschemes/DailyLevels.xcscheme   # shared scheme (headless xcodebuild)
-├── DailyLevels/                   # all app source lives here (auto-synced into the target)
-│   ├── LockProbeApp.swift         # Phase 1 probe — @main app, verbatim from the provided file
-│   └── Assets.xcassets/           # AppIcon + AccentColor (placeholders)
-├── SPEC.md · TESTING.md · CLAUDE.md
+DailyLevels/
+├── LevelMath.swift        # pure: level = floor(min/5)            ← unit-tested
+├── KnightClass.swift      # pure: §3 class ladder                 ← unit-tested
+├── DateUtils.swift        # pure: splitAtMidnights()              ← unit-tested
+├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
+├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
+├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime
+├── Theme.swift            # cream palette + Color(hex:)
+├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine via .environment
+└── Views/
+    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, Format
+    ├── HeroScenePanel.swift   # video > image asset > placeholder
+    ├── LoopingVideoView.swift # AVFoundation gapless loop (no deps)
+    └── FocusHistoryCard.swift # 7-day bar chart + day list
+DailyLevelsTests/          # LevelMath, KnightClass(10/11·30/31·60/61), MidnightSplit
 ```
 
-## Key decisions
+**Data flow:** `FocusEngine` is the single source of truth, injected once via `.environment`.
+Views are `@Environment(FocusEngine.self)` and pure-derive everything (level, class, progress,
+history) from `now` (1s ticker) + `completedSecondsByDay` (cached SwiftData fetch). No view owns
+state. Sleeping time is never persisted, so summing `FocusSession.durationSeconds` is always focus time.
 
-- **Native SwiftUI only, zero third-party deps** (hard constraint). The risky bits
-  (protected-data notifications, background tasks) are all native APIs.
-- **Name:** Daily Levels · target `DailyLevels` · display name "Daily Levels".
-- **Bundle ID:** `com.santipapmay.DailyLevels` · **Deployment target:** iOS 17.0.
-- **Project file is hand-written** because `xcodegen` isn't installed and a tool would add a
-  dependency. Xcode 26's **file-system-synchronized root group** means new `.swift` files added
-  under `DailyLevels/` are picked up automatically — you normally never edit `project.pbxproj`.
-- **`LockProbeApp.swift` is kept byte-for-byte as provided.** The `@main struct LockProbeApp`
-  name is intentional and independent of the target name.
+## How the animation drops in (Phase 4 — your ChatGPT→Kling workflow)
 
-## Build & run
+`HeroScenePanel` resolves art in this order, all native, no code change needed:
+1. **Looping video** — add `grind_loop.mp4` / `sleep_loop.mp4` to the **DailyLevels** target → auto-plays.
+2. **Static image** — add image set `HeroGrinding` / `HeroSleeping` to `Assets.xcassets`.
+3. Built-in placeholder (current).
+
+## Build · test · run
 
 ```bash
-# Build (verify) on a simulator — no code-signing needed:
-xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels \
-  -destination 'platform=iOS Simulator,name=iPhone 16' build
-
-# Run on hardware: open DailyLevels.xcodeproj in Xcode, set your Signing Team, pick your iPhone, Run.
+SIM=C494865D-5987-4B80-A5D4-EE9EAD88FAA5   # iPhone 16 (any iOS 17+ sim works)
+xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" build
+xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" test
+# Device: open DailyLevels.xcodeproj in Xcode, set Signing Team, pick your iPhone, Run.
 ```
-Last verified: **BUILD SUCCEEDED** on iPhone 16 simulator (iOS 18.6 SDK), Xcode 26.5.
+Last verified: **BUILD SUCCEEDED**, **10/10 tests pass**, app launches and renders on iPhone 16 sim (Xcode 26.5).
+
+## Decisions
+
+- Native SwiftUI only, **zero third-party deps**. Name "Daily Levels"; bundle `com.santipapmay.DailyLevels`; iOS 17.0.
+- Project file hand-written (no xcodegen) using Xcode 26 **file-system-synchronized groups** — new
+  `.swift` files under `DailyLevels/` or `DailyLevelsTests/` are auto-included; you rarely touch `project.pbxproj`.
+- iOS 17 patterns used: `@Observable` + `@Environment(Type.self)` (modern replacement for ObservableObject/@EnvironmentObject); SwiftData `@Model`/`ModelContainer`.
+- Bar chart hand-rolled (not Swift Charts) to match the mockup's soft-green rounded bars exactly.
+- Crash recovery is conservative (SPEC §5 edge 5): a session interrupted by app-kill is discarded, not credited.
 
 ## Out of scope for v1 (SPEC §9 — do not add without asking)
 
-Tabs · full history screen · settings beyond minimum · streaks · daily-goal card ·
-loot/items/coins/HP · multiple zones / monsters-as-content · accounts/sync · widgets/Live
-Activities · Android. The hero scene is **visual motivation only** — no game systems.
+Tabs · full history screen · settings · streaks · daily-goal card · loot/items/coins/HP ·
+multiple zones/monsters-as-content · accounts/sync · widgets/Live Activities · Android.
+The "History" link in the card is intentionally **inert** (reserved for v1.1).
 
-## Next session entry point
+## Known follow-ups
 
-1. Read `SPEC.md`, then this file.
-2. If the user has confirmed Phase 1 tests A–D passed → start **Phase 2 (engine, §5)**:
-   `FocusSession` / `DailySummary` / `Hero`, `level = floor(focusMinutes/5)`, class table (§3),
-   midnight session-split reset, SwiftData persistence, unit tests (level math, class boundaries
-   10/11·30/31·60/61, midnight-crossing session). Plain debug UI only — no main screen yet.
-3. If not yet confirmed → wait; do not build past the gate.
+- Close the Phase-1 hardware gate (`TESTING.md`).
+- Grace window is 30s (SPEC default) in `LockClassifier`; tune after device testing.
+- No-passcode devices can't get lock notifications → backgrounding always reads as app-switch;
+  SPEC §6 suggests a kind fallback (treat as grinding) — add only if real users hit it.
+- Sprites/animations (Phase 4), level-up & class-change moments, app icon (Phase 5).
