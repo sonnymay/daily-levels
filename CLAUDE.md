@@ -14,7 +14,14 @@
 | **2. Engine** | §5 — sessions, level math, daily class, midnight split/reset, SwiftData, unit tests | ✅ Done. 10 unit tests pass. |
 | **3. Main screen** | §4 — single screen per mockup, placeholder hero | ✅ Done. Builds + renders on simulator. |
 | **4. Sprites** | §8 — grinding animation per class | ✅ 10 Kling clips wired (`<class>_grind.mp4`), compressed 122MB→21MB. Sleeping still placeholder (no `sleep_loop.mp4` yet). |
-| **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 In progress: app icon ✅, listing copy + privacy ✅ (`AppStore/`), screenshots ✅. **Blocked on human-only steps** (Apple account, signing, hardware gate) — see `AppStore/SUBMISSION.md`. |
+| **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 Live on App Store Connect (App ID **6780007939**). Build **2** (1.0) uploaded + attached with the knight app icon. Metadata, privacy (Data Not Collected), age **9+**, price **$0.99**, availability all 175 regions, App Review contact (Sonny May, phone) — all set. **Remaining: drag 10 screenshots + click Add for Review → Submit (account-owner only).** |
+
+### App Store Connect state (for next session)
+- App: **Daily Levels**, App ID `6780007939`, bundle `com.santipapmay.DailyLevels`, Team `57U5D693VS`, ASC Issuer `69a6de7a-0b32-47e3-e053-5b8c7c11a4d1`.
+- App icon: user-provided knight art (`~/Downloads/app_icon_source.png` → resized into the asset catalog). Build number is now **2**.
+- Price **$0.99** (paid; Paid Apps agreement active). Age rating **9+** (cartoon/fantasy violence = Infrequent).
+- Screenshots: 10-class set in `AppStore/screenshots/` + 6.5″ copies in `~/Downloads/dl_screens/`. ASC's web uploader rejects agent file uploads (allowlist), so screenshots must be **dragged in by the user**.
+- Re-archive/upload recipe: `xcodebuild ... archive` then `xcodebuild -exportArchive -exportOptionsPlist /tmp/UploadOptions.plist` (destination=upload). Bump `CURRENT_PROJECT_VERSION` for each new upload.
 
 > ⚠️ **Unverified gate:** Phase 1's lock detection was never confirmed on a physical iPhone.
 > The whole "phone-locked = keep grinding" behavior rides on it. The risky logic is isolated in
