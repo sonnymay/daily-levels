@@ -17,7 +17,7 @@ struct MainView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     HeaderView()
-                    HeroScenePanel(grinding: engine.isGrinding)
+                    HeroScenePanel(grinding: engine.isGrinding, className: engine.knightClass.rawValue)
                     ProgressSection()
                     FocusHistoryCard()
                 }

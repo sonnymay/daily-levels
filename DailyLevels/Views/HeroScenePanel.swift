@@ -4,8 +4,10 @@
 //
 //  The rounded hero scene card (SPEC §4 item 3). Two states: grinding / sleeping.
 //  Asset resolution order (all native, drop-in):
-//    1. Looping video  `grind_loop.mp4` / `sleep_loop.mp4`  (Kling clips)
-//    2. Static image    "HeroGrinding" / "HeroSleeping"      (Assets.xcassets)
+//    1. Looping video
+//         grinding → "<class>_grind.mp4"  (e.g. novice_grind.mp4 … mythic_grind.mp4)
+//         sleeping → "sleep_loop.mp4"     (single shared resting clip, optional)
+//    2. Static image  "HeroGrinding" / "HeroSleeping"  (Assets.xcassets)
 //    3. Built-in styled placeholder
 //
 
@@ -13,6 +15,9 @@ import SwiftUI
 
 struct HeroScenePanel: View {
     let grinding: Bool
+    /// Current daily class name (e.g. "Novice"). Drives which grinding clip plays so the
+    /// hero's gear visually matches the class. Lowercased to match the bundled filenames.
+    let className: String
 
     private let height: CGFloat = 232
     private let corner: CGFloat = 22
@@ -20,7 +25,9 @@ struct HeroScenePanel: View {
     var body: some View {
         ZStack {
             if let url = videoURL {
-                LoopingVideoView(url: url)
+                // `.id(url)` forces SwiftUI to rebuild the player view when the class clip
+                // changes (e.g. Novice → Squire), so the new video actually swaps in.
+                LoopingVideoView(url: url).id(url)
             } else if let name = imageName {
                 Image(name).resizable().scaledToFill()
             } else {
@@ -37,7 +44,8 @@ struct HeroScenePanel: View {
     }
 
     private var videoURL: URL? {
-        Bundle.main.url(forResource: grinding ? "grind_loop" : "sleep_loop", withExtension: "mp4")
+        let resource = grinding ? "\(className.lowercased())_grind" : "sleep_loop"
+        return Bundle.main.url(forResource: resource, withExtension: "mp4")
     }
 
     private var imageName: String? {
@@ -45,7 +53,7 @@ struct HeroScenePanel: View {
         return UIImage(named: name) != nil ? name : nil
     }
 
-    // Placeholder shown until real art/video is added. Evokes the mockup's outdoor scene.
+    // Placeholder shown when no class clip/image is present (e.g. a class you haven't made yet).
     private var placeholder: some View {
         ZStack {
             LinearGradient(
@@ -59,9 +67,6 @@ struct HeroScenePanel: View {
                     .font(.system(size: 48, weight: .semibold))
                 Text(grinding ? "Grinding…" : "Resting by the campfire")
                     .font(.subheadline.weight(.semibold))
-                Text("Add grind_loop.mp4 / sleep_loop.mp4 to animate")
-                    .font(.caption2)
-                    .opacity(0.8)
             }
             .foregroundStyle(.white)
             .shadow(radius: 2, y: 1)
