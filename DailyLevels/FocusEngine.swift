@@ -193,17 +193,22 @@ final class FocusEngine {
     /// screen can be inspected and screenshotted without touching real usage.
     func applyDebugLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
-        if args.contains("-seedDemoData") { seedDemoData() }
+        // `-todayMinutes N` overrides today's seeded focus time (drives class for screenshots).
+        var todayMinutes = 20
+        if let i = args.firstIndex(of: "-todayMinutes"), i + 1 < args.count, let n = Int(args[i + 1]) {
+            todayMinutes = n
+        }
+        if args.contains("-seedDemoData") { seedDemoData(todayMinutes: todayMinutes) }
         if args.contains("-autoStart") { debugStartGrinding(secondsAgo: 150) }
     }
 
-    private func seedDemoData() {
+    private func seedDemoData(todayMinutes: Int = 20) {
         // Wipe any existing sessions so the demo is repeatable.
         if let all = try? context.fetch(FetchDescriptor<FocusSession>()) {
             all.forEach { context.delete($0) }
         }
-        // Past 6 days (levels 3,7,5,9,5,8) + today 20 min (Level 4), echoing the mockup.
-        let minutesByDaysAgo: [Int: Int] = [6: 15, 5: 35, 4: 25, 3: 45, 2: 25, 1: 40, 0: 20]
+        // Past 6 days (levels 3,7,5,9,5,8) + today (caller-specified), echoing the mockup.
+        let minutesByDaysAgo: [Int: Int] = [6: 15, 5: 35, 4: 25, 3: 45, 2: 25, 1: 40, 0: todayMinutes]
         for (daysAgo, minutes) in minutesByDaysAgo {
             let day = calendar.date(byAdding: .day, value: -daysAgo, to: startOfToday)!
             let start = calendar.date(byAdding: .hour, value: 9, to: day)!

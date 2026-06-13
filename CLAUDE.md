@@ -13,7 +13,8 @@
 | **1. Lock-detection probe** | §6, §8 | ✅ Logic ported into the app. **Hardware A–D test still unverified** (user chose to proceed). |
 | **2. Engine** | §5 — sessions, level math, daily class, midnight split/reset, SwiftData, unit tests | ✅ Done. 10 unit tests pass. |
 | **3. Main screen** | §4 — single screen per mockup, placeholder hero | ✅ Done. Builds + renders on simulator. |
-| 4. Sprites · 5. Polish | §8 | Next. Hero panel is a drop-in target for video loops (see below). |
+| **4. Sprites** | §8 — grinding animation per class | ✅ 10 Kling clips wired (`<class>_grind.mp4`), compressed 122MB→21MB. Sleeping still placeholder (no `sleep_loop.mp4` yet). |
+| **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 In progress: app icon ✅, listing copy + privacy ✅ (`AppStore/`), screenshots ✅. **Blocked on human-only steps** (Apple account, signing, hardware gate) — see `AppStore/SUBMISSION.md`. |
 
 > ⚠️ **Unverified gate:** Phase 1's lock detection was never confirmed on a physical iPhone.
 > The whole "phone-locked = keep grinding" behavior rides on it. The risky logic is isolated in
@@ -45,12 +46,16 @@ Views are `@Environment(FocusEngine.self)` and pure-derive everything (level, cl
 history) from `now` (1s ticker) + `completedSecondsByDay` (cached SwiftData fetch). No view owns
 state. Sleeping time is never persisted, so summing `FocusSession.durationSeconds` is always focus time.
 
-## How the animation drops in (Phase 4 — your ChatGPT→Kling workflow)
+## Hero animation (Phase 4 — wired)
 
-`HeroScenePanel` resolves art in this order, all native, no code change needed:
-1. **Looping video** — add `grind_loop.mp4` / `sleep_loop.mp4` to the **DailyLevels** target → auto-plays.
-2. **Static image** — add image set `HeroGrinding` / `HeroSleeping` to `Assets.xcassets`.
-3. Built-in placeholder (current).
+`HeroScenePanel(grinding:className:)` resolves art in this order, all native:
+1. **Looping video** — grinding plays `"<class>_grind.mp4"` (novice…mythic, bundled & compressed);
+   sleeping plays `sleep_loop.mp4` if present. `.id(url)` swaps the clip when the class changes.
+2. **Static image** — `HeroGrinding` / `HeroSleeping` in `Assets.xcassets` (fallback).
+3. Built-in placeholder (final fallback / classes without a clip yet).
+
+Videos are H.264, 1080-wide, CRF 26, audio-stripped (~1–2MB each, 21MB total). To re-compress
+new clips: `ffmpeg -i in.mp4 -an -vf scale=1080:-2:flags=lanczos -c:v libx264 -crf 26 -preset slow -movflags +faststart out.mp4`.
 
 ## Build · test · run
 
@@ -60,7 +65,8 @@ xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id
 xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" test
 # Device: open DailyLevels.xcodeproj in Xcode, set Signing Team, pick your iPhone, Run.
 ```
-Last verified: **BUILD SUCCEEDED**, **10/10 tests pass**, app launches and renders on iPhone 16 sim (Xcode 26.5).
+Last verified: **Debug + Release BUILD SUCCEEDED**, **12/12 tests pass**, per-class videos play, app
+runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N`.
 
 ## Decisions
 
