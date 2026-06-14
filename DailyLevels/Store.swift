@@ -29,6 +29,10 @@ final class Store {
     @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
     init() {
+        #if DEBUG
+        // Reflect immediately (before the async refresh) so previews/screenshots aren't gated.
+        if ProcessInfo.processInfo.arguments.contains("-unlockPro") { isPro = true }
+        #endif
         // Long-running listener for renewals / Ask-to-Buy approvals / refunds (SPEC-grade hygiene).
         updatesTask = Task { [weak self] in
             for await update in Transaction.updates {
@@ -45,8 +49,8 @@ final class Store {
     var priceText: String { proProduct?.displayPrice ?? "$6.99" }
 
     func refresh() async {
+        await updateEntitlements()   // entitlements first — never block isPro on product metadata
         await loadProducts()
-        await updateEntitlements()
     }
 
     func loadProducts() async {
