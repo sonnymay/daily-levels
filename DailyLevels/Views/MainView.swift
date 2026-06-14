@@ -196,9 +196,60 @@ private struct HeaderView: View {
                 }
             }
             Spacer()
-            ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
+            VStack(alignment: .trailing, spacing: 10) {
+                ShareDayButton()
+                ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
+            }
         }
         .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - Share my day (organic-growth hook)
+
+private struct ShareDayButton: View {
+    @Environment(FocusEngine.self) private var engine
+    @State private var shareImage: Image?
+
+    var body: some View {
+        Group {
+            if let shareImage {
+                ShareLink(item: shareImage,
+                          preview: SharePreview("Daily Levels", image: shareImage)) {
+                    icon
+                }
+            } else {
+                icon
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Share my day")
+        // Render once, then only when the level or minutes change — never per 1s tick.
+        .onAppear(perform: render)
+        .onChange(of: engine.level) { render() }
+        .onChange(of: engine.todayMinutes) { render() }
+    }
+
+    private var icon: some View {
+        Image(systemName: "square.and.arrow.up")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.green)
+            .padding(8)
+            .background(Theme.badgeBg, in: Circle())
+    }
+
+    @MainActor private func render() {
+        // Share card shows the user's REAL class art (even if Pro-gated in-app) — outbound
+        // marketing: revealing the locked art entices recipients and rewards the sharer.
+        let card = ShareCardView(
+            level: engine.level,
+            classDisplayName: engine.knightClass.displayName,
+            todayMinutes: engine.todayMinutes,
+            heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue)
+        )
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 1   // card authored at 1080pt → exact 1080×1080 px
+        if let ui = renderer.uiImage { shareImage = Image(uiImage: ui) }
     }
 }
 
