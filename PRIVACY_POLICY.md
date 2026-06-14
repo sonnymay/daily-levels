@@ -18,8 +18,14 @@ Daily Levels does **not** track you and does not use the Advertising Identifier 
 No data is shared with third parties because no data is collected.
 
 ## Permissions
-Daily Levels requests no special permissions (no location, contacts, camera, microphone,
-photos, or notifications).
+Daily Levels requests no access to location, contacts, camera, microphone, or photos. It may ask
+permission to send you **local notifications** (e.g. a level-up ping while your phone is locked);
+these are generated on your device and collect no data. You can decline or disable them anytime in
+Settings.
+
+## Purchases
+Daily Levels offers an optional one-time "Pro" unlock through Apple's in-app purchase (StoreKit).
+Apple processes the payment; we receive no personal or payment information and store nothing.
 
 ## Children
 The app is suitable for all ages and collects no data from anyone, including children.

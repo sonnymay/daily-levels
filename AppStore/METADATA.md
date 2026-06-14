@@ -1,23 +1,46 @@
 # Daily Levels — App Store listing copy
 
-Paste these into App Store Connect → your app → the version's **App Information** /
-**Version Information** fields. Limits noted per field (Apple's hard caps).
+Paste into App Store Connect → your app → **App Information** / **Version Information**.
+Limits are Apple's hard caps. **This reflects the Free + one-time "Pro" unlock model** (see
+[GROWTH.md](GROWTH.md) for the strategy and [SUBMISSION.md](SUBMISSION.md) for the steps).
 
-## App name (30 chars max)
+> ASO principle used throughout: the **Title** is the highest-weight field, **Subtitle** second,
+> **Keywords** third. Put your best search terms in the Title/Subtitle, then **never repeat**
+> those words in the Keyword field (Apple already indexes them) — use the 100 chars for *new* terms.
+
+## App name / Title (30 chars max)
 ```
-Daily Levels
+Daily Levels: Focus Timer
 ```
+(25 chars — brand + the #1 search term in the strongest slot. Alt: `Daily Levels — Study Timer`.)
 
 ## Subtitle (30 chars max)
 ```
-Focus timer that levels you up
+Pomodoro deep work for study
 ```
-(29 chars. Alt: `Level up your focus` / `Focus, level up, repeat`)
+(28 chars. Adds pomodoro / deep work / study. Alt, more emotional: `Make focusing feel rewarding`.)
+
+## Keywords (100 chars max, comma-separated, NO spaces, no repeats of Title/Subtitle)
+```
+concentration,productivity,adhd,session,reading,homework,attention,gamified,rpg,habit,grind,deepfocus
+```
+(~99 chars. Deliberately omits focus/timer/pomodoro/deep/work/study — already in Title+Subtitle.
+The **rpg / gamified / grind** terms are a near-uncontested long-tail our hero mechanic can own.)
 
 ## Promotional text (170 chars, editable anytime without review)
 ```
-Every 5 minutes of focus levels up your hero. Stay off your phone and grind from Novice to Mythic. Resets at midnight — a fresh climb every day.
+Free to start. Every 5 minutes of focus levels up your hero — Novice to Mythic. Unlock Pro once to evolve all the way. No ads, no tracking. A fresh climb every day.
 ```
+
+## In-App Purchase (create in ASC → Features → In-App Purchases)
+- **Type:** Non-Consumable
+- **Reference Name:** Daily Levels Pro
+- **Product ID:** `com.santipapmay.DailyLevels.pro`  ← must match `Store.proProductID` in code
+- **Price:** launch **Tier $6.99** ("Founder's price"); plan to raise to **$9.99** later
+- **Display Name:** `Daily Levels Pro`
+- **Description:** `Evolve your hero through all 10 classes — Knight to Mythic. No ads, no tracking. One-time unlock, yours forever.`
+- **Review screenshot:** use the paywall screenshot (1290×2796 or any required size)
+- Submit the IAP **together with** the app version that contains it (first StoreKit build = build 4).
 
 ## Description (4000 chars max)
 ```
@@ -28,7 +51,7 @@ Every 5 minutes you stay focused earns 1 level. Tap Start and your hero gets to 
 Put your phone down and the hero keeps grinding — locking your phone still counts, because living your life is the whole point. Switch to another app and the hero falls asleep by the campfire. No focus, no progress. Kind, never punishing: the hero never dies and never loses what you earned.
 
 ONE SCREEN. NO NOISE.
-Daily Levels is deliberately simple. One screen, one button. No feeds, no streaks to guilt you, no coins, no shop, no notifications begging for attention. Just today's level, your class, and a clean history of how each day went — like the Health app's step count, but for focus.
+Daily Levels is deliberately simple. One screen, one button. No feeds, no streaks to guilt you, no coins, no ads. Just today's level, your class, and a clean history of how each day went — like the Health app's step count, but for focus.
 
 THE DAILY CLASS LADDER
 Your class is a badge for today's effort, reset every midnight:
@@ -45,40 +68,50 @@ Your class is a badge for today's effort, reset every midnight:
 
 Reaching Knight is the everyday milestone. Mythic is the once-in-a-blue-moon flex.
 
+FREE TO START · PRO TO GO FURTHER
+Daily Levels is free: focus, level up, and watch your hero evolve through its first three classes. A single one-time Pro unlock evolves your hero the rest of the way to Mythic — no subscription, no renewals, yours forever.
+
 PRIVATE BY DESIGN
 Everything stays on your device. No account, no sign-up, no servers, no tracking, no ads. Your focus history is yours alone.
 
 Start your climb today.
 ```
 
-## Keywords (100 chars max, comma-separated, no spaces)
-```
-focus,timer,pomodoro,study,deep work,productivity,concentration,rpg,level,habit,attention,grind
-```
-(98 chars. Don't repeat the app name or subtitle words — Apple already indexes those.)
+## Screenshot captions (captions are indexed for ASO since 2025 — use keywords)
+Order — lead with the payoff, then mechanic, proof, depth:
+1. **"Watch your hero level up"** — the level-up / class-change moment (the differentiator)
+2. **"Every 5 min of focus = 1 level"** — timer running mid-session
+3. **"Lock your phone — focus keeps counting"** — the trust/mechanic shot
+4. **"See your focus add up"** — the 7-day history chart
+5. **"10 classes, Novice → Mythic"** — the class ladder / aspiration
+
+Asset sizes: provide **6.9″ iPhone (1290×2796)**; ASC derives smaller sizes. PNG for crisp text.
+
+## App Preview video (optional, high-impact for a gamified app)
+A 15–30s clip: timer running → minutes climb → hero levels up / changes class. Source recording
+produced at `/tmp/dl_preview.mp4` via the simulator (`-autoStart -seedDemoData -unlockPro
+-autoStartSecondsAgo`). It is the simulator's native size — **resize/trim to an ASC-accepted
+preview spec** (e.g. 886×1920 or 1080×1920, H.264, ≤30s) before upload.
 
 ## Category
 - Primary: **Productivity**
-- Secondary: **Health & Fitness** (optional; or leave blank)
+- Secondary: **Health & Fitness** (optional)
 
 ## Age rating
-- 4+ (no objectionable content). Answer "None" to all content-description questions.
+- **9+** as configured live (cartoon/fantasy violence = Infrequent). (Metadata previously said 4+;
+  the live app is 9+ — keep 9+.)
 
 ## Support URL (required)
 ```
 https://github.com/sonnymay/daily-levels
 ```
-(Apple requires a reachable support URL. The repo readme works for v1; swap for a real page later.)
-
-## Marketing URL (optional)
-Leave blank for v1, or reuse the repo URL.
 
 ## Copyright
 ```
 2026 Sonny May
 ```
 
-## What's New (for v1.0)
+## What's New (for the freemium version)
 ```
-First release. Focus, level up, repeat.
+Daily Levels is now free to start. Pause & resume your session, a one-time Pro unlock to evolve your hero to Mythic, a calmer first run, and accessibility polish.
 ```
