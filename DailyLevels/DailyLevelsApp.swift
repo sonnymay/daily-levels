@@ -13,6 +13,7 @@ import SwiftData
 struct DailyLevelsApp: App {
     private let container: ModelContainer
     @State private var engine: FocusEngine
+    @State private var store = Store()
 
     init() {
         // One local SwiftData store for FocusSession. `try!` is acceptable here: if the
@@ -31,6 +32,7 @@ struct DailyLevelsApp: App {
         WindowGroup {
             MainView()
                 .environment(engine)
+                .environment(store)
                 .preferredColorScheme(.light)   // calm cream UI is light by design (SPEC §4)
         }
         .modelContainer(container)

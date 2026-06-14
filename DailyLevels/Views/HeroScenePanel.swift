@@ -25,6 +25,9 @@ struct HeroScenePanel: View {
     /// Current daily class name (e.g. "Novice"). Drives which grinding clip plays so the
     /// hero's gear visually matches the class. Lowercased to match the bundled filenames.
     let className: String
+    /// When true the real class is Pro-gated: art is capped at the free ceiling and a
+    /// subtle "Unlock Pro" overlay invites the purchase. Defaults to unlocked.
+    var locked: Bool = false
 
     private let height: CGFloat = 232
     private let corner: CGFloat = 22
@@ -48,8 +51,21 @@ struct HeroScenePanel: View {
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .strokeBorder(.black.opacity(0.05), lineWidth: 1)
         )
+        .overlay(alignment: .bottom) {
+            if locked {
+                Label("Unlock Pro to evolve", systemImage: "lock.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.black.opacity(0.55), in: Capsule())
+                    .padding(.bottom, 12)
+            }
+        }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(className) hero \(grinding ? "grinding" : "resting")")
+        .accessibilityLabel(locked
+            ? "Hero locked. Unlock Pro to evolve past \(className)."
+            : "\(className) hero \(grinding ? "grinding" : "resting")")
     }
 
     private var videoURL: URL? {

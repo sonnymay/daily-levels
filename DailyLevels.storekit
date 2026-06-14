@@ -1,0 +1,42 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "B1F0C0DE-0000-4000-A000-DA11Y1EVEL5",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "6.99",
+      "familyShareable" : false,
+      "internalID" : "A2C0FFEE-0000-4000-A000-DA11Y1EVEL5",
+      "localizations" : [
+        {
+          "description" : "Evolve your hero through all 10 classes — Knight to Mythic. No ads, no tracking. One-time unlock, yours forever.",
+          "displayName" : "Daily Levels Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.santipapmay.DailyLevels.pro",
+      "referenceName" : "Daily Levels Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

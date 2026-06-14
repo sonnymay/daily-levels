@@ -6,15 +6,25 @@
 //
 
 import SwiftUI
+import StoreKit   // \.requestReview
 
 struct MainView: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(Store.self) private var store
     @State private var levelPulse = 0
     @State private var classPulse = 0
     @State private var celebration: LevelCelebration?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.requestReview) private var requestReview
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
+    @AppStorage("firstLaunchAt") private var firstLaunchAt = 0.0
+    @AppStorage("lastReviewVersion") private var lastReviewVersion = ""
     @State private var showIntro = false
+    @State private var showPaywall = false
+
+    /// Hero art is gated past the free ceiling until Pro is unlocked.
+    private var heroLocked: Bool { !store.isPro && engine.knightClass.isProOnly }
+    private var heroArtClass: KnightClass { heroLocked ? KnightClass.freeArtCeiling : engine.knightClass }
 
     var body: some View {
         ZStack {
@@ -27,13 +37,18 @@ struct MainView: View {
                         classPulse: classPulse,
                         celebration: celebration
                     )
-                    HeroScenePanel(grinding: engine.isGrinding, className: engine.knightClass.rawValue)
+                    HeroScenePanel(grinding: engine.isGrinding,
+                                   className: heroArtClass.rawValue,
+                                   locked: heroLocked)
                         .onTapGesture {
                             Haptics.actionTap()
-                            engine.toggle()
+                            if heroLocked { showPaywall = true } else { engine.toggle() }
                         }
                     ProgressSection()
                     FocusHistoryCard()
+                    if !store.isPro {
+                        UnlockProRow { showPaywall = true }
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -70,11 +85,30 @@ struct MainView: View {
             }
             Haptics.progressMilestone(classChanged: classChanged)
             showCelebration(level: newLevel, className: newClass.rawValue, classChanged: classChanged)
+            maybeRequestReview()
         }
-        .onAppear { if !hasSeenIntro { showIntro = true } }
+        .onAppear {
+            if firstLaunchAt == 0 { firstLaunchAt = Date().timeIntervalSince1970 }
+            if !hasSeenIntro { showIntro = true }
+        }
         .sheet(isPresented: $showIntro, onDismiss: { hasSeenIntro = true }) {
             IntroSheet { showIntro = false }
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+    }
+
+    /// Ask for an App Store rating after a genuine win (a level-up), but only for
+    /// users a few days in, and at most once per app version (Apple throttles further).
+    private func maybeRequestReview() {
+        let now = Date().timeIntervalSince1970
+        if firstLaunchAt == 0 { firstLaunchAt = now }
+        let daysIn = (now - firstLaunchAt) / 86_400
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        guard daysIn >= 3, version != lastReviewVersion else { return }
+        lastReviewVersion = version
+        requestReview()
     }
 
     private func showCelebration(level: Int, className: String, classChanged: Bool) {
@@ -286,6 +320,38 @@ private struct StartPauseButton: View {
     private var label: String {
         if engine.isGrinding { return "Pause" }
         return engine.isPaused ? "Resume" : "Start"
+    }
+}
+
+// MARK: - Unlock Pro entry point (shown until purchased)
+
+private struct UnlockProRow: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .foregroundStyle(Theme.greenDeep)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Daily Levels Pro")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                    Text("Evolve your hero all the way to Mythic")
+                        .font(.caption)
+                        .foregroundStyle(Theme.gray)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.gray)
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens the Pro unlock")
     }
 }
 
