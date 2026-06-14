@@ -229,6 +229,10 @@ final class FocusEngine {
     /// screen can be inspected and screenshotted without touching real usage.
     func applyDebugLaunchArguments() {
         let args = ProcessInfo.processInfo.arguments
+        // Screenshot / demo launches shouldn't be covered by the first-run intro sheet.
+        if args.contains("-seedDemoData") || args.contains("-autoStart") {
+            UserDefaults.standard.set(true, forKey: "hasSeenIntro")
+        }
         // `-todayMinutes N` overrides today's seeded focus time (drives class for screenshots).
         var todayMinutes = 20
         if let i = args.firstIndex(of: "-todayMinutes"), i + 1 < args.count, let n = Int(args[i + 1]) {

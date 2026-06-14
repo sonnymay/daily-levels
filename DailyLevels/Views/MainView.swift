@@ -13,6 +13,8 @@ struct MainView: View {
     @State private var classPulse = 0
     @State private var celebration: LevelCelebration?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("hasSeenIntro") private var hasSeenIntro = false
+    @State private var showIntro = false
 
     var body: some View {
         ZStack {
@@ -68,6 +70,10 @@ struct MainView: View {
             }
             Haptics.progressMilestone(classChanged: classChanged)
             showCelebration(level: newLevel, className: newClass.rawValue, classChanged: classChanged)
+        }
+        .onAppear { if !hasSeenIntro { showIntro = true } }
+        .sheet(isPresented: $showIntro, onDismiss: { hasSeenIntro = true }) {
+            IntroSheet { showIntro = false }
         }
     }
 
@@ -280,6 +286,66 @@ private struct StartPauseButton: View {
     private var label: String {
         if engine.isGrinding { return "Pause" }
         return engine.isPaused ? "Resume" : "Start"
+    }
+}
+
+// MARK: - First-run intro (one-time, explains the core loop)
+
+private struct IntroSheet: View {
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Theme.cream.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 22) {
+                Text("Welcome to Daily Levels")
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    IntroRow(icon: "hourglass",
+                             text: "Focus to level up — every 5 minutes is one level.")
+                    IntroRow(icon: "lock.fill",
+                             text: "Lock your phone — your focus keeps counting.")
+                    IntroRow(icon: "moon.zzz.fill",
+                             text: "Switch apps and your hero rests until you return.")
+                }
+
+                Spacer(minLength: 0)
+
+                Button(action: onDismiss) {
+                    Text("Start focusing")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Theme.green, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(28)
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+private struct IntroRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Theme.greenDeep)
+                .frame(width: 28)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(Theme.ink)
+            Spacer(minLength: 0)
+        }
     }
 }
 

@@ -31,6 +31,7 @@ struct DailyLevelsApp: App {
         WindowGroup {
             MainView()
                 .environment(engine)
+                .preferredColorScheme(.light)   // calm cream UI is light by design (SPEC §4)
         }
         .modelContainer(container)
     }
