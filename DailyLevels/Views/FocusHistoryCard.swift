@@ -47,6 +47,7 @@ struct FocusHistoryCard: View {
         }
         .padding(18)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -141,5 +142,6 @@ private struct DayRow: View {
                 .padding(.leading, 6)
         }
         .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
     }
 }

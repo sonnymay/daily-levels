@@ -3,7 +3,7 @@
 //  Daily Levels
 //
 //  The data layer + clock (SPEC §5). Owns the SwiftData context, the current
-//  grinding/sleeping state, the 1-second UI ticker, and the lock classifier.
+//  grinding/paused state, the 1-second UI ticker, and the lock classifier.
 //
 //  Swift note: `@Observable` (iOS 17) auto-publishes property changes to SwiftUI —
 //  no @Published needed. Views read it via `@Environment(FocusEngine.self)`.
@@ -18,7 +18,7 @@ import Observation
 @Observable
 final class FocusEngine {
 
-    enum Mode { case idle, grinding, sleeping }
+    enum Mode { case idle, grinding, paused }
 
     // MARK: Stored, observed state
     private(set) var mode: Mode = .idle
@@ -32,6 +32,10 @@ final class FocusEngine {
     @ObservationIgnored private let context: ModelContext
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private var activeStart: Date?            // start of current grinding stretch
+    /// Focused seconds already banked in the *current logical session* from earlier stretches
+    /// (before the latest resume). Drives the "Current session" clock so it survives pause/resume.
+    /// Pure display state — daily totals come from persisted sessions, never from this.
+    @ObservationIgnored private var sessionAccumulatedSeconds: Int = 0
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private let classifier = LockClassifier()
     @ObservationIgnored private let activeStartKey = "engine.activeStart"
@@ -45,11 +49,43 @@ final class FocusEngine {
         wireClassifier()
     }
 
-    // MARK: Public actions (the one Start/Pause button)
-    func toggle() { isGrinding ? pause() : start() }
+    // MARK: Public actions (the one Start/Pause/Resume button)
+    func toggle() {
+        switch mode {
+        case .grinding: pause()
+        case .paused:   resume()
+        case .idle:     start()
+        }
+    }
 
+    /// Begin a brand-new focus session (clock from 0:00).
     func start() {
         guard mode != .grinding else { return }
+        sessionAccumulatedSeconds = 0
+        beginStretch()
+    }
+
+    /// Continue a paused session — the "Current session" clock picks up where it left off.
+    func resume() {
+        guard mode == .paused else { return }
+        beginStretch()
+    }
+
+    func pause() {
+        guard mode == .grinding else { return }
+        if let s = activeStart {
+            sessionAccumulatedSeconds += max(0, Int(Date().timeIntervalSince(s)))  // bank the live stretch
+        }
+        endActiveSession(at: Date())
+        mode = .paused
+        classifier.isActive = false
+        stopTicker()
+        FocusNotifications.cancelLevelUps()
+        now = Date()
+    }
+
+    /// Shared start/resume mechanics: open a new grinding stretch and start the clock.
+    private func beginStretch() {
         let t = Date()
         activeStart = t
         now = t
@@ -57,18 +93,15 @@ final class FocusEngine {
         classifier.isActive = true
         UserDefaults.standard.set(t, forKey: activeStartKey)   // crash marker (SPEC §5 edge 5)
         startTicker()
-    }
-
-    func pause() {
-        endActiveSession(at: Date())
-        mode = .sleeping
-        classifier.isActive = false
-        stopTicker()
-        now = Date()
+        // Schedule "you leveled up" pings for the locked/background case (SPEC §6 grind-while-locked).
+        FocusNotifications.requestAuthorizationIfNeeded()
+        FocusNotifications.scheduleLevelUps(currentSeconds: todaySeconds)
     }
 
     // MARK: Derived display values
     var isGrinding: Bool { mode == .grinding }
+    /// Session is held — show "Resume" instead of "Start", and keep the clock on screen.
+    var isPaused: Bool { mode == .paused }
 
     /// Today's grinding seconds = completed-today + live portion of the active session
     /// that falls after today's midnight (so a session crossing midnight only credits today).
@@ -79,10 +112,13 @@ final class FocusEngine {
     var level: Int { LevelMath.level(forFocusMinutes: todayMinutes) }
     var knightClass: KnightClass { KnightClass.forLevel(level) }
 
-    /// Seconds of the current grinding stretch (the "Current session mm:ss" line).
+    /// Focused seconds in the current session (the "Current session mm:ss" line):
+    /// earlier banked stretches + the live stretch. Holds its value while paused.
     var currentSessionSeconds: Int {
-        guard mode == .grinding, let s = activeStart else { return 0 }
-        return max(0, Int(now.timeIntervalSince(s)))
+        let live = (mode == .grinding && activeStart != nil)
+            ? max(0, Int(now.timeIntervalSince(activeStart!)))
+            : 0
+        return sessionAccumulatedSeconds + live
     }
 
     /// True once the daily level cap (100 = Mythic) is reached — the UI shows a max state.
@@ -199,7 +235,12 @@ final class FocusEngine {
             todayMinutes = n
         }
         if args.contains("-seedDemoData") { seedDemoData(todayMinutes: todayMinutes) }
-        if args.contains("-autoStart") { debugStartGrinding(secondsAgo: 150) }
+        var autoStartSecondsAgo: TimeInterval = 150
+        if let i = args.firstIndex(of: "-autoStartSecondsAgo"), i + 1 < args.count,
+           let n = TimeInterval(args[i + 1]) {
+            autoStartSecondsAgo = n
+        }
+        if args.contains("-autoStart") { debugStartGrinding(secondsAgo: autoStartSecondsAgo) }
     }
 
     private func seedDemoData(todayMinutes: Int = 20) {
@@ -237,10 +278,14 @@ final class FocusEngine {
         // so the time spent in the other app never counts.
         classifier.onAppSwitchDetected = { [weak self] backgroundedAt in
             guard let self, self.mode == .grinding else { return }
+            if let s = self.activeStart {
+                self.sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(s)))
+            }
             self.endActiveSession(at: backgroundedAt)
-            self.mode = .sleeping
+            self.mode = .paused
             self.classifier.isActive = false
             self.stopTicker()
+            FocusNotifications.cancelLevelUps()
         }
 
         // Returned to the app. If we're still grinding (locked the whole time, or came back

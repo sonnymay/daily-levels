@@ -6,12 +6,19 @@
 //  Asset resolution order (all native, drop-in):
 //    1. Looping video
 //         grinding → "<class>_grind.mp4"  (e.g. novice_grind.mp4 … mythic_grind.mp4)
-//         sleeping → "sleep_loop.mp4"     (single shared resting clip, optional)
-//    2. Static image  "HeroGrinding" / "HeroSleeping"  (Assets.xcassets)
+//    2. Static image
+//         sleeping → "<class>_sleep.png"  (e.g. novice_sleep.png … mythic_sleep.png)
+//         fallback → "HeroGrinding" / "HeroSleeping"  (Assets.xcassets)
 //    3. Built-in styled placeholder
 //
 
 import SwiftUI
+
+enum HeroSceneAsset {
+    static func resourceName(grinding: Bool, className: String) -> String {
+        "\(className.lowercased())_\(grinding ? "grind" : "sleep")"
+    }
+}
 
 struct HeroScenePanel: View {
     let grinding: Bool
@@ -28,8 +35,8 @@ struct HeroScenePanel: View {
                 // `.id(url)` forces SwiftUI to rebuild the player view when the class clip
                 // changes (e.g. Novice → Squire), so the new video actually swaps in.
                 LoopingVideoView(url: url).id(url)
-            } else if let name = imageName {
-                Image(name).resizable().scaledToFill()
+            } else if let image = stillImage {
+                Image(uiImage: image).resizable().scaledToFill()
             } else {
                 placeholder
             }
@@ -41,16 +48,26 @@ struct HeroScenePanel: View {
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .strokeBorder(.black.opacity(0.05), lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(className) hero \(grinding ? "grinding" : "resting")")
     }
 
     private var videoURL: URL? {
-        let resource = grinding ? "\(className.lowercased())_grind" : "sleep_loop"
+        guard grinding else { return nil }
+        let resource = HeroSceneAsset.resourceName(grinding: true, className: className)
         return Bundle.main.url(forResource: resource, withExtension: "mp4")
     }
 
-    private var imageName: String? {
+    private var stillImage: UIImage? {
+        if !grinding {
+            let classSleepName = HeroSceneAsset.resourceName(grinding: false, className: className)
+            if let url = Bundle.main.url(forResource: classSleepName, withExtension: "png"),
+               let image = UIImage(contentsOfFile: url.path) {
+                return image
+            }
+        }
         let name = grinding ? "HeroGrinding" : "HeroSleeping"
-        return UIImage(named: name) != nil ? name : nil
+        return UIImage(named: name)
     }
 
     // Placeholder shown when no class clip/image is present (e.g. a class you haven't made yet).
