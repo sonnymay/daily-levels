@@ -39,7 +39,8 @@ struct MainView: View {
                     )
                     HeroScenePanel(grinding: engine.isGrinding,
                                    className: heroArtClass.rawValue,
-                                   locked: heroLocked)
+                                   locked: heroLocked,
+                                   displayName: heroArtClass.displayName)
                         .onTapGesture {
                             Haptics.actionTap()
                             if heroLocked { showPaywall = true } else { engine.toggle() }
@@ -84,7 +85,7 @@ struct MainView: View {
                 if classChanged { classPulse += 1 }
             }
             Haptics.progressMilestone(classChanged: classChanged)
-            showCelebration(level: newLevel, className: newClass.rawValue, classChanged: classChanged)
+            showCelebration(level: newLevel, knightClass: newClass, classChanged: classChanged)
             maybeRequestReview()
         }
         .onAppear {
@@ -111,8 +112,8 @@ struct MainView: View {
         requestReview()
     }
 
-    private func showCelebration(level: Int, className: String, classChanged: Bool) {
-        let next = LevelCelebration(level: level, className: className, classChanged: classChanged)
+    private func showCelebration(level: Int, knightClass: KnightClass, classChanged: Bool) {
+        let next = LevelCelebration(level: level, knightClass: knightClass, classChanged: classChanged)
         if reduceMotion {
             celebration = next
         } else {
@@ -133,15 +134,23 @@ struct MainView: View {
 private struct LevelCelebration: Identifiable, Equatable {
     let id = UUID()
     let level: Int
-    let className: String
+    let knightClass: KnightClass
     let classChanged: Bool
 
+    // Built via String(localized:) so both the format and the (already-localized) class
+    // name translate; the resulting String is then shown verbatim in Text/Label.
     var title: String {
-        classChanged ? "\(className) reached" : "Level \(level)!"
+        let cls = String(localized: knightClass.displayName)
+        return classChanged
+            ? String(localized: "\(cls) reached", comment: "Celebration chip: reached a new class")
+            : String(localized: "Level \(level)!", comment: "Celebration chip: reached a new level")
     }
 
     var accessibilityText: String {
-        classChanged ? "Class changed to \(className)" : "Level \(level) reached"
+        let cls = String(localized: knightClass.displayName)
+        return classChanged
+            ? String(localized: "Class changed to \(cls)")
+            : String(localized: "Level \(level) reached")
     }
 }
 
@@ -187,14 +196,14 @@ private struct HeaderView: View {
                 }
             }
             Spacer()
-            ClassBadge(name: engine.knightClass.rawValue, pulse: classPulse)
+            ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
         }
         .accessibilityElement(children: .contain)
     }
 }
 
 private struct ClassBadge: View {
-    let name: String
+    let name: LocalizedStringResource
     let pulse: Int
 
     var body: some View {
@@ -213,7 +222,7 @@ private struct ClassBadge: View {
             } animation: { _ in
                 .easeOut(duration: 0.2)
             }
-            .accessibilityLabel("Daily class \(name)")
+            .accessibilityLabel(Text("Daily class \(String(localized: name))"))
     }
 }
 
@@ -259,7 +268,7 @@ private struct ProgressSection: View {
                         .foregroundStyle(Theme.ink)
 
                     if engine.isGrinding || engine.isPaused {
-                        Text(engine.isPaused ? "Paused" : "Current session")
+                        Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
                             .font(.caption)
                             .foregroundStyle(Theme.gray)
                         // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
@@ -284,7 +293,7 @@ private struct ProgressSection: View {
         .accessibilityElement(children: .contain)
     }
 
-    private var progressLabel: String {
+    private var progressLabel: LocalizedStringKey {
         if engine.isMaxLevel { return "Max level — Mythic!" }
         if engine.isLevelUpMoment { return "Level up!" }
         return "Next level in \(engine.minutesToNextLevel) min"
@@ -317,7 +326,7 @@ private struct StartPauseButton: View {
             : engine.isPaused ? "Resume focus timer" : "Start focus timer")
     }
 
-    private var label: String {
+    private var label: LocalizedStringKey {
         if engine.isGrinding { return "Pause" }
         return engine.isPaused ? "Resume" : "Start"
     }
@@ -399,7 +408,7 @@ private struct IntroSheet: View {
 
 private struct IntroRow: View {
     let icon: String
-    let text: String
+    let text: LocalizedStringKey
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -427,13 +436,12 @@ enum Format {
             : String(format: "%d:%02d", m, sec)
     }
 
-    private static let shortDay: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "MMM d"; return f      // "Jun 6"
-    }()
-    private static let longDay: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "MMMM d"; return f     // "June 12"
-    }()
-
-    static func shortDate(_ date: Date) -> String { shortDay.string(from: date) }
-    static func longDate(_ date: Date) -> String { longDay.string(from: date) }
+    /// Locale-aware "Jun 6" — day/month order adapts per locale (e.g. "6 juin", "6月6日").
+    static func shortDate(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.abbreviated).day())
+    }
+    /// Locale-aware "June 12".
+    static func longDate(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.wide).day())
+    }
 }

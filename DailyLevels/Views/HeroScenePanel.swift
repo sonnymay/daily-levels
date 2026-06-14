@@ -18,6 +18,17 @@ enum HeroSceneAsset {
     static func resourceName(grinding: Bool, className: String) -> String {
         "\(className.lowercased())_\(grinding ? "grind" : "sleep")"
     }
+
+    /// The per-class resting still, for off-screen rendering (e.g. the share card).
+    /// `className` is the English `rawValue` (asset key). Falls back to the bundled "HeroSleeping".
+    static func sleepImage(for className: String) -> UIImage? {
+        let name = resourceName(grinding: false, className: className)
+        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
+           let image = UIImage(contentsOfFile: url.path) {
+            return image
+        }
+        return UIImage(named: "HeroSleeping")
+    }
 }
 
 struct HeroScenePanel: View {
@@ -28,6 +39,9 @@ struct HeroScenePanel: View {
     /// When true the real class is Pro-gated: art is capped at the free ceiling and a
     /// subtle "Unlock Pro" overlay invites the purchase. Defaults to unlocked.
     var locked: Bool = false
+    /// Localized name of the *displayed* class (matches the capped art when locked) — used
+    /// only for the VoiceOver label. `className` (English rawValue) still resolves assets.
+    var displayName: LocalizedStringResource
 
     private let height: CGFloat = 232
     private let corner: CGFloat = 22
@@ -63,9 +77,15 @@ struct HeroScenePanel: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(locked
-            ? "Hero locked. Unlock Pro to evolve past \(className)."
-            : "\(className) hero \(grinding ? "grinding" : "resting")")
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        let cls = String(localized: displayName)
+        if locked { return String(localized: "Hero locked. Unlock Pro to evolve past \(cls).") }
+        return grinding
+            ? String(localized: "\(cls) hero, grinding")
+            : String(localized: "\(cls) hero, resting")
     }
 
     private var videoURL: URL? {
@@ -98,7 +118,7 @@ struct HeroScenePanel: View {
             VStack(spacing: 10) {
                 Image(systemName: grinding ? "figure.fencing" : "moon.zzz.fill")
                     .font(.system(size: 48, weight: .semibold))
-                Text(grinding ? "Grinding…" : "Resting by the campfire")
+                Text(grinding ? LocalizedStringKey("Grinding…") : LocalizedStringKey("Resting by the campfire"))
                     .font(.subheadline.weight(.semibold))
             }
             .foregroundStyle(.white)

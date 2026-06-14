@@ -50,10 +50,14 @@ enum FocusNotifications {
             let classChanged = cls != KnightClass.forLevel(level - 1)
 
             let content = UNMutableNotificationContent()
-            content.title = classChanged ? "\(cls.rawValue) reached" : "Level \(level) reached"
+            // String(localized:) so notifications honor the user's language; the class name
+            // uses the localized displayName (never rawValue, which stays English for assets).
+            content.title = classChanged
+                ? String(localized: "\(String(localized: cls.displayName)) reached")
+                : String(localized: "Level \(level) reached")
             content.body = classChanged
-                ? "New class unlocked — keep grinding!"
-                : "You're at level \(level). Keep going."
+                ? String(localized: "New class unlocked — keep grinding!")
+                : String(localized: "You're at level \(level). Keep going.")
             content.sound = .default
 
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false)

@@ -9,6 +9,9 @@
 
 import Foundation
 
+// NOTE: `rawValue` is load-bearing and must stay English — it builds asset filenames
+// ("<class>_grind.mp4", "<class>_sleep.png") and drives Pro gating. Never localize it.
+// User-facing text uses `displayName` (localized) instead.
 enum KnightClass: String, CaseIterable {
     case novice    = "Novice"     // level 0–10   (up to 50 min)
     case squire    = "Squire"     // level 11–20  (~1–1.7 hrs)
@@ -36,6 +39,24 @@ enum KnightClass: String, CaseIterable {
         case ..<81: return .hero
         case ..<91: return .legend
         default:    return .mythic   // 91+ (level is capped at 100, see LevelMath)
+        }
+    }
+
+    /// Localized, user-facing class name. Distinct from `rawValue` (which stays English for
+    /// asset filenames + gating). `LocalizedStringResource` works in both SwiftUI `Text(...)`
+    /// and `String(localized:)` (notifications), so every surface localizes from one source.
+    var displayName: LocalizedStringResource {
+        switch self {
+        case .novice:    return LocalizedStringResource("Novice",    comment: "Knight class name")
+        case .squire:    return LocalizedStringResource("Squire",    comment: "Knight class name")
+        case .swordsman: return LocalizedStringResource("Swordsman", comment: "Knight class name")
+        case .knight:    return LocalizedStringResource("Knight",    comment: "Knight class name")
+        case .crusader:  return LocalizedStringResource("Crusader",  comment: "Knight class name")
+        case .champion:  return LocalizedStringResource("Champion",  comment: "Knight class name")
+        case .paladin:   return LocalizedStringResource("Paladin",   comment: "Knight class name")
+        case .hero:      return LocalizedStringResource("Hero",      comment: "Knight class name")
+        case .legend:    return LocalizedStringResource("Legend",    comment: "Knight class name")
+        case .mythic:    return LocalizedStringResource("Mythic",    comment: "Knight class name")
         }
     }
 }
