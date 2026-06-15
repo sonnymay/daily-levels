@@ -97,6 +97,16 @@ add("%lld day focus streak","Racha de concentración de %lld días","Sequência 
 add("New class unlocked — keep grinding!","¡Nueva clase desbloqueada! Sigue entrenando.","Nova classe desbloqueada — continue treinando!","Neue Klasse freigeschaltet — weiter grinden!","Nouvelle classe débloquée — continue !","新しいクラスを解除 — その調子で修行を！")
 add("You're at level %lld. Keep going.","Estás en el nivel %lld. ¡Sigue así!","Você está no nível %lld. Continue!","Du bist auf Level %lld. Weiter so!","Tu es au niveau %lld. Continue !","レベル%lldです。その調子！")
 
+# --- Growth: milestone share, free-ceiling nudge, onboarding ---
+add("You reached %@!","¡Alcanzaste %@!","Você alcançou %@!","%@ erreicht!","%@ atteint !","%@に到達！")
+add("Show a friend how far your focus has climbed.","Muestra a un amigo hasta dónde llegó tu concentración.","Mostre a um amigo até onde seu foco chegou.","Zeig einem Freund, wie weit dein Fokus geklettert ist.","Montre à un ami jusqu’où ta concentration t’a mené.","あなたの集中がどこまで登ったか友だちに見せよう。")
+add("Share your climb","Comparte tu ascenso","Compartilhe sua escalada","Deinen Aufstieg teilen","Partager ton ascension","登りを共有")
+add("Maybe later","Quizás más tarde","Talvez depois","Vielleicht später","Plus tard","あとで")
+add("You've reached the free climb","Llegaste al límite gratuito","Você chegou ao limite gratuito","Du hast den kostenlosen Aufstieg erreicht","Tu as atteint le palier gratuit","無料の範囲に到達しました")
+add("Unlock Knight → Mythic — yours forever","Desbloquea de Caballero a Mítico, para siempre","Desbloqueie de Cavaleiro a Mítico, para sempre","Ritter bis Mythisch freischalten — für immer deins","Débloque Chevalier → Mythique, à toi pour toujours","ナイト→ミシックを解除 — ずっとあなたのもの")
+add("Come back tomorrow — your streak keeps growing.","Vuelve mañana: tu racha sigue creciendo.","Volte amanhã — sua sequência continua crescendo.","Komm morgen wieder — deine Serie wächst weiter.","Reviens demain — ta série continue de grandir.","明日も戻ってきて — 連続記録は伸び続けます。")
+add("Share your climb to inspire a friend.","Comparte tu ascenso para inspirar a un amigo.","Compartilhe sua escalada para inspirar um amigo.","Teile deinen Aufstieg und inspiriere einen Freund.","Partage ton ascension pour inspirer un ami.","登りを共有して友だちを励まそう。")
+
 strings = {}
 for key, vals in T.items():
     locs = {}
