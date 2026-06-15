@@ -38,6 +38,7 @@ DailyLevels/
 ├── LevelMath.swift        # pure: level = floor(min/5)            ← unit-tested
 ├── KnightClass.swift      # pure: §3 class ladder + localized `displayName` (rawValue stays EN) ← unit-tested
 ├── DateUtils.swift        # pure: splitAtMidnights()              ← unit-tested
+├── StreakMath.swift       # pure: calm consecutive-day focus streak (Level-1+ days) ← unit-tested
 ├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
 ├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
 ├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime
@@ -54,9 +55,10 @@ DailyLevels/
     ├── ShareCardView.swift    # 1080² share image (ImageRenderer + ShareLink) — organic growth
     ├── AppIconPicker.swift    # alternate-icon picker (Pro perk); placeholder icon art
     ├── LoopingVideoView.swift # AVFoundation gapless loop (no deps)
-    └── FocusHistoryCard.swift # 7-day bar chart + day list
+    ├── PressableButtonStyle.swift # tactile press (dip+dim+spring); replaces .plain; Reduce-Motion safe
+    └── FocusHistoryCard.swift # 7-day bar chart + day list + calm streak chip (2+ days)
 DailyLevels.storekit       # local StoreKit config for in-Xcode purchase testing (product: ...DailyLevels.pro)
-DailyLevelsTests/          # LevelMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability (17 tests)
+DailyLevelsTests/          # LevelMath, StreakMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability (24 tests)
 ```
 
 **Growth/i18n:** App is localized into 5 languages via the String Catalog (translations flagged
@@ -90,8 +92,8 @@ xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id
 xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" test
 # Device: open DailyLevels.xcodeproj in Xcode, set Signing Team, pick your iPhone, Run.
 ```
-Last verified: **Debug + Release BUILD SUCCEEDED**, **12/12 tests pass**, per-class videos play, app
-runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N`.
+Last verified: **Debug BUILD SUCCEEDED**, **24/24 tests pass**, per-class videos play, app
+runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Decisions
 
@@ -105,9 +107,16 @@ runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seed
 
 ## Out of scope for v1 (SPEC §9 — do not add without asking)
 
-Tabs · full history screen · settings · streaks · daily-goal card · loot/items/coins/HP ·
+Tabs · full history screen · settings · daily-goal card · loot/items/coins/HP ·
 multiple zones/monsters-as-content · accounts/sync · widgets/Live Activities · Android.
 The "History" link in the card is intentionally **inert** (reserved for v1.1).
+
+> **Owner-authorized additions (beyond original §9):** a **calm focus streak** was added
+> (consecutive Level-1+ days; an unstarted today never "breaks" it; shown only at 2+ days,
+> no countdown/anxiety framing) — in-app chip + on the share card. **Widget deferred to v1.1
+> on purpose:** it needs a new app-extension target + App Group entitlement whose IDs must be
+> registered in the Apple Developer portal *before any archive*, which would block the imminent
+> freemium build's archive/upload. Add it as a fast-follow once the first build is submitted.
 
 ## Known follow-ups
 
@@ -116,3 +125,7 @@ The "History" link in the card is intentionally **inert** (reserved for v1.1).
 - No-passcode devices can't get lock notifications → backgrounding always reads as app-switch;
   SPEC §6 suggests a kind fallback (treat as grinding) — add only if real users hit it.
 - Sprites/animations (Phase 4), level-up & class-change moments, app icon (Phase 5).
+- **v1.1 widget** (today's level/class/streak): new app-extension target + App Group
+  `group.com.santipapmay.DailyLevels`; register the group + widget bundle ID in the dev portal
+  *first*. Simplest data path: app writes a tiny snapshot to the shared `UserDefaults(suiteName:)`;
+  widget's `TimelineProvider` reads it (no SwiftData sharing). Ship after the freemium build is live.
