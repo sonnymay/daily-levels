@@ -21,6 +21,7 @@ struct MainView: View {
     @AppStorage("lastReviewVersion") private var lastReviewVersion = ""
     @State private var showIntro = false
     @State private var showPaywall = false
+    @State private var showIconPicker = false
 
     /// Hero art is gated past the free ceiling until Pro is unlocked.
     private var heroLocked: Bool { !store.isPro && engine.knightClass.isProOnly }
@@ -47,7 +48,9 @@ struct MainView: View {
                         }
                     ProgressSection()
                     FocusHistoryCard()
-                    if !store.isPro {
+                    if store.isPro {
+                        AppIconRow { showIconPicker = true }
+                    } else {
                         UnlockProRow { showPaywall = true }
                     }
                 }
@@ -97,6 +100,9 @@ struct MainView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()
+        }
+        .sheet(isPresented: $showIconPicker) {
+            AppIconPickerSheet()
         }
     }
 
