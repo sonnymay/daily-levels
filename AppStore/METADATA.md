@@ -22,10 +22,11 @@ Pomodoro deep work for study
 
 ## Keywords (100 chars max, comma-separated, NO spaces, no repeats of Title/Subtitle)
 ```
-concentration,productivity,adhd,session,reading,homework,attention,gamified,rpg,habit,grind,deepfocus
+concentration,productivity,adhd,session,reading,homework,attention,gamified,rpg,habit,grind,mindful
 ```
-(~99 chars. Deliberately omits focus/timer/pomodoro/deep/work/study — already in Title+Subtitle.
-The **rpg / gamified / grind** terms are a near-uncontested long-tail our hero mechanic can own.)
+(99 chars. Deliberately omits focus/timer/pomodoro/deep/work/study — already in Title+Subtitle
+(dropped "deepfocus" which duplicated those + pushed it to 101). The **rpg / gamified / grind**
+terms are a near-uncontested long-tail our hero mechanic can own; "mindful" adds a fresh lane.)
 
 ## Promotional text (170 chars, editable anytime without review)
 ```
