@@ -49,9 +49,9 @@ DailyLevels/
 ├── Haptics.swift          # tiny tactile cues: tap, level-up, class-change
 ├── Theme.swift            # cream palette + Color(hex:)
 ├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine & Store via .environment
-├── Localizable.xcstrings  # String Catalog: 68 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review (regen via AppStore/gen_xcstrings.py — the source of truth)
+├── Localizable.xcstrings  # String Catalog: 76 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review (regen via AppStore/gen_xcstrings.py — the source of truth)
 └── Views/
-    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet, UnlockProRow, AppIconRow, ShareDayButton, Format
+    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet (5 rows), UnlockProRow (capped copy), AppIconRow, ShareDayButton, MilestoneShareSheet, renderShareCard, Format
     ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay; HeroSceneAsset.sleepImage
     ├── PaywallView.swift      # calm native StoreKit paywall (one-time Pro unlock)
     ├── ShareCardView.swift    # 1080² share image (ImageRenderer + ShareLink) — organic growth
@@ -66,9 +66,12 @@ DailyLevelsTests/          # LevelMath, StreakMath, KnightClass, MidnightSplit, 
 **Growth/i18n:** App is localized into 5 languages via the String Catalog (translations flagged
 `needs_review` — need native sign-off). `KnightClass.displayName` is the localized UI name; `rawValue`
 stays English (asset filenames + Pro gating), guarded by `LocalizationStabilityTests`. Share-my-day
-card + alternate app icons (placeholder art) are additive growth features. App Store assets in
-[`AppStore/`](AppStore): 6 captioned screenshots (`screenshots/captioned/`), `preview_appstore.mp4`
-(gitignored), `compose_screenshot.swift` + `gen_xcstrings.py` (regen tools).
+card + alternate app icons (placeholder art) + a milestone share prompt are additive growth
+features. **Organic-growth assets** in [`AppStore/`](AppStore): 6 captioned screenshots
+(`screenshots/captioned/`), `preview_886x1920.mp4` (ASC-ready preview) + `preview_appstore.mp4`
+source (both gitignored), [`PRESS_KIT.md`](AppStore/PRESS_KIT.md) (Apple-featuring nomination +
+press one-pager), per-locale ASO listings in [`METADATA.md`](AppStore/METADATA.md) (AI drafts,
+native-review pending), `compose_screenshot.swift` + `gen_xcstrings.py` (regen tools).
 
 **Data flow:** `FocusEngine` is the single source of truth, injected once via `.environment`.
 Views are `@Environment(FocusEngine.self)` and pure-derive everything (level, class, progress,

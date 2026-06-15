@@ -78,21 +78,27 @@ Everything stays on your device. No account, no sign-up, no servers, no tracking
 Start your climb today.
 ```
 
-## Screenshot captions (captions are indexed for ASO since 2025 — use keywords)
-Order — lead with the payoff, then mechanic, proof, depth:
-1. **"Watch your hero level up"** — the level-up / class-change moment (the differentiator)
-2. **"Every 5 min of focus = 1 level"** — timer running mid-session
-3. **"Lock your phone — focus keeps counting"** — the trust/mechanic shot
-4. **"See your focus add up"** — the 7-day history chart
-5. **"10 classes, Novice → Mythic"** — the class ladder / aspiration
+## Screenshots (6, captioned — indexed for ASO since 2025)
+Upload order leads with the payoff, then mechanic, aspiration, proof, the offer, the calm.
+Caption text is **baked into each PNG** in `screenshots/captioned/`:
+1. `01_levelup.png` — **"Watch your hero level up"** (the differentiator / payoff)
+2. `02_lock.png` — **"Lock your phone, focus keeps counting"** (trust + core mechanic)
+3. `03_mythic.png` — **"Climb all the way to Mythic"** (aspiration / class ladder)
+4. `04_history.png` — **"See your focus add up"** (the 7-day proof)
+5. `05_paywall.png` — **"No subscription — unlock Pro once"** (conversion / pricing trust)
+6. `06_intro.png` — **"Calm. One screen. No noise."** (the calm promise)
 
-Asset sizes: provide **6.9″ iPhone (1290×2796)**; ASC derives smaller sizes. PNG for crisp text.
+Size **1290×2796 (6.9″ iPhone)** — iPhone-only app, so this is the only required set; ASC derives
+smaller sizes. PNG for crisp text.
+> Note: `06_intro.png` shows the 3-row first-run intro; the app now ships a 5-row intro (added the
+> "come back tomorrow / streak" and "share your climb" rows) — optional refresh before upload.
 
 ## App Preview video (optional, high-impact for a gamified app)
-A 15–30s clip: timer running → minutes climb → hero levels up / changes class. Source recording
-produced at `/tmp/dl_preview.mp4` via the simulator (`-autoStart -seedDemoData -unlockPro
--autoStartSecondsAgo`). It is the simulator's native size — **resize/trim to an ASC-accepted
-preview spec** (e.g. 886×1920 or 1080×1920, H.264, ≤30s) before upload.
+A 15–30s clip: timer running → minutes climb → hero levels up / changes class.
+**Upload-ready file:** `AppStore/preview_886x1920.mp4` (886×1920, H.264, 20s — a canonical
+ASC-accepted portrait preview size). `preview_appstore.mp4` is the 1290×2796 source; both are
+gitignored (regenerate via simctl + ffmpeg). Re-encode recipe:
+`ffmpeg -i preview_appstore.mp4 -vf scale=886:1920:flags=lanczos -r 30 -c:v libx264 -pix_fmt yuv420p -crf 20 -an -movflags +faststart preview_886x1920.mp4`
 
 ## Category
 - Primary: **Productivity**
@@ -116,3 +122,42 @@ https://github.com/sonnymay/daily-levels
 ```
 Daily Levels is now free to start. Pause & resume your session, a one-time Pro unlock to evolve your hero to Mythic, a calmer first run, and accessibility polish.
 ```
+
+## Localized listings (per-locale ASO — AI drafts, native review pending)
+The app UI is already localized; localizing the **store listing** lifts non-English organic
+discovery (audit est. 30–50%). Enter these per language in App Store Connect. **All AI-drafted —
+have a native speaker confirm before publishing each locale.** Rules kept: Title ≤30, Subtitle ≤30,
+Keywords ≤100 (comma, no spaces), and keywords never repeat Title/Subtitle words.
+
+> Screenshot captions are baked into the English PNGs; to fully localize, re-render the captioned
+> screenshots per locale later. The **first two** caption texts are provided below as the priority.
+
+### 🇪🇸 Spanish (es)
+- **Title:** `Daily Levels: Enfoque`
+- **Subtitle:** `Pomodoro para estudiar mejor`
+- **Keywords:** `concentracion,productividad,tdah,sesion,lectura,deberes,atencion,gamificado,rpg,habito`
+- **Captions 1–2:** "Sube de nivel mientras te concentras" · "Bloquea el móvil: el foco sigue"
+
+### 🇧🇷 Portuguese — Brazil (pt-BR)
+- **Title:** `Daily Levels: Foco`
+- **Subtitle:** `Pomodoro para estudar melhor`
+- **Keywords:** `concentracao,produtividade,tdah,sessao,leitura,licao,atencao,gamificado,rpg,habito`
+- **Captions 1–2:** "Suba de nível enquanto foca" · "Bloqueie o celular: o foco continua"
+
+### 🇩🇪 German (de)
+- **Title:** `Daily Levels: Fokus-Timer`
+- **Subtitle:** `Pomodoro für tiefes Lernen`
+- **Keywords:** `konzentration,produktivitaet,adhs,sitzung,lesen,hausaufgaben,aufmerksamkeit,rpg,gewohnheit`
+- **Captions 1–2:** "Fokussiere und steige auf" · "Sperre dein Telefon — der Fokus zählt weiter"
+
+### 🇫🇷 French (fr)
+- **Title:** `Daily Levels: Concentration`
+- **Subtitle:** `Pomodoro pour mieux étudier`
+- **Keywords:** `productivite,tdah,session,lecture,devoirs,attention,gamifie,rpg,habitude,minuteur`
+- **Captions 1–2:** "Monte de niveau en te concentrant" · "Verrouille ton téléphone, le focus continue"
+
+### 🇯🇵 Japanese (ja)
+- **Title:** `Daily Levels: 集中タイマー`
+- **Subtitle:** `勉強がはかどるポモドーロ`
+- **Keywords:** `集中,生産性,ADHD,勉強,セッション,読書,宿題,習慣,RPG,ゲーム化`
+- **Captions 1–2:** "集中するほどレベルアップ" · "スマホをロックしても集中は続く"
