@@ -36,7 +36,7 @@
 ```
 DailyLevels/
 ├── LevelMath.swift        # pure: level = floor(min/5)            ← unit-tested
-├── KnightClass.swift      # pure: §3 class ladder                 ← unit-tested
+├── KnightClass.swift      # pure: §3 class ladder + localized `displayName` (rawValue stays EN) ← unit-tested
 ├── DateUtils.swift        # pure: splitAtMidnights()              ← unit-tested
 ├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
 ├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
@@ -46,15 +46,25 @@ DailyLevels/
 ├── Haptics.swift          # tiny tactile cues: tap, level-up, class-change
 ├── Theme.swift            # cream palette + Color(hex:)
 ├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine & Store via .environment
+├── Localizable.xcstrings  # String Catalog: 66 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review
 └── Views/
-    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet, UnlockProRow, Format
-    ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay
+    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet, UnlockProRow, AppIconRow, ShareDayButton, Format
+    ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay; HeroSceneAsset.sleepImage
     ├── PaywallView.swift      # calm native StoreKit paywall (one-time Pro unlock)
+    ├── ShareCardView.swift    # 1080² share image (ImageRenderer + ShareLink) — organic growth
+    ├── AppIconPicker.swift    # alternate-icon picker (Pro perk); placeholder icon art
     ├── LoopingVideoView.swift # AVFoundation gapless loop (no deps)
     └── FocusHistoryCard.swift # 7-day bar chart + day list
 DailyLevels.storekit       # local StoreKit config for in-Xcode purchase testing (product: ...DailyLevels.pro)
-DailyLevelsTests/          # LevelMath, KnightClass, MidnightSplit, HeroSceneAsset (14 tests)
+DailyLevelsTests/          # LevelMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability (17 tests)
 ```
+
+**Growth/i18n:** App is localized into 5 languages via the String Catalog (translations flagged
+`needs_review` — need native sign-off). `KnightClass.displayName` is the localized UI name; `rawValue`
+stays English (asset filenames + Pro gating), guarded by `LocalizationStabilityTests`. Share-my-day
+card + alternate app icons (placeholder art) are additive growth features. App Store assets in
+[`AppStore/`](AppStore): 6 captioned screenshots (`screenshots/captioned/`), `preview_appstore.mp4`
+(gitignored), `compose_screenshot.swift` + `gen_xcstrings.py` (regen tools).
 
 **Data flow:** `FocusEngine` is the single source of truth, injected once via `.environment`.
 Views are `@Environment(FocusEngine.self)` and pure-derive everything (level, class, progress,
