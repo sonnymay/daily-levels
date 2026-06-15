@@ -31,6 +31,18 @@ struct FocusHistoryCard: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
 
+            // Gentle streak — shown only at 2+ days so it rewards a habit without
+            // pressuring brand-new users (no "you'll lose it!" framing; calm green).
+            if engine.focusStreak >= 2 {
+                Label("\(engine.focusStreak)-day focus streak", systemImage: "flame.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.greenDeep)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Theme.greenSoft.opacity(0.35), in: Capsule())
+                    .accessibilityLabel("\(engine.focusStreak) day focus streak")
+            }
+
             WeekBarChart(days: engine.weekHistory)
                 .frame(height: 150)
                 .padding(.top, 2)
@@ -47,12 +59,14 @@ struct FocusHistoryCard: View {
         }
         .padding(18)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityElement(children: .contain)
     }
 }
 
 // MARK: - Bar chart
 
 private struct WeekBarChart: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let days: [DaySummary]
 
     /// Chart top: at least 12 (matches the mockup's gridlines), rounded up to a multiple of 6.
@@ -91,6 +105,7 @@ private struct WeekBarChart: View {
                                 .fill(isToday ? Theme.greenDeep : Theme.greenSoft)
                                 .frame(width: 22,
                                        height: max(2, plotH * CGFloat(day.level) / CGFloat(top)))
+                                .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: day.level)
                             Text(isToday ? "Today" : Format.shortDate(day.date))
                                 .font(.caption2.weight(isToday ? .bold : .regular))
                                 .foregroundStyle(isToday ? Theme.ink : Theme.gray)
@@ -141,5 +156,6 @@ private struct DayRow: View {
                 .padding(.leading, 6)
         }
         .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
     }
 }

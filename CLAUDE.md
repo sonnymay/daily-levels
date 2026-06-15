@@ -13,15 +13,20 @@
 | **1. Lock-detection probe** | §6, §8 | ✅ Logic ported into the app. **Hardware A–D test still unverified** (user chose to proceed). |
 | **2. Engine** | §5 — sessions, level math, daily class, midnight split/reset, SwiftData, unit tests | ✅ Done. 10 unit tests pass. |
 | **3. Main screen** | §4 — single screen per mockup, placeholder hero | ✅ Done. Builds + renders on simulator. |
-| **4. Sprites** | §8 — grinding animation per class | ✅ 10 Kling clips wired (`<class>_grind.mp4`), compressed 122MB→21MB. Sleeping still placeholder (no `sleep_loop.mp4` yet). |
-| **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 Live on App Store Connect (App ID **6780007939**). Build **2** (1.0) uploaded + attached with the knight app icon. Metadata, privacy (Data Not Collected), age **9+**, price **$0.99**, availability all 175 regions, App Review contact (Sonny May, phone) — all set. **Remaining: drag 10 screenshots + click Add for Review → Submit (account-owner only).** |
+| **4. Sprites** | §8 — grinding animation per class | ✅ 10 Kling clips wired (`<class>_grind.mp4`), compressed 122MB→21MB. Sleeping now uses per-class `<class>_sleep.png` stills (no `sleep_loop.mp4` yet). |
+| **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 Live on App Store Connect (App ID **6780007939**). Build **3** (1.0, $0.99 paid) uploaded + processing. **Pivoting to freemium before launch** (see Phase 6). |
+| **6. Monetization (freemium)** | Money plan ([`AppStore/GROWTH.md`](AppStore/GROWTH.md)) | 🔶 **Model: Free app + one-time "Daily Levels Pro" unlock** ($6.99 launch → $9.99), StoreKit 2 only (no RevenueCat; keeps Data Not Collected). Code done: `Store.swift`, `Views/PaywallView.swift`, hero-art gate (free = Novice/Squire/Swordsman; Pro = Knight→Mythic), `UnlockProRow`, `requestReview` on level-up. **Build 4 uploaded 2026-06-14 → ASC status "Ready to Submit"** (binary only). **Remaining (owner): device lock test, create IAP `com.santipapmay.DailyLevels.pro`, set price Free, attach build+IAP, screenshots, Submit.** |
 
 ### App Store Connect state (for next session)
 - App: **Daily Levels**, App ID `6780007939`, bundle `com.santipapmay.DailyLevels`, Team `57U5D693VS`, ASC Issuer `69a6de7a-0b32-47e3-e053-5b8c7c11a4d1`.
-- App icon: user-provided knight art (`~/Downloads/app_icon_source.png` → resized into the asset catalog). Build number is now **2**.
-- Price **$0.99** (paid; Paid Apps agreement active). Age rating **9+** (cartoon/fantasy violence = Infrequent).
-- Screenshots: 10-class set in `AppStore/screenshots/` + 6.5″ copies in `~/Downloads/dl_screens/`. ASC's web uploader rejects agent file uploads (allowlist), so screenshots must be **dragged in by the user**.
-- Re-archive/upload recipe: `xcodebuild ... archive` then `xcodebuild -exportArchive -exportOptionsPlist /tmp/UploadOptions.plist` (destination=upload). Bump `CURRENT_PROJECT_VERSION` for each new upload.
+- App icon: user-provided knight art (`~/Downloads/app_icon_source.png` → resized into the asset catalog).
+- **Builds:** build **3** (no StoreKit, $0.99) uploaded 2026-06-14. **Build 4** = first freemium/StoreKit build, `CURRENT_PROJECT_VERSION = 4`, **uploaded 2026-06-14, ASC status "Ready to Submit"** (binary processed; not submitted). Re-archive recipe: `xcodebuild ... archive DEVELOPMENT_TEAM=57U5D693VS` (team not stored in pbxproj) then `-exportArchive -exportOptionsPlist /tmp/UploadOptions.plist` (method=app-store-connect, destination=upload). The IAP does NOT need to exist before uploading — only before *submitting* with the IAP attached.
+- **IAP to create (owner):** Non-Consumable, product ID **`com.santipapmay.DailyLevels.pro`** (must match `Store.proProductID`), launch price **$6.99**. Local testing via `DailyLevels.storekit` (referenced in the shared scheme; verify it's selected in Xcode → Edit Scheme → Run → Options → StoreKit Configuration). Note: `simctl launch` from CLI does **not** apply the scheme's StoreKit config — use Xcode Run to test the real purchase; DEBUG `-unlockPro` flag forces `isPro` for screenshots/previews.
+- **Price plan:** change from $0.99 paid → **Free** when shipping build 4. Age rating **9+** (cartoon/fantasy violence = Infrequent).
+- **iPhone-only:** `TARGETED_DEVICE_FAMILY = "1"` (was `"1,2"`; iPad orientation keys removed) — a portrait one-screen app, so no iPad screenshots are required at submission. Add iPad in a later update if wanted.
+- **Pre-submission audit (passed):** StoreKit purchase/restore/entitlements correct; `-unlockPro` backdoor is `#if DEBUG`-only (no Release leak); paywall has price+Restore+Terms+Privacy; Pro gate verified on sim (free caps hero to Swordsman + lock overlay, Pro shows Knight→Mythic). Keywords trimmed to **99 chars** (was 101 — over limit).
+- Screenshots: 10-class set in `AppStore/screenshots/`. ASC's web uploader rejects agent file uploads (allowlist), so screenshots must be **dragged in by the user**. New store copy/keywords/captions in [`AppStore/METADATA.md`](AppStore/METADATA.md).
+- Re-archive/upload recipe: `xcodebuild ... archive DEVELOPMENT_TEAM=57U5D693VS` then `xcodebuild -exportArchive -exportOptionsPlist /tmp/UploadOptions.plist` (destination=upload). Bump `CURRENT_PROJECT_VERSION` for each new upload.
 
 > ⚠️ **Unverified gate:** Phase 1's lock detection was never confirmed on a physical iPhone.
 > The whole "phone-locked = keep grinding" behavior rides on it. The risky logic is isolated in
@@ -33,20 +38,37 @@
 ```
 DailyLevels/
 ├── LevelMath.swift        # pure: level = floor(min/5)            ← unit-tested
-├── KnightClass.swift      # pure: §3 class ladder                 ← unit-tested
+├── KnightClass.swift      # pure: §3 class ladder + localized `displayName` (rawValue stays EN) ← unit-tested
 ├── DateUtils.swift        # pure: splitAtMidnights()              ← unit-tested
+├── StreakMath.swift       # pure: calm consecutive-day focus streak (Level-1+ days) ← unit-tested
 ├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
 ├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
 ├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime
+├── Store.swift            # @Observable StoreKit 2: Pro unlock entitlement + KnightClass.isProOnly gate
+├── FocusNotifications.swift # local level-up pings (locked/background); scheduled on start, cancelled on pause
+├── Haptics.swift          # tiny tactile cues: tap, level-up, class-change
 ├── Theme.swift            # cream palette + Color(hex:)
-├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine via .environment
+├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine & Store via .environment
+├── Localizable.xcstrings  # String Catalog: 68 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review (regen via AppStore/gen_xcstrings.py — the source of truth)
 └── Views/
-    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, Format
-    ├── HeroScenePanel.swift   # video > image asset > placeholder
+    ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet, UnlockProRow, AppIconRow, ShareDayButton, Format
+    ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay; HeroSceneAsset.sleepImage
+    ├── PaywallView.swift      # calm native StoreKit paywall (one-time Pro unlock)
+    ├── ShareCardView.swift    # 1080² share image (ImageRenderer + ShareLink) — organic growth
+    ├── AppIconPicker.swift    # alternate-icon picker (Pro perk); placeholder icon art
     ├── LoopingVideoView.swift # AVFoundation gapless loop (no deps)
-    └── FocusHistoryCard.swift # 7-day bar chart + day list
-DailyLevelsTests/          # LevelMath, KnightClass(10/11·30/31·60/61), MidnightSplit
+    ├── PressableButtonStyle.swift # tactile press (dip+dim+spring); replaces .plain; Reduce-Motion safe
+    └── FocusHistoryCard.swift # 7-day bar chart + day list + calm streak chip (2+ days)
+DailyLevels.storekit       # local StoreKit config for in-Xcode purchase testing (product: ...DailyLevels.pro)
+DailyLevelsTests/          # LevelMath, StreakMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability (24 tests)
 ```
+
+**Growth/i18n:** App is localized into 5 languages via the String Catalog (translations flagged
+`needs_review` — need native sign-off). `KnightClass.displayName` is the localized UI name; `rawValue`
+stays English (asset filenames + Pro gating), guarded by `LocalizationStabilityTests`. Share-my-day
+card + alternate app icons (placeholder art) are additive growth features. App Store assets in
+[`AppStore/`](AppStore): 6 captioned screenshots (`screenshots/captioned/`), `preview_appstore.mp4`
+(gitignored), `compose_screenshot.swift` + `gen_xcstrings.py` (regen tools).
 
 **Data flow:** `FocusEngine` is the single source of truth, injected once via `.environment`.
 Views are `@Environment(FocusEngine.self)` and pure-derive everything (level, class, progress,
@@ -72,8 +94,8 @@ xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id
 xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" test
 # Device: open DailyLevels.xcodeproj in Xcode, set Signing Team, pick your iPhone, Run.
 ```
-Last verified: **Debug + Release BUILD SUCCEEDED**, **12/12 tests pass**, per-class videos play, app
-runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N`.
+Last verified: **Debug BUILD SUCCEEDED**, **24/24 tests pass**, per-class videos play, app
+runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Decisions
 
@@ -87,9 +109,16 @@ runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seed
 
 ## Out of scope for v1 (SPEC §9 — do not add without asking)
 
-Tabs · full history screen · settings · streaks · daily-goal card · loot/items/coins/HP ·
+Tabs · full history screen · settings · daily-goal card · loot/items/coins/HP ·
 multiple zones/monsters-as-content · accounts/sync · widgets/Live Activities · Android.
 The "History" link in the card is intentionally **inert** (reserved for v1.1).
+
+> **Owner-authorized additions (beyond original §9):** a **calm focus streak** was added
+> (consecutive Level-1+ days; an unstarted today never "breaks" it; shown only at 2+ days,
+> no countdown/anxiety framing) — in-app chip + on the share card. **Widget deferred to v1.1
+> on purpose:** it needs a new app-extension target + App Group entitlement whose IDs must be
+> registered in the Apple Developer portal *before any archive*, which would block the imminent
+> freemium build's archive/upload. Add it as a fast-follow once the first build is submitted.
 
 ## Known follow-ups
 
@@ -98,3 +127,9 @@ The "History" link in the card is intentionally **inert** (reserved for v1.1).
 - No-passcode devices can't get lock notifications → backgrounding always reads as app-switch;
   SPEC §6 suggests a kind fallback (treat as grinding) — add only if real users hit it.
 - Sprites/animations (Phase 4), level-up & class-change moments, app icon (Phase 5).
+- **v1.1 widget** (today's level/class/streak): code is **staged + type-checked** in
+  [`widget/`](widget/) (off the build path, so it can't affect the freemium archive). Drop-in
+  steps in [`WIDGET_SETUP.md`](WIDGET_SETUP.md): create the extension target via Xcode (File ▸ New
+  ▸ Target — never hand-edit pbxproj), register App Group `group.com.santipapmay.DailyLevels` +
+  widget bundle ID in the dev portal *first*, add `DailyLevelsSnapshot.swift` to both targets, wire
+  the FocusEngine publish snippet. Ship after the freemium build is live.

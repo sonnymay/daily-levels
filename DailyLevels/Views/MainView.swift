@@ -6,9 +6,26 @@
 //
 
 import SwiftUI
+import StoreKit   // \.requestReview
 
 struct MainView: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(Store.self) private var store
+    @State private var levelPulse = 0
+    @State private var classPulse = 0
+    @State private var celebration: LevelCelebration?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage("hasSeenIntro") private var hasSeenIntro = false
+    @AppStorage("firstLaunchAt") private var firstLaunchAt = 0.0
+    @AppStorage("lastReviewVersion") private var lastReviewVersion = ""
+    @State private var showIntro = false
+    @State private var showPaywall = false
+    @State private var showIconPicker = false
+
+    /// Hero art is gated past the free ceiling until Pro is unlocked.
+    private var heroLocked: Bool { !store.isPro && engine.knightClass.isProOnly }
+    private var heroArtClass: KnightClass { heroLocked ? KnightClass.freeArtCeiling : engine.knightClass }
 
     var body: some View {
         ZStack {
@@ -16,10 +33,37 @@ struct MainView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    HeaderView()
-                    HeroScenePanel(grinding: engine.isGrinding, className: engine.knightClass.rawValue)
+                    HeaderView(
+                        levelPulse: levelPulse,
+                        classPulse: classPulse,
+                        celebration: celebration
+                    )
+                    HeroScenePanel(grinding: engine.isGrinding,
+                                   className: heroArtClass.rawValue,
+                                   locked: heroLocked,
+                                   displayName: heroArtClass.displayName)
+                        .onTapGesture {
+                            Haptics.actionTap()
+                            if heroLocked { showPaywall = true } else { engine.toggle() }
+                        }
+                        // A soft green ring flashes around the hero on level-up (matches the
+                        // panel's 22pt corner). `levelPulse` only increments when motion is on,
+                        // so Reduce Motion users never see it.
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .stroke(Theme.greenDeep, lineWidth: 3)
+                                .allowsHitTesting(false)
+                                .phaseAnimator([0.0, 0.7, 0.0], trigger: levelPulse) { ring, opacity in
+                                    ring.opacity(opacity)
+                                } animation: { _ in .easeOut(duration: 0.5) }
+                        }
                     ProgressSection()
                     FocusHistoryCard()
+                    if store.isPro {
+                        AppIconRow { showIconPicker = true }
+                    } else {
+                        UnlockProRow { showPaywall = true }
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -28,12 +72,102 @@ struct MainView: View {
         }
         // Pinned Start/Pause pill, always visible over the cream background (SPEC §4 item 6).
         .safeAreaInset(edge: .bottom) {
-            StartPauseButton()
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .padding(.bottom, 6)
-                .background(Theme.cream)
+            VStack(spacing: 8) {
+                // Reassure that the core mechanic works: focus keeps counting once locked.
+                if engine.isGrinding {
+                    Label("Lock your phone — focus keeps counting", systemImage: "lock.fill")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.gray)
+                        .transition(.opacity)
+                }
+                StartPauseButton()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 6)
+            .background(Theme.cream)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: engine.isGrinding)
         }
+        .onChange(of: engine.level) { oldLevel, newLevel in
+            guard newLevel > oldLevel else { return }
+            let oldClass = KnightClass.forLevel(oldLevel)
+            let newClass = KnightClass.forLevel(newLevel)
+            let classChanged = oldClass != newClass
+
+            if !reduceMotion {
+                levelPulse += 1
+                if classChanged { classPulse += 1 }
+            }
+            Haptics.progressMilestone(classChanged: classChanged)
+            showCelebration(level: newLevel, knightClass: newClass, classChanged: classChanged)
+            maybeRequestReview()
+        }
+        .onAppear {
+            if firstLaunchAt == 0 { firstLaunchAt = Date().timeIntervalSince1970 }
+            if !hasSeenIntro { showIntro = true }
+        }
+        .sheet(isPresented: $showIntro, onDismiss: { hasSeenIntro = true }) {
+            IntroSheet { showIntro = false }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+        .sheet(isPresented: $showIconPicker) {
+            AppIconPickerSheet()
+        }
+    }
+
+    /// Ask for an App Store rating after a genuine win (a level-up), but only for
+    /// users a few days in, and at most once per app version (Apple throttles further).
+    private func maybeRequestReview() {
+        let now = Date().timeIntervalSince1970
+        if firstLaunchAt == 0 { firstLaunchAt = now }
+        let daysIn = (now - firstLaunchAt) / 86_400
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        guard daysIn >= 3, version != lastReviewVersion else { return }
+        lastReviewVersion = version
+        requestReview()
+    }
+
+    private func showCelebration(level: Int, knightClass: KnightClass, classChanged: Bool) {
+        let next = LevelCelebration(level: level, knightClass: knightClass, classChanged: classChanged)
+        if reduceMotion {
+            celebration = next
+        } else {
+            withAnimation(.snappy(duration: 0.22)) { celebration = next }
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(2_400))
+            guard celebration?.id == next.id else { return }
+            if reduceMotion {
+                celebration = nil
+            } else {
+                withAnimation(.easeOut(duration: 0.22)) { celebration = nil }
+            }
+        }
+    }
+}
+
+private struct LevelCelebration: Identifiable, Equatable {
+    let id = UUID()
+    let level: Int
+    let knightClass: KnightClass
+    let classChanged: Bool
+
+    // Built via String(localized:) so both the format and the (already-localized) class
+    // name translate; the resulting String is then shown verbatim in Text/Label.
+    var title: String {
+        let cls = String(localized: knightClass.displayName)
+        return classChanged
+            ? String(localized: "\(cls) reached", comment: "Celebration chip: reached a new class")
+            : String(localized: "Level \(level)!", comment: "Celebration chip: reached a new level")
+    }
+
+    var accessibilityText: String {
+        let cls = String(localized: knightClass.displayName)
+        return classChanged
+            ? String(localized: "Class changed to \(cls)")
+            : String(localized: "Level \(level) reached")
     }
 }
 
@@ -41,6 +175,10 @@ struct MainView: View {
 
 private struct HeaderView: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let levelPulse: Int
+    let classPulse: Int
+    let celebration: LevelCelebration?
 
     var body: some View {
         HStack(alignment: .top) {
@@ -52,24 +190,96 @@ private struct HeaderView: View {
                 Text("Level \(engine.level)")
                     .font(.system(size: 46, weight: .bold))
                     .foregroundStyle(Theme.ink)
+                    .contentTransition(.numericText(value: Double(engine.level)))
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
+                    .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
+                        content
+                            .scaleEffect(scale, anchor: .leading)
+                            .foregroundStyle(scale > 1 ? Theme.greenDeep : Theme.ink)
+                    } animation: { _ in
+                        .easeOut(duration: 0.18)
+                    }
 
                 Text("\(engine.todayMinutes) min focused today")
                     .font(.callout)
                     .foregroundStyle(Theme.gray)
+                    .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
                 Label("5 min = 1 level", systemImage: "hourglass")
                     .font(.footnote)
                     .foregroundStyle(Theme.gray)
                     .padding(.top, 4)
+
+                if let celebration {
+                    CelebrationChip(celebration: celebration)
+                        .padding(.top, 8)
+                        .transition(.scale(scale: 0.92, anchor: .leading).combined(with: .opacity))
+                }
             }
             Spacer()
-            ClassBadge(name: engine.knightClass.rawValue)
+            VStack(alignment: .trailing, spacing: 10) {
+                ShareDayButton()
+                ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
+            }
         }
+        .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - Share my day (organic-growth hook)
+
+private struct ShareDayButton: View {
+    @Environment(FocusEngine.self) private var engine
+    @State private var shareImage: Image?
+
+    var body: some View {
+        Group {
+            if let shareImage {
+                ShareLink(item: shareImage,
+                          preview: SharePreview("Daily Levels", image: shareImage)) {
+                    icon
+                }
+            } else {
+                icon
+            }
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel("Share my day")
+        // Render once, then only when the level or minutes change — never per 1s tick.
+        .onAppear(perform: render)
+        .onChange(of: engine.level) { render() }
+        .onChange(of: engine.todayMinutes) { render() }
+    }
+
+    private var icon: some View {
+        Image(systemName: "square.and.arrow.up")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.green)
+            .padding(8)
+            .background(Theme.badgeBg, in: Circle())
+    }
+
+    @MainActor private func render() {
+        // Share card shows the user's REAL class art (even if Pro-gated in-app) — outbound
+        // marketing: revealing the locked art entices recipients and rewards the sharer.
+        let card = ShareCardView(
+            level: engine.level,
+            classDisplayName: engine.knightClass.displayName,
+            todayMinutes: engine.todayMinutes,
+            heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue),
+            streak: engine.focusStreak
+        )
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 1   // card authored at 1080pt → exact 1080×1080 px
+        if let ui = renderer.uiImage { shareImage = Image(uiImage: ui) }
     }
 }
 
 private struct ClassBadge: View {
-    let name: String
+    let name: LocalizedStringResource
+    let pulse: Int
+
     var body: some View {
         Text(name)
             .font(.subheadline.weight(.medium))
@@ -77,6 +287,30 @@ private struct ClassBadge: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Theme.badgeBg, in: Capsule())
+            .phaseAnimator([false, true, false], trigger: pulse) { content, active in
+                content
+                    .scaleEffect(active ? 1.06 : 1)
+                    .shadow(color: active ? Theme.green.opacity(0.22) : .clear,
+                            radius: active ? 8 : 0,
+                            y: active ? 2 : 0)
+            } animation: { _ in
+                .easeOut(duration: 0.2)
+            }
+            .accessibilityLabel(Text("Daily class \(String(localized: name))"))
+    }
+}
+
+private struct CelebrationChip: View {
+    let celebration: LevelCelebration
+
+    var body: some View {
+        Label(celebration.title, systemImage: celebration.classChanged ? "sparkles" : "arrow.up.circle.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Theme.greenDeep)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Theme.greenSoft.opacity(0.35), in: Capsule())
+            .accessibilityLabel(celebration.accessibilityText)
     }
 }
 
@@ -84,6 +318,7 @@ private struct ClassBadge: View {
 
 private struct ProgressSection: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -97,23 +332,29 @@ private struct ProgressSection: View {
             }
             .frame(height: 12)
             .animation(.easeInOut(duration: 0.3), value: engine.levelProgress)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Level progress")
+            .accessibilityValue("\(Int(engine.levelProgress * 100)) percent")
 
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("\(engine.todayMinutes) min focused today")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
+                        .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                        .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
-                    if engine.isGrinding {
-                        Text("Current session")
+                    if engine.isGrinding || engine.isPaused {
+                        Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
                             .font(.caption)
                             .foregroundStyle(Theme.gray)
                         // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
                         // width so the timer doesn't shift left/right as the seconds tick.
+                        // While paused it holds its value; resume continues from here.
                         Text(Format.clock(engine.currentSessionSeconds))
                             .font(.system(size: 34, weight: .bold, design: .rounded))
                             .monospacedDigit()
-                            .foregroundStyle(Theme.ink)
+                            .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
                     } else {
                         Text("Ready to focus")
                             .font(.footnote)
@@ -126,9 +367,10 @@ private struct ProgressSection: View {
                     .foregroundStyle(engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray)
             }
         }
+        .accessibilityElement(children: .contain)
     }
 
-    private var progressLabel: String {
+    private var progressLabel: LocalizedStringKey {
         if engine.isMaxLevel { return "Max level — Mythic!" }
         if engine.isLevelUpMoment { return "Level up!" }
         return "Next level in \(engine.minutesToNextLevel) min"
@@ -141,10 +383,13 @@ private struct StartPauseButton: View {
     @Environment(FocusEngine.self) private var engine
 
     var body: some View {
-        Button(action: engine.toggle) {
+        Button {
+            Haptics.actionTap()
+            engine.toggle()
+        } label: {
             HStack(spacing: 10) {
                 Image(systemName: engine.isGrinding ? "pause.fill" : "play.fill")
-                Text(engine.isGrinding ? "Pause" : "Start")
+                Text(label)
             }
             .font(.title3.weight(.semibold))
             .foregroundStyle(.white)
@@ -152,7 +397,107 @@ private struct StartPauseButton: View {
             .padding(.vertical, 18)
             .background(Theme.green, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable(scale: 0.97))
+        .accessibilityLabel(label)
+        .accessibilityHint(engine.isGrinding ? "Pause focus timer"
+            : engine.isPaused ? "Resume focus timer" : "Start focus timer")
+    }
+
+    private var label: LocalizedStringKey {
+        if engine.isGrinding { return "Pause" }
+        return engine.isPaused ? "Resume" : "Start"
+    }
+}
+
+// MARK: - Unlock Pro entry point (shown until purchased)
+
+private struct UnlockProRow: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .foregroundStyle(Theme.greenDeep)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Daily Levels Pro")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.ink)
+                    Text("Evolve your hero all the way to Mythic")
+                        .font(.caption)
+                        .foregroundStyle(Theme.gray)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.gray)
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.pressable)
+        .accessibilityHint("Opens the Pro unlock")
+    }
+}
+
+// MARK: - First-run intro (one-time, explains the core loop)
+
+private struct IntroSheet: View {
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Theme.cream.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 22) {
+                Text("Welcome to Daily Levels")
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    IntroRow(icon: "hourglass",
+                             text: "Focus to level up — every 5 minutes is one level.")
+                    IntroRow(icon: "lock.fill",
+                             text: "Lock your phone — your focus keeps counting.")
+                    IntroRow(icon: "moon.zzz.fill",
+                             text: "Switch apps and your hero rests until you return.")
+                }
+
+                Spacer(minLength: 0)
+
+                Button(action: onDismiss) {
+                    Text("Start focusing")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Theme.green, in: Capsule())
+                }
+                .buttonStyle(.pressable(scale: 0.97))
+            }
+            .padding(28)
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+    }
+}
+
+private struct IntroRow: View {
+    let icon: String
+    let text: LocalizedStringKey
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Theme.greenDeep)
+                .frame(width: 28)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(Theme.ink)
+            Spacer(minLength: 0)
+        }
     }
 }
 
@@ -168,13 +513,12 @@ enum Format {
             : String(format: "%d:%02d", m, sec)
     }
 
-    private static let shortDay: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "MMM d"; return f      // "Jun 6"
-    }()
-    private static let longDay: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "MMMM d"; return f     // "June 12"
-    }()
-
-    static func shortDate(_ date: Date) -> String { shortDay.string(from: date) }
-    static func longDate(_ date: Date) -> String { longDay.string(from: date) }
+    /// Locale-aware "Jun 6" — day/month order adapts per locale (e.g. "6 juin", "6月6日").
+    static func shortDate(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.abbreviated).day())
+    }
+    /// Locale-aware "June 12".
+    static func longDate(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.wide).day())
+    }
 }

@@ -29,3 +29,7 @@ Carthage/Build/
 ## fastlane (not used)
 fastlane/report.xml
 fastlane/screenshots/**/*.png
+
+# App Store preview videos (regenerate via simctl + ffmpeg; large binaries)
+AppStore/*.mp4
+AppStore/*.mov
