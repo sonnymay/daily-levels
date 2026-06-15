@@ -22,6 +22,7 @@ struct MainView: View {
     @State private var showIntro = false
     @State private var showPaywall = false
     @State private var showIconPicker = false
+    @State private var milestone: Milestone?
 
     /// Hero art is gated past the free ceiling until Pro is unlocked.
     private var heroLocked: Bool { !store.isPro && engine.knightClass.isProOnly }
@@ -62,7 +63,7 @@ struct MainView: View {
                     if store.isPro {
                         AppIconRow { showIconPicker = true }
                     } else {
-                        UnlockProRow { showPaywall = true }
+                        UnlockProRow(capped: heroLocked) { showPaywall = true }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -100,7 +101,10 @@ struct MainView: View {
             }
             Haptics.progressMilestone(classChanged: classChanged)
             showCelebration(level: newLevel, knightClass: newClass, classChanged: classChanged)
-            maybeRequestReview()
+            if classChanged, !showIntro {
+                milestone = Milestone(knightClass: newClass)   // gentle, one-tap share at peak pride
+            }
+            maybeRequestReview(classChanged: classChanged)
         }
         .onAppear {
             if firstLaunchAt == 0 { firstLaunchAt = Date().timeIntervalSince1970 }
@@ -115,16 +119,22 @@ struct MainView: View {
         .sheet(isPresented: $showIconPicker) {
             AppIconPickerSheet()
         }
+        .sheet(item: $milestone) { m in
+            MilestoneShareSheet(className: m.knightClass.displayName)
+        }
     }
 
-    /// Ask for an App Store rating after a genuine win (a level-up), but only for
-    /// users a few days in, and at most once per app version (Apple throttles further).
-    private func maybeRequestReview() {
+    /// Ask for an App Store rating only at a genuine *retention* milestone — reaching a new
+    /// class while on a 2+ day streak, a couple days in — and at most once per app version
+    /// (Apple throttles further). Habit-formed users leave better, higher ratings, which is
+    /// the biggest organic lever for rank + conversion. (Was: any level-up after day 3.)
+    private func maybeRequestReview(classChanged: Bool) {
         let now = Date().timeIntervalSince1970
         if firstLaunchAt == 0 { firstLaunchAt = now }
         let daysIn = (now - firstLaunchAt) / 86_400
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        guard daysIn >= 3, version != lastReviewVersion else { return }
+        guard classChanged, engine.focusStreak >= 2, daysIn >= 2,
+              version != lastReviewVersion else { return }
         lastReviewVersion = version
         requestReview()
     }
@@ -260,19 +270,87 @@ private struct ShareDayButton: View {
             .background(Theme.badgeBg, in: Circle())
     }
 
-    @MainActor private func render() {
-        // Share card shows the user's REAL class art (even if Pro-gated in-app) — outbound
-        // marketing: revealing the locked art entices recipients and rewards the sharer.
-        let card = ShareCardView(
-            level: engine.level,
-            classDisplayName: engine.knightClass.displayName,
-            todayMinutes: engine.todayMinutes,
-            heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue),
-            streak: engine.focusStreak
-        )
-        let renderer = ImageRenderer(content: card)
-        renderer.scale = 1   // card authored at 1080pt → exact 1080×1080 px
-        if let ui = renderer.uiImage { shareImage = Image(uiImage: ui) }
+    @MainActor private func render() { shareImage = renderShareCard(engine) }
+}
+
+/// One shared renderer for the share image, used by both the header button and the
+/// milestone share prompt. The card shows the user's REAL class art (even if Pro-gated
+/// in-app) — outbound marketing: revealing the locked art entices recipients and rewards
+/// the sharer.
+@MainActor private func renderShareCard(_ engine: FocusEngine) -> Image? {
+    let card = ShareCardView(
+        level: engine.level,
+        classDisplayName: engine.knightClass.displayName,
+        todayMinutes: engine.todayMinutes,
+        heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue),
+        streak: engine.focusStreak
+    )
+    let renderer = ImageRenderer(content: card)
+    renderer.scale = 1   // card authored at 1080pt → exact 1080×1080 px
+    return renderer.uiImage.map(Image.init(uiImage:))
+}
+
+// MARK: - Milestone share prompt (gentle word-of-mouth at a class change)
+
+/// Identifies a class-up worth offering to share. Shown once per class change.
+private struct Milestone: Identifiable {
+    let knightClass: KnightClass
+    var id: String { knightClass.rawValue }
+}
+
+/// A calm, dismissible sheet offered at the peak-pride moment of reaching a new class.
+/// One tap shares the branded card (which reveals the hero art → free word-of-mouth);
+/// "Maybe later" closes it. Never shown for ordinary level-ups, never nags.
+private struct MilestoneShareSheet: View {
+    @Environment(FocusEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    let className: LocalizedStringResource
+    @State private var shareImage: Image?
+
+    var body: some View {
+        ZStack {
+            Theme.cream.ignoresSafeArea()
+            VStack(spacing: 18) {
+                Text("You reached \(String(localized: className))!")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
+                Text("Show a friend how far your focus has climbed.")
+                    .font(.callout)
+                    .foregroundStyle(Theme.gray)
+                    .multilineTextAlignment(.center)
+
+                if let shareImage {
+                    shareImage
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 280)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+
+                    ShareLink(item: shareImage,
+                              preview: SharePreview("Daily Levels", image: shareImage)) {
+                        Label("Share your climb", systemImage: "square.and.arrow.up")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(Theme.green, in: Capsule())
+                    }
+                    .buttonStyle(.pressable(scale: 0.97))
+                } else {
+                    ProgressView().padding(.vertical, 40)
+                }
+
+                Button("Maybe later") { dismiss() }
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.gray)
+            }
+            .padding(24)
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .onAppear { shareImage = renderShareCard(engine) }
     }
 }
 
@@ -412,6 +490,9 @@ private struct StartPauseButton: View {
 // MARK: - Unlock Pro entry point (shown until purchased)
 
 private struct UnlockProRow: View {
+    /// True when a free user has hit the Pro art ceiling — show contextual copy + a soft
+    /// outline so the upgrade reads as the natural next step (calm, no urgency/countdown).
+    var capped: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -421,10 +502,11 @@ private struct UnlockProRow: View {
                     .font(.title3)
                     .foregroundStyle(Theme.greenDeep)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Daily Levels Pro")
+                    Text(capped ? "You've reached the free climb" : "Daily Levels Pro")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
-                    Text("Evolve your hero all the way to Mythic")
+                    Text(capped ? "Unlock Knight → Mythic — yours forever"
+                               : "Evolve your hero all the way to Mythic")
                         .font(.caption)
                         .foregroundStyle(Theme.gray)
                 }
@@ -435,6 +517,12 @@ private struct UnlockProRow: View {
             }
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                if capped {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(Theme.greenSoft, lineWidth: 1.5)
+                }
+            }
         }
         .buttonStyle(.pressable)
         .accessibilityHint("Opens the Pro unlock")
@@ -462,6 +550,10 @@ private struct IntroSheet: View {
                              text: "Lock your phone — your focus keeps counting.")
                     IntroRow(icon: "moon.zzz.fill",
                              text: "Switch apps and your hero rests until you return.")
+                    IntroRow(icon: "flame.fill",
+                             text: "Come back tomorrow — your streak keeps growing.")
+                    IntroRow(icon: "square.and.arrow.up",
+                             text: "Share your climb to inspire a friend.")
                 }
 
                 Spacer(minLength: 0)
@@ -478,7 +570,7 @@ private struct IntroSheet: View {
             }
             .padding(28)
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 }
