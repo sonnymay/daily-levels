@@ -15,6 +15,7 @@ struct ShareCardView: View {
     let classDisplayName: LocalizedStringResource
     let todayMinutes: Int
     let heroImage: UIImage?
+    var streak: Int = 0        // shown only at 2+ — a braggable, shareable habit
     var side: CGFloat = 1080   // 1080×1080 — clean on every social surface
 
     var body: some View {
@@ -45,6 +46,16 @@ struct ShareCardView: View {
                     Text("\(todayMinutes) min focused today")
                         .font(.system(size: 38))
                         .foregroundStyle(Theme.gray)
+
+                    if streak >= 2 {
+                        Label("\(streak)-day focus streak", systemImage: "flame.fill")
+                            .font(.system(size: 34, weight: .semibold))
+                            .foregroundStyle(Theme.greenDeep)
+                            .padding(.horizontal, 22)
+                            .padding(.vertical, 11)
+                            .background(Theme.greenSoft.opacity(0.4), in: Capsule())
+                            .padding(.top, 6)
+                    }
                 }
 
                 Spacer(minLength: 0)

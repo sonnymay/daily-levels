@@ -144,6 +144,12 @@ final class FocusEngine {
         secondsByDayIncludingLive().values.reduce(0) { $0 + LevelMath.level(forFocusMinutes: $1 / 60) }
     }
 
+    /// Calm consecutive-day focus streak (days reaching at least Level 1). An unstarted
+    /// today doesn't break it — no countdown anxiety. See `StreakMath`.
+    var focusStreak: Int {
+        StreakMath.currentStreak(secondsByDay: secondsByDayIncludingLive(), today: now, calendar: calendar)
+    }
+
     /// Last 7 days, oldest → newest (rightmost = today) for the bar chart (SPEC §4).
     var weekHistory: [DaySummary] {
         let map = secondsByDayIncludingLive()

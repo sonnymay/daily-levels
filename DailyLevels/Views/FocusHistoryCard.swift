@@ -31,6 +31,18 @@ struct FocusHistoryCard: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
 
+            // Gentle streak — shown only at 2+ days so it rewards a habit without
+            // pressuring brand-new users (no "you'll lose it!" framing; calm green).
+            if engine.focusStreak >= 2 {
+                Label("\(engine.focusStreak)-day focus streak", systemImage: "flame.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.greenDeep)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Theme.greenSoft.opacity(0.35), in: Capsule())
+                    .accessibilityLabel("\(engine.focusStreak) day focus streak")
+            }
+
             WeekBarChart(days: engine.weekHistory)
                 .frame(height: 150)
                 .padding(.top, 2)

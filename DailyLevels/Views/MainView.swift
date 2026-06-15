@@ -46,6 +46,17 @@ struct MainView: View {
                             Haptics.actionTap()
                             if heroLocked { showPaywall = true } else { engine.toggle() }
                         }
+                        // A soft green ring flashes around the hero on level-up (matches the
+                        // panel's 22pt corner). `levelPulse` only increments when motion is on,
+                        // so Reduce Motion users never see it.
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .stroke(Theme.greenDeep, lineWidth: 3)
+                                .allowsHitTesting(false)
+                                .phaseAnimator([0.0, 0.7, 0.0], trigger: levelPulse) { ring, opacity in
+                                    ring.opacity(opacity)
+                                } animation: { _ in .easeOut(duration: 0.5) }
+                        }
                     ProgressSection()
                     FocusHistoryCard()
                     if store.isPro {
@@ -256,7 +267,8 @@ private struct ShareDayButton: View {
             level: engine.level,
             classDisplayName: engine.knightClass.displayName,
             todayMinutes: engine.todayMinutes,
-            heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue)
+            heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue),
+            streak: engine.focusStreak
         )
         let renderer = ImageRenderer(content: card)
         renderer.scale = 1   // card authored at 1080pt → exact 1080×1080 px
