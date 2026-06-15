@@ -125,7 +125,9 @@ The "History" link in the card is intentionally **inert** (reserved for v1.1).
 - No-passcode devices can't get lock notifications → backgrounding always reads as app-switch;
   SPEC §6 suggests a kind fallback (treat as grinding) — add only if real users hit it.
 - Sprites/animations (Phase 4), level-up & class-change moments, app icon (Phase 5).
-- **v1.1 widget** (today's level/class/streak): new app-extension target + App Group
-  `group.com.santipapmay.DailyLevels`; register the group + widget bundle ID in the dev portal
-  *first*. Simplest data path: app writes a tiny snapshot to the shared `UserDefaults(suiteName:)`;
-  widget's `TimelineProvider` reads it (no SwiftData sharing). Ship after the freemium build is live.
+- **v1.1 widget** (today's level/class/streak): code is **staged + type-checked** in
+  [`widget/`](widget/) (off the build path, so it can't affect the freemium archive). Drop-in
+  steps in [`WIDGET_SETUP.md`](WIDGET_SETUP.md): create the extension target via Xcode (File ▸ New
+  ▸ Target — never hand-edit pbxproj), register App Group `group.com.santipapmay.DailyLevels` +
+  widget bundle ID in the dev portal *first*, add `DailyLevelsSnapshot.swift` to both targets, wire
+  the FocusEngine publish snippet. Ship after the freemium build is live.
