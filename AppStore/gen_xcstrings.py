@@ -90,6 +90,8 @@ add("Focus History","Historial de concentración","Histórico de foco","Fokus-Ve
 add("History","Historial","Histórico","Verlauf","Historique","履歴")
 add("Levels earned each day · resets at midnight","Niveles ganados cada día · se reinicia a medianoche","Níveis ganhos por dia · reinicia à meia-noite","Täglich erreichte Level · Reset um Mitternacht","Niveaux gagnés chaque jour · réinitialisé à minuit","毎日獲得したレベル · 深夜にリセット")
 add("%lld min focus time","%lld min de foco","%lld min de foco","%lld Min. Fokuszeit","%lld min de focus","集中時間%lld分")
+add("%lld-day focus streak","Racha de %lld días","Sequência de %lld dias","%lld-Tage-Serie","Série de %lld jours","%lld日連続")
+add("%lld day focus streak","Racha de concentración de %lld días","Sequência de foco de %lld dias","%lld Tage Fokus-Serie","Série de concentration de %lld jours","%lld日間の集中連続記録")
 
 # --- Notifications ---
 add("New class unlocked — keep grinding!","¡Nueva clase desbloqueada! Sigue entrenando.","Nova classe desbloqueada — continue treinando!","Neue Klasse freigeschaltet — weiter grinden!","Nouvelle classe débloquée — continue !","新しいクラスを解除 — その調子で修行を！")

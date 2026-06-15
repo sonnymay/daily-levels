@@ -49,7 +49,7 @@ DailyLevels/
 ├── Haptics.swift          # tiny tactile cues: tap, level-up, class-change
 ├── Theme.swift            # cream palette + Color(hex:)
 ├── DailyLevelsApp.swift   # @main: ModelContainer + shared FocusEngine & Store via .environment
-├── Localizable.xcstrings  # String Catalog: 66 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review
+├── Localizable.xcstrings  # String Catalog: 68 keys × 5 langs (es, pt-BR, de, fr, ja); all needs_review (regen via AppStore/gen_xcstrings.py — the source of truth)
 └── Views/
     ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet, UnlockProRow, AppIconRow, ShareDayButton, Format
     ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay; HeroSceneAsset.sleepImage
