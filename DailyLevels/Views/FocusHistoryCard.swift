@@ -54,6 +54,7 @@ struct FocusHistoryCard: View {
 // MARK: - Bar chart
 
 private struct WeekBarChart: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let days: [DaySummary]
 
     /// Chart top: at least 12 (matches the mockup's gridlines), rounded up to a multiple of 6.
@@ -92,6 +93,7 @@ private struct WeekBarChart: View {
                                 .fill(isToday ? Theme.greenDeep : Theme.greenSoft)
                                 .frame(width: 22,
                                        height: max(2, plotH * CGFloat(day.level) / CGFloat(top)))
+                                .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: day.level)
                             Text(isToday ? "Today" : Format.shortDate(day.date))
                                 .font(.caption2.weight(isToday ? .bold : .regular))
                                 .foregroundStyle(isToday ? Theme.ink : Theme.gray)

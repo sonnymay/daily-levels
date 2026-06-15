@@ -164,6 +164,7 @@ private struct LevelCelebration: Identifiable, Equatable {
 
 private struct HeaderView: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let levelPulse: Int
     let classPulse: Int
     let celebration: LevelCelebration?
@@ -178,6 +179,8 @@ private struct HeaderView: View {
                 Text("Level \(engine.level)")
                     .font(.system(size: 46, weight: .bold))
                     .foregroundStyle(Theme.ink)
+                    .contentTransition(.numericText(value: Double(engine.level)))
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
                     .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
                         content
                             .scaleEffect(scale, anchor: .leading)
@@ -189,6 +192,8 @@ private struct HeaderView: View {
                 Text("\(engine.todayMinutes) min focused today")
                     .font(.callout)
                     .foregroundStyle(Theme.gray)
+                    .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
                 Label("5 min = 1 level", systemImage: "hourglass")
                     .font(.footnote)
@@ -228,7 +233,7 @@ private struct ShareDayButton: View {
                 icon
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .accessibilityLabel("Share my day")
         // Render once, then only when the level or minutes change — never per 1s tick.
         .onAppear(perform: render)
@@ -301,6 +306,7 @@ private struct CelebrationChip: View {
 
 private struct ProgressSection: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -323,6 +329,8 @@ private struct ProgressSection: View {
                     Text("\(engine.todayMinutes) min focused today")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
+                        .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                        .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
                     if engine.isGrinding || engine.isPaused {
                         Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
@@ -377,7 +385,7 @@ private struct StartPauseButton: View {
             .padding(.vertical, 18)
             .background(Theme.green, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable(scale: 0.97))
         .accessibilityLabel(label)
         .accessibilityHint(engine.isGrinding ? "Pause focus timer"
             : engine.isPaused ? "Resume focus timer" : "Start focus timer")
@@ -416,7 +424,7 @@ private struct UnlockProRow: View {
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .accessibilityHint("Opens the Pro unlock")
     }
 }
@@ -454,7 +462,7 @@ private struct IntroSheet: View {
                         .padding(.vertical, 16)
                         .background(Theme.green, in: Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable(scale: 0.97))
             }
             .padding(28)
         }

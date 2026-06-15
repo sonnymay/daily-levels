@@ -76,7 +76,7 @@ struct PaywallView: View {
                 .padding(.vertical, 16)
                 .background(Theme.green, in: Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressable(scale: 0.97))
             .disabled(store.isWorking)
 
             Button("Restore Purchases") {

@@ -54,7 +54,7 @@ struct AppIconPickerSheet: View {
                 VStack(spacing: 0) {
                     ForEach(Array(AppIconOption.allCases.enumerated()), id: \.element.id) { idx, opt in
                         Button { select(opt) } label: { row(opt) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.pressable)
                         if idx < AppIconOption.allCases.count - 1 {
                             Divider().background(Theme.hairline)
                         }
@@ -92,6 +92,7 @@ struct AppIconPickerSheet: View {
 
     private func select(_ opt: AppIconOption) {
         guard opt.alternateName != current else { return }
+        Haptics.actionTap()
         UIApplication.shared.setAlternateIconName(opt.alternateName) { _ in }
         current = opt.alternateName
     }
@@ -118,7 +119,7 @@ struct AppIconRow: View {
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .accessibilityHint("Choose an app icon")
     }
 }
