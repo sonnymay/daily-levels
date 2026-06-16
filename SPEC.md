@@ -163,3 +163,4 @@ Tabs · full History screen · settings beyond minimum · streaks · daily goal 
 - [ ] Final character design (original, not RO) — sprite sheet generation
 - [ ] Grace-window tuning after prototype (start at 30s)
 - [ ] App icon
+- [ ] Write onboarding copy (first-launch tooltip or empty-state message)
