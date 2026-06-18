@@ -24,6 +24,35 @@ enum KnightClass: String, CaseIterable {
     case legend    = "Legend"     // level 81–90  (~6.8–7.5 hrs)
     case mythic    = "Mythic"     // level 91–100 (~7.6–8.3 hrs, the daily cap)
 
+    /// Lifetime ("journey") level at which this class is first reached. Powers the
+    /// Hero Collection: the collectible hero climbs this ladder with *cumulative*
+    /// progress (it never resets), so every user steadily advances toward the higher
+    /// classes — unlike the daily class, which resets at midnight. Novice is the
+    /// starting hero (reached from level 0).
+    var minLevel: Int {
+        switch self {
+        case .novice:    return 0
+        case .squire:    return 11
+        case .swordsman: return 21
+        case .knight:    return 31
+        case .crusader:  return 41
+        case .champion:  return 51
+        case .paladin:   return 61
+        case .hero:      return 71
+        case .legend:    return 81
+        case .mythic:    return 91
+        }
+    }
+
+    /// True once a cumulative journey level has climbed into this class's band.
+    /// Pure + boundary-tested so the Hero Collection's "reached" state is trustworthy.
+    func isReached(atJourneyLevel level: Int) -> Bool { level >= minLevel }
+
+    /// How many of the 10 classes a given journey level has reached (for "X of 10" copy).
+    static func reachedCount(atJourneyLevel level: Int) -> Int {
+        allCases.filter { $0.isReached(atJourneyLevel: level) }.count
+    }
+
     /// Map a daily level to its class. Boundaries are inclusive on the upper end
     /// of each band (e.g. level 10 = Novice, level 11 = Squire).
     static func forLevel(_ level: Int) -> KnightClass {
