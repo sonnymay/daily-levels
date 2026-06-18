@@ -48,6 +48,15 @@ struct PaywallView: View {
                                        title: "Support an indie dev",
                                        text: "A one-time purchase keeps Daily Levels calm and ad-free.")
                         }
+
+                        // Show the real heroes — the ones you've earned but can't yet own —
+                        // so the purchase is concrete, not abstract.
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Your collection")
+                                .font(.headline)
+                                .foregroundStyle(Theme.ink)
+                            HeroCollectionGrid()
+                        }
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)

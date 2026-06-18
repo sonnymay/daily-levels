@@ -15,7 +15,7 @@
 | **3. Main screen** | §4 — single screen per mockup, placeholder hero | ✅ Done. Builds + renders on simulator. |
 | **4. Sprites** | §8 — grinding animation per class | ✅ 10 Kling clips wired (`<class>_grind.mp4`), compressed 122MB→21MB. Sleeping now uses per-class `<class>_sleep.png` stills (no `sleep_loop.mp4` yet). |
 | **5. Polish / App Store** | §8 — icon, metadata, submission | 🔶 Live on App Store Connect (App ID **6780007939**). Build **3** (1.0, $0.99 paid) uploaded + processing. **Pivoting to freemium before launch** (see Phase 6). |
-| **6. Monetization (freemium)** | Money plan ([`AppStore/GROWTH.md`](AppStore/GROWTH.md)) | 🔶 **Model: Free app + one-time "Daily Levels Pro" unlock** ($6.99 launch → $9.99), StoreKit 2 only (no RevenueCat; keeps Data Not Collected). Code done: `Store.swift`, `Views/PaywallView.swift`, hero-art gate (free = Novice/Squire/Swordsman; Pro = Knight→Mythic), `UnlockProRow`, `requestReview` on level-up. **Build 4 uploaded 2026-06-14 → ASC status "Ready to Submit"** (binary only). **Remaining (owner): device lock test, create IAP `com.santipapmay.DailyLevels.pro`, set price Free, attach build+IAP, screenshots, Submit.** |
+| **6. Monetization (freemium)** | Money plan ([`AppStore/GROWTH.md`](AppStore/GROWTH.md)) | 🔶 **Model: Free app + one-time "Daily Levels Pro" unlock** ($6.99 launch → $9.99), StoreKit 2 only (no RevenueCat; keeps Data Not Collected). Code done: `Store.swift`, `Views/PaywallView.swift`, hero-art gate (free = Novice/Squire/Swordsman; Pro = Knight→Mythic), `UnlockProRow`, `requestReview` on level-up. **Build 4 uploaded 2026-06-14 → ASC status "Ready to Submit"** (binary only). **Conversion redesign 2026-06-18 (zero sales diagnosis):** the daily class resets at midnight, so the Pro art (Knight = daily level 31 = 2h35m in ONE day) was unreachable/invisible to ~95% of users → no desire. Fix: **Hero Collection** driven by cumulative `journeyLevel` (lifetime, never resets) — all 10 heroes shown from day one, earned-but-locked Pro heroes teased w/ "Pro" badge; reachable in ~1 week of normal use. See `Views/HeroCollectionView.swift`. **Open follow-up:** share card still renders REAL locked art for free (undercuts exclusivity — decide marketing-reach vs. Pro-flex); new collection strings need i18n. **Remaining (owner): device lock test, create IAP `com.santipapmay.DailyLevels.pro`, set price Free, attach build+IAP, screenshots, Submit.** |
 
 ### App Store Connect state (for next session)
 - App: **Daily Levels**, App ID `6780007939`, bundle `com.santipapmay.DailyLevels`, Team `57U5D693VS`, ASC Issuer `69a6de7a-0b32-47e3-e053-5b8c7c11a4d1`.
@@ -43,7 +43,8 @@ DailyLevels/
 ├── StreakMath.swift       # pure: calm consecutive-day focus streak (Level-1+ days) ← unit-tested
 ├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
 ├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
-├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime
+├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime + journeyLevel/journeyClass (Hero Collection)
+├── FocusLedger.swift      # pure: per-day seconds aggregation (extracted from engine for trust tests) ← unit-tested
 ├── Store.swift            # @Observable StoreKit 2: Pro unlock entitlement + KnightClass.isProOnly gate
 ├── FocusNotifications.swift # local level-up pings (locked/background); scheduled on start, cancelled on pause
 ├── Haptics.swift          # tiny tactile cues: tap, level-up, class-change
@@ -53,14 +54,15 @@ DailyLevels/
 └── Views/
     ├── MainView.swift         # screen layout + Header, ClassBadge, ProgressSection, StartPauseButton, IntroSheet (5 rows), UnlockProRow (capped copy), AppIconRow, ShareDayButton, MilestoneShareSheet, renderShareCard, Format
     ├── HeroScenePanel.swift   # video > image asset > placeholder; `locked` Pro overlay; HeroSceneAsset.sleepImage
-    ├── PaywallView.swift      # calm native StoreKit paywall (one-time Pro unlock)
+    ├── PaywallView.swift      # calm native StoreKit paywall (one-time Pro unlock) + embedded HeroCollectionGrid (concrete "what you'll unlock")
+    ├── HeroCollectionView.swift # CONVERSION CENTERPIECE: HeroJourneyRow (main-screen entry) + HeroCollectionSheet + HeroCollectionGrid + HeroThumbnail. All 10 heroes, filled by cumulative journeyLevel; earned-but-locked Pro heroes shown w/ "Pro" badge → paywall
     ├── ShareCardView.swift    # 1080² share image (ImageRenderer + ShareLink) — organic growth
     ├── AppIconPicker.swift    # alternate-icon picker (Pro perk); placeholder icon art
     ├── LoopingVideoView.swift # AVFoundation gapless loop (no deps)
     ├── PressableButtonStyle.swift # tactile press (dip+dim+spring); replaces .plain; Reduce-Motion safe
     └── FocusHistoryCard.swift # 7-day bar chart + day list + calm streak chip (2+ days)
 DailyLevels.storekit       # local StoreKit config for in-Xcode purchase testing (product: ...DailyLevels.pro)
-DailyLevelsTests/          # LevelMath, StreakMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability (24 tests)
+DailyLevelsTests/          # LevelMath, StreakMath, KnightClass, MidnightSplit, HeroSceneAsset, LocalizationStability, TrustAudit (DST/tz/cold-launch), HeroCollection (journey/Pro boundaries) (36 tests)
 ```
 
 **Growth/i18n:** App is localized into 5 languages via the String Catalog (translations flagged
@@ -97,7 +99,7 @@ xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id
 xcodebuild -project "DailyLevels.xcodeproj" -scheme DailyLevels -destination "id=$SIM" test
 # Device: open DailyLevels.xcodeproj in Xcode, set Signing Team, pick your iPhone, Run.
 ```
-Last verified: **Debug BUILD SUCCEEDED**, **24/24 tests pass**, per-class videos play, app
+Last verified: **Debug BUILD SUCCEEDED**, **36/36 tests pass**, per-class videos play, app
 runs on iPhone 16 / 16 Pro Max sims (Xcode 26.5). DEBUG screenshot flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Decisions

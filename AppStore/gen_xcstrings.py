@@ -107,6 +107,21 @@ add("Unlock Knight → Mythic — yours forever","Desbloquea de Caballero a Mít
 add("Come back tomorrow — your streak keeps growing.","Vuelve mañana: tu racha sigue creciendo.","Volte amanhã — sua sequência continua crescendo.","Komm morgen wieder — deine Serie wächst weiter.","Reviens demain — ta série continue de grandir.","明日も戻ってきて — 連続記録は伸び続けます。")
 add("Share your climb to inspire a friend.","Comparte tu ascenso para inspirar a un amigo.","Compartilhe sua escalada para inspirar um amigo.","Teile deinen Aufstieg und inspiriere einen Freund.","Partage ton ascension pour inspirer un ami.","登りを共有して友だちを励まそう。")
 
+# --- Hero Collection (conversion centerpiece) ---
+add("Hero Collection","Colección de héroes","Coleção de heróis","Heldensammlung","Collection de héros","ヒーローコレクション")
+add("%lld of 10 heroes reached","%lld de 10 héroes alcanzados","%lld de 10 heróis alcançados","%lld von 10 Helden erreicht","%lld héros sur 10 atteints","10人中%lld人のヒーローに到達")
+add("Your journey: lifetime level %lld · %@","Tu viaje: nivel total %lld · %@","Sua jornada: nível vitalício %lld · %@","Deine Reise: Gesamtlevel %lld · %@","Ton parcours : niveau cumulé %lld · %@","あなたの旅: 累計レベル%lld · %@")
+add("%lld of 10 reached — keep focusing to climb.","%lld de 10 alcanzados: sigue concentrándote para subir.","%lld de 10 alcançados — continue focando para subir.","%lld von 10 erreicht — bleib fokussiert, um aufzusteigen.","%lld sur 10 atteints — continue à te concentrer pour grimper.","10中%lld到達 — 集中を続けて登ろう。")
+add("Unlock all 10 heroes · %@","Desbloquea los 10 héroes · %@","Desbloqueie os 10 heróis · %@","Alle 10 Helden freischalten · %@","Débloque les 10 héros · %@","全10ヒーローを解除 · %@")
+add("Reach level %lld","Llega al nivel %lld","Alcance o nível %lld","Erreiche Level %lld","Atteins le niveau %lld","レベル%lldに到達")
+add("Tap to unlock","Toca para desbloquear","Toque para desbloquear","Zum Freischalten tippen","Touche pour débloquer","タップで解除")
+add("Unlocked","Desbloqueado","Desbloqueado","Freigeschaltet","Débloqué","解除済み")
+add("Your collection","Tu colección","Sua coleção","Deine Sammlung","Ta collection","あなたのコレクション")
+add("Opens your hero collection","Abre tu colección de héroes","Abre sua coleção de heróis","Öffnet deine Heldensammlung","Ouvre ta collection de héros","ヒーローコレクションを開く")
+add("%@, locked. Reach level %lld.","%@, bloqueado. Llega al nivel %lld.","%@, bloqueado. Alcance o nível %lld.","%@, gesperrt. Erreiche Level %lld.","%@, verrouillé. Atteins le niveau %lld.","%@、ロック中。レベル%lldに到達。")
+add("%@, earned. Tap to unlock with Pro.","%@, conseguido. Toca para desbloquear con Pro.","%@, conquistado. Toque para desbloquear com Pro.","%@, verdient. Zum Freischalten mit Pro tippen.","%@, mérité. Touche pour débloquer avec Pro.","%@、獲得済み。タップしてProで解除。")
+add("%@, unlocked.","%@, desbloqueado.","%@, desbloqueado.","%@, freigeschaltet.","%@, débloqué.","%@、解除済み。")
+
 strings = {}
 for key, vals in T.items():
     locs = {}

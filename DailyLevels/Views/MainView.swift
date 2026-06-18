@@ -22,6 +22,7 @@ struct MainView: View {
     @State private var showIntro = false
     @State private var showPaywall = false
     @State private var showIconPicker = false
+    @State private var showCollection = false
     @State private var milestone: Milestone?
 
     /// Hero art is gated past the free ceiling until Pro is unlocked.
@@ -60,6 +61,9 @@ struct MainView: View {
                         }
                     ProgressSection()
                     FocusHistoryCard()
+                    // Every user sees the 10-hero ladder they're climbing — exposure is what
+                    // turns the Pro art from invisible into something worth buying.
+                    HeroJourneyRow { showCollection = true }
                     if store.isPro {
                         AppIconRow { showIconPicker = true }
                     } else {
@@ -118,6 +122,9 @@ struct MainView: View {
         }
         .sheet(isPresented: $showIconPicker) {
             AppIconPickerSheet()
+        }
+        .sheet(isPresented: $showCollection) {
+            HeroCollectionSheet()
         }
         .sheet(item: $milestone) { m in
             MilestoneShareSheet(className: m.knightClass.displayName)
@@ -241,6 +248,7 @@ private struct HeaderView: View {
 
 private struct ShareDayButton: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(Store.self) private var store
     @State private var shareImage: Image?
 
     var body: some View {
@@ -256,10 +264,11 @@ private struct ShareDayButton: View {
         }
         .buttonStyle(.pressable)
         .accessibilityLabel("Share my day")
-        // Render once, then only when the level or minutes change — never per 1s tick.
+        // Render once, then only when the level, minutes, or Pro status change — never per 1s tick.
         .onAppear(perform: render)
         .onChange(of: engine.level) { render() }
         .onChange(of: engine.todayMinutes) { render() }
+        .onChange(of: store.isPro) { render() }
     }
 
     private var icon: some View {
@@ -270,19 +279,22 @@ private struct ShareDayButton: View {
             .background(Theme.badgeBg, in: Circle())
     }
 
-    @MainActor private func render() { shareImage = renderShareCard(engine) }
+    @MainActor private func render() { shareImage = renderShareCard(engine, isPro: store.isPro) }
 }
 
 /// One shared renderer for the share image, used by both the header button and the
-/// milestone share prompt. The card shows the user's REAL class art (even if Pro-gated
-/// in-app) — outbound marketing: revealing the locked art entices recipients and rewards
-/// the sharer.
-@MainActor private func renderShareCard(_ engine: FocusEngine) -> Image? {
+/// milestone share prompt. Sharing your *real* hero is a Pro flex: free users share their
+/// free hero (art + class name capped at the free ceiling, but their real level), while Pro
+/// users show off the Knight→Mythic hero they own. That gives a friend a reason to ask, and
+/// the sharer a reason to upgrade — without misrepresenting the level they actually earned.
+@MainActor private func renderShareCard(_ engine: FocusEngine, isPro: Bool) -> Image? {
+    let locked = !isPro && engine.knightClass.isProOnly
+    let shareClass = locked ? KnightClass.freeArtCeiling : engine.knightClass
     let card = ShareCardView(
         level: engine.level,
-        classDisplayName: engine.knightClass.displayName,
+        classDisplayName: shareClass.displayName,
         todayMinutes: engine.todayMinutes,
-        heroImage: HeroSceneAsset.sleepImage(for: engine.knightClass.rawValue),
+        heroImage: HeroSceneAsset.sleepImage(for: shareClass.rawValue),
         streak: engine.focusStreak
     )
     let renderer = ImageRenderer(content: card)
@@ -303,6 +315,7 @@ private struct Milestone: Identifiable {
 /// "Maybe later" closes it. Never shown for ordinary level-ups, never nags.
 private struct MilestoneShareSheet: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let className: LocalizedStringResource
     @State private var shareImage: Image?
@@ -350,7 +363,7 @@ private struct MilestoneShareSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .onAppear { shareImage = renderShareCard(engine) }
+        .onAppear { shareImage = renderShareCard(engine, isPro: store.isPro) }
     }
 }
 
