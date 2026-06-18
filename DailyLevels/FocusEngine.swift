@@ -38,7 +38,7 @@ final class FocusEngine {
     @ObservationIgnored private var sessionAccumulatedSeconds: Int = 0
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private let classifier = LockClassifier()
-    @ObservationIgnored private let activeStartKey = "engine.activeStart"
+    @ObservationIgnored static let activeStartKey = "engine.activeStart"
 
     // MARK: Init
     init(context: ModelContext, calendar: Calendar = .current) {
@@ -91,7 +91,7 @@ final class FocusEngine {
         now = t
         mode = .grinding
         classifier.isActive = true
-        UserDefaults.standard.set(t, forKey: activeStartKey)   // crash marker (SPEC §5 edge 5)
+        UserDefaults.standard.set(t, forKey: Self.activeStartKey)   // crash marker (SPEC §5 edge 5)
         startTicker()
         // Schedule "you leveled up" pings for the locked/background case (SPEC §6 grind-while-locked).
         FocusNotifications.requestAuthorizationIfNeeded()
@@ -187,7 +187,7 @@ final class FocusEngine {
     private func endActiveSession(at end: Date) {
         defer {
             activeStart = nil
-            UserDefaults.standard.removeObject(forKey: activeStartKey)
+            UserDefaults.standard.removeObject(forKey: Self.activeStartKey)
         }
         guard let start = activeStart else { return }
         for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
@@ -201,18 +201,19 @@ final class FocusEngine {
 
     private func reloadSessions() {
         let all = (try? context.fetch(FetchDescriptor<FocusSession>())) ?? []
-        var dict: [Date: Int] = [:]
-        for s in all {
-            dict[calendar.startOfDay(for: s.startAt), default: 0] += s.durationSeconds
-        }
-        completedSecondsByDay = dict
+        let segments = all.map { FocusSegment(startAt: $0.startAt, durationSeconds: $0.durationSeconds) }
+        completedSecondsByDay = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
     }
 
     /// SPEC §5 edge 5: if the app was killed mid-session we can't *prove* the user was
     /// grinding, so we conservatively discard the leftover marker and count zero.
     private func recoverFromColdLaunch() {
-        if UserDefaults.standard.object(forKey: activeStartKey) != nil {
-            UserDefaults.standard.removeObject(forKey: activeStartKey)
+        Self.discardUnprovenActiveStart(defaults: .standard)
+    }
+
+    static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
+        if defaults.object(forKey: activeStartKey) != nil {
+            defaults.removeObject(forKey: activeStartKey)
         }
     }
 
