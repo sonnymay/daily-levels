@@ -48,6 +48,11 @@ enum KnightClass: String, CaseIterable {
     /// Pure + boundary-tested so the Hero Collection's "reached" state is trustworthy.
     func isReached(atJourneyLevel level: Int) -> Bool { level >= minLevel }
 
+    /// How many of the 10 classes a given journey level has reached (for "X of 10" copy).
+    static func reachedCount(atJourneyLevel level: Int) -> Int {
+        allCases.filter { $0.isReached(atJourneyLevel: level) }.count
+    }
+
     /// Map a daily level to its class. Boundaries are inclusive on the upper end
     /// of each band (e.g. level 10 = Novice, level 11 = Squire).
     static func forLevel(_ level: Int) -> KnightClass {

@@ -148,15 +148,9 @@ final class FocusEngine {
     /// the 0...maxLevel class ladder. Unlike the daily level it never resets at midnight, so
     /// the collectible hero climbs steadily over days/weeks: that is what makes the Pro
     /// classes (Knight → Mythic) something every user *approaches* and can *see coming*.
+    /// Views derive the class + "X of 10" count from this via `KnightClass.forLevel` /
+    /// `KnightClass.reachedCount` (reading it once per render, not per hero).
     var journeyLevel: Int { min(LevelMath.maxLevel, lifetimeLevels) }
-
-    /// Highest class reached on the lifetime journey (the Hero Collection's "current" hero).
-    var journeyClass: KnightClass { KnightClass.forLevel(journeyLevel) }
-
-    /// How many of the 10 classes the journey has reached so far (for "X of 10" copy).
-    var heroesReached: Int {
-        KnightClass.allCases.filter { $0.isReached(atJourneyLevel: journeyLevel) }.count
-    }
 
     /// Calm consecutive-day focus streak (days reaching at least Level 1). An unstarted
     /// today doesn't break it — no countdown anxiety. See `StreakMath`.

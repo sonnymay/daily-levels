@@ -26,14 +26,15 @@ struct HeroJourneyRow: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        let journeyLevel = engine.journeyLevel
+        return Button(action: action) {
             HStack(spacing: 12) {
-                HeroThumbnail(className: engine.journeyClass.rawValue, size: 44, dimmed: false)
+                HeroThumbnail(className: KnightClass.forLevel(journeyLevel).rawValue, size: 44, dimmed: false)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Hero Collection")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
-                    Text("\(engine.heroesReached) of 10 heroes reached")
+                    Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 heroes reached")
                         .font(.caption)
                         .foregroundStyle(Theme.gray)
                 }
@@ -46,7 +47,7 @@ struct HeroJourneyRow: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.pressable)
-        .accessibilityHint("Opens your hero collection")
+        .accessibilityHint(Text("Opens your hero collection"))
     }
 }
 
@@ -75,14 +76,15 @@ struct HeroCollectionSheet: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let journeyLevel = engine.journeyLevel
+        return VStack(alignment: .leading, spacing: 6) {
             Text("Hero Collection")
                 .font(.largeTitle.weight(.bold))
                 .foregroundStyle(Theme.ink)
-            Text("Your journey: lifetime level \(engine.journeyLevel) · \(String(localized: engine.journeyClass.displayName))")
+            Text("Your journey: lifetime level \(journeyLevel) · \(String(localized: KnightClass.forLevel(journeyLevel).displayName))")
                 .font(.callout)
                 .foregroundStyle(Theme.gray)
-            Text("\(engine.heroesReached) of 10 reached — keep focusing to climb.")
+            Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 reached — keep focusing to climb.")
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
         }
@@ -116,12 +118,15 @@ struct HeroCollectionGrid: View {
                            GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
+        // Read the (cumulative) journey level once, not once per card.
+        let journeyLevel = engine.journeyLevel
+        let isPro = store.isPro
+        return LazyVGrid(columns: columns, spacing: 12) {
             ForEach(KnightClass.allCases, id: \.self) { knightClass in
                 HeroClassCard(
                     knightClass: knightClass,
-                    reached: knightClass.isReached(atJourneyLevel: engine.journeyLevel),
-                    proLocked: knightClass.isProOnly && !store.isPro,
+                    reached: knightClass.isReached(atJourneyLevel: journeyLevel),
+                    proLocked: knightClass.isProOnly && !isPro,
                     onUnlock: onUnlock
                 )
             }

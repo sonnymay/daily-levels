@@ -364,6 +364,8 @@ private struct MilestoneShareSheet: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .onAppear { shareImage = renderShareCard(engine, isPro: store.isPro) }
+        // If Pro is purchased while this is open, re-render so the shared card shows the real hero.
+        .onChange(of: store.isPro) { shareImage = renderShareCard(engine, isPro: store.isPro) }
     }
 }
 

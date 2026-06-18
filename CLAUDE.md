@@ -43,7 +43,7 @@ DailyLevels/
 ├── StreakMath.swift       # pure: calm consecutive-day focus streak (Level-1+ days) ← unit-tested
 ├── Models.swift           # @Model FocusSession (SwiftData) + DaySummary value type
 ├── LockClassifier.swift   # §6 lock-vs-app-switch (ported probe), isolated + swappable
-├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime + journeyLevel/journeyClass (Hero Collection)
+├── FocusEngine.swift      # @Observable @MainActor: state, ticker, SwiftData, midnight, lifetime + journeyLevel (Hero Collection)
 ├── FocusLedger.swift      # pure: per-day seconds aggregation (extracted from engine for trust tests) ← unit-tested
 ├── Store.swift            # @Observable StoreKit 2: Pro unlock entitlement + KnightClass.isProOnly gate
 ├── FocusNotifications.swift # local level-up pings (locked/background); scheduled on start, cancelled on pause
