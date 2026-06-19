@@ -19,6 +19,7 @@ struct MainView: View {
     @AppStorage("hasSeenIntro") private var hasSeenIntro = false
     @AppStorage("firstLaunchAt") private var firstLaunchAt = 0.0
     @AppStorage("lastReviewVersion") private var lastReviewVersion = ""
+    @AppStorage("swordsmanPaywallShown") private var swordsmanPaywallShown = false
     @State private var showIntro = false
     @State private var showPaywall = false
     @State private var showIconPicker = false
@@ -128,6 +129,11 @@ struct MainView: View {
         }
         .sheet(item: $milestone) { m in
             MilestoneShareSheet(className: m.knightClass.displayName)
+        }
+        .onChange(of: engine.journeyLevel) { _, new in
+            guard new >= 21, !store.isPro, !swordsmanPaywallShown else { return }
+            swordsmanPaywallShown = true
+            showPaywall = true
         }
     }
 

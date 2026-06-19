@@ -27,6 +27,7 @@ struct HeroJourneyRow: View {
 
     var body: some View {
         let journeyLevel = engine.journeyLevel
+        let nextClass = KnightClass.allCases.first { !$0.isReached(atJourneyLevel: journeyLevel) }
         return Button(action: action) {
             HStack(spacing: 12) {
                 HeroThumbnail(className: KnightClass.forLevel(journeyLevel).rawValue, size: 44, dimmed: false)
@@ -34,9 +35,15 @@ struct HeroJourneyRow: View {
                     Text("Hero Collection")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.ink)
-                    Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 heroes reached")
-                        .font(.caption)
-                        .foregroundStyle(Theme.gray)
+                    if let next = nextClass {
+                        Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 reached · Next: \(String(localized: next.displayName)) at level \(next.minLevel)")
+                            .font(.caption)
+                            .foregroundStyle(Theme.gray)
+                    } else {
+                        Text("All 10 heroes reached")
+                            .font(.caption)
+                            .foregroundStyle(Theme.gray)
+                    }
                 }
                 Spacer()
                 Image(systemName: "chevron.right")

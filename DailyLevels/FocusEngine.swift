@@ -81,6 +81,7 @@ final class FocusEngine {
         classifier.isActive = false
         stopTicker()
         FocusNotifications.cancelLevelUps()
+        FocusNotifications.scheduleReturn()
         now = Date()
     }
 
@@ -95,6 +96,7 @@ final class FocusEngine {
         startTicker()
         // Schedule "you leveled up" pings for the locked/background case (SPEC §6 grind-while-locked).
         FocusNotifications.requestAuthorizationIfNeeded()
+        FocusNotifications.cancelReturn()
         FocusNotifications.scheduleLevelUps(currentSeconds: todaySeconds)
     }
 
@@ -305,6 +307,7 @@ final class FocusEngine {
             self.classifier.isActive = false
             self.stopTicker()
             FocusNotifications.cancelLevelUps()
+            FocusNotifications.scheduleReturn()
         }
 
         // Returned to the app. If we're still grinding (locked the whole time, or came back

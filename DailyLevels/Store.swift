@@ -78,9 +78,13 @@ final class Store {
     }
 
     func purchase() async {
-        guard let product = proProduct else { await loadProducts(); return }
         isWorking = true
         defer { isWorking = false }
+        if proProduct == nil { await loadProducts() }   // first-launch / offline retry, then surface failure
+        guard let product = proProduct else {
+            lastError = String(localized: "Couldn’t reach the App Store. Check your connection and try again.")
+            return
+        }
         do {
             switch try await product.purchase() {
             case .success(let verification):
@@ -102,7 +106,8 @@ final class Store {
     func restore() async {
         isWorking = true
         defer { isWorking = false }
-        try? await AppStore.sync()
+        do { try await AppStore.sync() }
+        catch { lastError = error.localizedDescription }
         await updateEntitlements()
     }
 

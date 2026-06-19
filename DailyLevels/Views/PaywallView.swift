@@ -17,6 +17,11 @@ struct PaywallView: View {
     private let privacyURL = URL(string: "https://github.com/sonnymay/daily-levels/blob/main/PRIVACY_POLICY.md")!
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 
+    /// Drives the failure alert off `store.lastError`; dismissing clears it.
+    private var showError: Binding<Bool> {
+        Binding(get: { store.lastError != nil }, set: { if !$0 { store.lastError = nil } })
+    }
+
     var body: some View {
         ZStack {
             Theme.cream.ignoresSafeArea()
@@ -44,9 +49,9 @@ struct PaywallView: View {
                             BenefitRow(icon: "hand.raised.fill",
                                        title: "No ads, no tracking",
                                        text: "No accounts, no analytics, no ads — ever. Your focus stays on your phone.")
-                            BenefitRow(icon: "heart.fill",
-                                       title: "Support an indie dev",
-                                       text: "A one-time purchase keeps Daily Levels calm and ad-free.")
+                            BenefitRow(icon: "checkmark.seal.fill",
+                                       title: "No subscription. Ever.",
+                                       text: "One price, yours forever. Keeps Daily Levels calm and ad-free.")
                         }
 
                         // Show the real heroes — the ones you've earned but can't yet own —
@@ -64,6 +69,11 @@ struct PaywallView: View {
 
                 purchaseFooter
             }
+        }
+        .alert("Purchase failed", isPresented: showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(store.lastError ?? "")
         }
     }
 
@@ -93,6 +103,7 @@ struct PaywallView: View {
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
+            .disabled(store.isWorking)   // no double-tap → no two concurrent AppStore.sync() calls
 
             HStack(spacing: 16) {
                 Link("Privacy Policy", destination: privacyURL)
@@ -111,8 +122,8 @@ struct PaywallView: View {
 
 private struct BenefitRow: View {
     let icon: String
-    let title: String
-    let text: String
+    let title: LocalizedStringKey   // LocalizedStringKey so the catalog actually resolves (was String → English-only)
+    let text: LocalizedStringKey
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {

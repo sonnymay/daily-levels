@@ -79,4 +79,25 @@ enum FocusNotifications {
             center.removePendingNotificationRequests(withIdentifiers: ids)
         }
     }
+
+    // MARK: - Return nudge
+
+    private static let returnID = "return-nudge"
+
+    /// Schedule a "come back and grind" ping for 20 hours from now.
+    /// Called on pause and app-switch; cancelled when grinding resumes.
+    static func scheduleReturn() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [returnID])
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Your hero is resting")
+        content.body = String(localized: "Lock your phone and grind — even 5 minutes levels you up.")
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 20 * 3600, repeats: false)
+        center.add(UNNotificationRequest(identifier: returnID, content: content, trigger: trigger))
+    }
+
+    static func cancelReturn() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [returnID])
+    }
 }

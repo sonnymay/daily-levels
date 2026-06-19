@@ -47,8 +47,15 @@ final class LoopingPlayerUIView: UIView {
     func setURL(_ url: URL) {
         guard url != currentURL else { return }
         currentURL = url
+        looper?.disableLooping()   // release the old looper before it's replaced (avoids two loopers on one player)
         let item = AVPlayerItem(url: url)
         looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
         queuePlayer.play()
+    }
+
+    deinit {
+        looper?.disableLooping()
+        queuePlayer.pause()
+        queuePlayer.removeAllItems()
     }
 }
