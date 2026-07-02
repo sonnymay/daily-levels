@@ -4,7 +4,7 @@
 [![Swift](https://img.shields.io/badge/Swift-5.9-F05138?style=flat&logo=swift&logoColor=white)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/SwiftUI-iOS_17+-007AFF?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/swiftui/)
 [![App Store](https://img.shields.io/badge/App_Store-Daily_Levels-0D96F6?style=flat&logo=app-store&logoColor=white)](https://apps.apple.com/app/id6780007939)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat)](LICENSE)
+[![License](https://img.shields.io/badge/license-source--available-blue?style=flat)](LICENSE)
 
 **Every 5 minutes of focus levels up your hero. Lock your phone — the hero keeps grinding. Resets at midnight.**
 
@@ -157,4 +157,4 @@ xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
 
 ## License
 
-[MIT](LICENSE) — the code is free to learn from. The Daily Levels name, hero artwork, and App Store listing are not covered.
+[Source-available](LICENSE) — read it, learn from it, build it locally. Redistribution, App Store republishing, and commercial use of the code, artwork, or name are reserved.
