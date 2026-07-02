@@ -1,19 +1,20 @@
 # Daily Levels: Focus Timer
 
-[![Swift](https://img.shields.io/badge/Swift-5.9-F05138?style=for-the-badge&logo=swift&logoColor=white)](https://swift.org)
-[![SwiftUI](https://img.shields.io/badge/SwiftUI-iOS_17+-007AFF?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/swiftui/)
-[![App Store](https://img.shields.io/badge/App_Store-Daily_Levels-0D96F6?style=for-the-badge&logo=app-store&logoColor=white)](https://apps.apple.com/app/id6746621860)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![CI](https://github.com/sonnymay/daily-levels/actions/workflows/ci.yml/badge.svg)](https://github.com/sonnymay/daily-levels/actions/workflows/ci.yml)
+[![Swift](https://img.shields.io/badge/Swift-5.9-F05138?style=flat&logo=swift&logoColor=white)](https://swift.org)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-iOS_17+-007AFF?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/swiftui/)
+[![App Store](https://img.shields.io/badge/App_Store-Daily_Levels-0D96F6?style=flat&logo=app-store&logoColor=white)](https://apps.apple.com/app/id6780007939)
+[![License](https://img.shields.io/badge/license-source--available-blue?style=flat)](LICENSE)
 
-**Every 5 minutes of focus levels up your hero. Stay off your phone — the hero grinds. Resets at midnight.**
+**Every 5 minutes of focus levels up your hero. Lock your phone — the hero keeps grinding. Resets at midnight.**
 
-A calm, minimal focus timer with light RPG visuals as motivation. Inspired by the Health app's step counter, but for deep work. Free to start · one-time Pro unlock to go all the way to Mythic.
+A calm, minimal focus timer with light-RPG visuals as motivation — not a game. One screen, one button. Native SwiftUI with **zero third-party dependencies**; everything stays on device.
 
-**[Download on the App Store →](https://apps.apple.com/app/id6746621860)**
+**[Download on the App Store →](https://apps.apple.com/app/id6780007939)**
 
 ---
 
-## App Screenshots
+## Screenshots
 
 | | | |
 |:---:|:---:|:---:|
@@ -24,9 +25,29 @@ A calm, minimal focus timer with light RPG visuals as motivation. Inspired by th
 
 ---
 
+## How It Works
+
+```
+5 minutes of focus = 1 level
+Daily level = min(100, floor(todayFocusMinutes / 5))
+Resets at midnight (local time) · Cap = Level 100 = 8h 20m
+```
+
+**Grinding** (hero fights & walks) — the timer counts when:
+- The app is in the foreground
+- The phone is **locked** ✅ ← living your life counts
+
+**Sleeping** (hero rests by the campfire) — the timer pauses when:
+- You switch to another app ← doomscrolling doesn't count
+- You tap Pause
+
+**Hero journey level** — the sum of every day's level, ever. It never resets, and it fills the Hero Collection one class at a time.
+
+---
+
 ## The Daily Class Ladder
 
-Every day starts fresh. Everyone wakes up a Novice. Your class is a badge for today's effort — resets at midnight.
+Every day starts fresh: everyone wakes up a Novice. Your class is a badge for *today's* effort.
 
 | Class | Daily Level | Focus Time | Screenshot |
 |:---:|:---:|:---:|:---:|
@@ -41,68 +62,36 @@ Every day starts fresh. Everyone wakes up a Novice. Your class is a badge for to
 | **Legend** | 81–90 | ~6.8–7.5 hrs | ![Legend](AppStore/screenshots/09_legend.png) |
 | **Mythic** 🏆 | 91–100 | ~7.6–8h20m | ![Mythic](AppStore/screenshots/10_mythic.png) |
 
-> Knight (Level 31 · ~2.6 hrs) is the aspirational everyday milestone. Mythic (Level 100 · 8h20m) is the once-in-a-blue-moon flex worth screenshotting.
+> Knight (Level 31 · ~2.6 hrs) is the aspirational everyday milestone. Mythic (Level 100 · 8h 20m) is the once-in-a-blue-moon flex worth screenshotting.
 
 ---
 
-## How It Works
+## Engineering Highlights
 
-```
-5 minutes of focus = 1 level
-Daily level = min(100, floor(todayFocusMinutes / 5))
-Resets at midnight (local time) · Cap = Level 100 = 8h20m
-```
+The parts of this codebase worth reading:
 
-**Grinding** (hero fights & walks) — timer ticks when:
-- App is in the foreground
-- Phone is locked ✅ ← living your life counts
-
-**Sleeping** (hero rests by campfire) — timer pauses when:
-- You switch to another app ← doomscrolling doesn't count
-- You tap Pause
-
-**Hero (Lifetime) Level** — the sum of all daily levels ever earned. Never resets. Shown as a badge. Your permanent record.
+- **Lock vs. app-switch detection** — iOS reports "backgrounded" identically whether the user locked the phone or switched apps, but only a real lock (on a passcode device) fires `protectedDataWillBecomeUnavailable`. [`LockClassifier.swift`](DailyLevels/LockClassifier.swift) holds a `beginBackgroundTask` + 30-second grace window to tell the two apart, and is deliberately isolated in one swappable file. This one distinction is the product: locked = keep grinding, app switch = hero sleeps.
+- **Pure, tested core** — level math, midnight session-splitting, streak logic, and the per-day focus ledger are pure functions ([`LevelMath`](DailyLevels/LevelMath.swift), [`DateUtils`](DailyLevels/DateUtils.swift), [`StreakMath`](DailyLevels/StreakMath.swift), [`FocusLedger`](DailyLevels/FocusLedger.swift)) covered by **36 XCTest unit tests**, including trust audits for DST transitions, timezone changes, and cold-launch crash recovery ([`TrustAuditTests`](DailyLevelsTests/TrustAuditTests.swift)).
+- **Modern iOS 17 patterns** — `@Observable` + `@Environment` (no `ObservableObject` boilerplate) and SwiftData `@Model`. [`FocusEngine`](DailyLevels/FocusEngine.swift) is the single source of truth; views own no state and pure-derive level, class, progress, and history from a 1-second ticker plus a cached fetch.
+- **StoreKit 2, no middleman** — non-consumable Pro unlock with on-device transaction verification and Restore Purchases ([`Store.swift`](DailyLevels/Store.swift)). Skipping RevenueCat keeps the App Store privacy label at **Data Not Collected**. The screenshot/testing backdoor (`-unlockPro`) is compiled out of Release builds.
+- **Conversion-driven redesign** — the original Pro gate keyed off the *daily* level, which resets at midnight, so ~95% of users could never see the paid art (Knight = 2.6 focused hours in a single day). The [Hero Collection](DailyLevels/Views/HeroCollectionView.swift) fixes it: all 10 heroes are visible from day one and fill up with the cumulative journey level, so Pro classes become something users can *see coming* within a week.
+- **Localization with guardrails** — a String Catalog covers 6 languages (EN, ES, PT-BR, DE, FR, JA). `KnightClass.displayName` localizes while `rawValue` stays English (it drives asset filenames and Pro gating), pinned by [`LocalizationStabilityTests`](DailyLevelsTests/LocalizationStabilityTests.swift).
+- **Hand-rolled where it counts** — gapless hero animation via an AVFoundation looping player ([`LoopingVideoView`](DailyLevels/Views/LoopingVideoView.swift)); 10 per-class clips compressed 122 MB → 21 MB; a 1080×1080 share card rendered with `ImageRenderer` ([`ShareCardView`](DailyLevels/Views/ShareCardView.swift)); a custom bar chart matching the mockup exactly.
 
 ---
 
 ## Features
 
 - **One screen, one button** — Start / Pause. Nothing else.
-- **Lock detection** — phone locked = still grinding; other app = sleeping. Uses `protectedDataWillBecomeUnavailable` to distinguish the two.
-- **10-class daily ladder** — Novice → Mythic, reset every midnight
-- **Lifetime hero level** — cumulative XP badge that never resets
-- **7-day focus history** — bar chart + list of recent days with levels and focus time
-- **Free + Pro** — free through first few classes; one-time unlock to reach Mythic
-- **No account, no tracking** — everything stays on device (SwiftData)
-- **iOS Home Screen widget** — glanceable level + class badge
-- **Localized** — English, Spanish, Portuguese, German, French, Japanese
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Swift 5.9 |
-| UI | SwiftUI (iOS 17+) |
-| Persistence | SwiftData |
-| IAP | StoreKit 2 (non-consumable Pro unlock) |
-| Background | `BGTaskScheduler` + `UIApplication.beginBackgroundTask` |
-| Lock detection | `protectedDataWillBecomeUnavailable` / `protectedDataDidBecomeAvailable` |
-| Widget | WidgetKit |
-| Tests | XCTest |
-| CI | Xcode Cloud / GitHub Actions |
-
----
-
-## What This Code Shows
-
-- **Lock vs. app-switch detection** — distinguishing phone-locked (keep counting) from app-switched (pause) using iOS protected data notifications — a non-trivial native problem
-- **StoreKit 2 integration** — non-consumable IAP with receipt validation, paywall gating, and restore purchases
-- **SwiftData persistence** — session modelling, midnight-split logic, derived daily summaries
-- **WidgetKit** — home screen widget surfacing live level + class
-- **SwiftUI single-screen architecture** — one view, two states (grinding / sleeping), smooth animated transitions
-- **Background task lifecycle** — correct use of `beginBackgroundTask` + grace timer + state reconciliation on foreground
+- **Lock detection** — phone locked = still grinding; another app = sleeping.
+- **10-class daily ladder** — Novice → Mythic, fresh every midnight.
+- **Hero Collection** — a lifetime journey level that never resets fills a 10-hero gallery.
+- **7-day focus history** — soft bar chart, day list, and a calm streak chip (no countdown anxiety — an unstarted today never "breaks" it).
+- **Share your day** — a rendered share card for milestones.
+- **Free + one-time Pro unlock** — no subscription (StoreKit 2).
+- **No account, no tracking** — everything on device (SwiftData); privacy label: Data Not Collected.
+- **Localized** — English, Spanish, Portuguese (BR), German, French, Japanese.
+- **Home Screen widget** — staged in [`widget/`](widget/) for v1.1 (see [`WIDGET_SETUP.md`](WIDGET_SETUP.md)).
 
 ---
 
@@ -110,46 +99,62 @@ Resets at midnight (local time) · Cap = Level 100 = 8h20m
 
 ```
 DailyLevels/
-├── DailyLevels/          # Main app target
-│   ├── Models/           # SwiftData models: FocusSession, DailySummary, Hero
-│   ├── Views/            # SwiftUI views (single main screen + history)
-│   ├── Services/         # FocusEngine, LockDetector, SessionStore
-│   └── Resources/        # Assets, localizations
-├── DailyLevelsTests/     # XCTest unit tests
-├── widget/               # WidgetKit extension
-└── AppStore/             # Store metadata, screenshots, submission docs
-    ├── screenshots/      # Hero class shots (01_novice → 10_mythic)
-        │   └── captioned/    # 6 captioned App Store screenshots
-            ├── METADATA.md       # App Store listing copy + ASO strategy
-                ├── SUBMISSION.md     # Step-by-step submission checklist
-                    └── GROWTH.md         # Freemium strategy + growth playbook
-                    ```
+├── LevelMath.swift            # pure: level = floor(minutes / 5)        ← unit-tested
+├── KnightClass.swift          # pure: 10-class ladder + localized names ← unit-tested
+├── DateUtils.swift            # pure: split sessions at midnight        ← unit-tested
+├── StreakMath.swift           # pure: calm consecutive-day streak       ← unit-tested
+├── FocusLedger.swift          # pure: per-day seconds aggregation       ← unit-tested
+├── Models.swift               # SwiftData @Model FocusSession + DaySummary
+├── LockClassifier.swift       # lock vs. app-switch — isolated & swappable
+├── FocusEngine.swift          # @Observable single source of truth
+├── Store.swift                # StoreKit 2 Pro unlock entitlement
+├── FocusNotifications.swift   # local level-up pings while locked
+├── Haptics.swift · Theme.swift
+├── Localizable.xcstrings      # String Catalog · 6 languages
+└── Views/                     # MainView, HeroScenePanel, PaywallView,
+                               # HeroCollectionView, ShareCardView, FocusHistoryCard, …
+DailyLevelsTests/              # 36 unit tests (math, midnight, i18n, trust audits)
+widget/                        # WidgetKit extension, staged for v1.1
+AppStore/                      # metadata, ASO copy, screenshots, growth playbook
+SPEC.md                        # full product spec — the source of truth
+```
 
-                    ---
+---
 
-                    ## Build & Run
+## Build · Test · Run
 
-                    ```bash
-                    git clone https://github.com/sonnymay/daily-levels.git
-                    open DailyLevels.xcodeproj
-                    ```
+```bash
+git clone https://github.com/sonnymay/daily-levels.git
+cd daily-levels
+open DailyLevels.xcodeproj                 # Xcode 16+, iOS 17.0+
+```
 
-                    Select your device and run. **Lock detection requires a physical iPhone with a passcode** — the simulator cannot fire `protectedDataWillBecomeUnavailable`.
+Or from the command line:
 
-                    For IAP testing, use a StoreKit configuration file in Xcode (`DailyLevels.storekit`) — no sandbox account needed in development.
+```bash
+xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build test
+```
 
-                    ---
+- **Lock detection needs a physical iPhone with a passcode** — the simulator never fires `protectedDataWillBecomeUnavailable`.
+- **IAP testing** uses the bundled StoreKit configuration (`DailyLevels.storekit`) — no sandbox account needed. Run from Xcode so the scheme's StoreKit config applies.
+- **DEBUG launch arguments** for screenshots/demos: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
-                    ## App Store Listing
+---
 
-                    **Title:** Daily Levels: Focus Timer
-                    **Subtitle:** Pomodoro deep work for study
-                    **Category:** Productivity · Health & Fitness
-                    **Price:** Free · Pro unlock $6.99 (one-time)
-                    **Bundle ID:** `com.santipapmay.DailyLevels`
+## App Store
 
-                    ---
+| | |
+|---|---|
+| **Title** | Daily Levels: Focus Timer |
+| **Category** | Productivity |
+| **Link** | [apps.apple.com/app/id6780007939](https://apps.apple.com/app/id6780007939) |
+| **Pricing** | Launched paid; moving to **free + one-time Pro unlock** (the freemium build in this repo) |
+| **Privacy** | Data Not Collected |
+| **Bundle ID** | `com.santipapmay.DailyLevels` |
 
-                    ## License
+---
 
-                    MIT
+## License
+
+[Source-available](LICENSE) — read it, learn from it, build it locally. Redistribution, App Store republishing, and commercial use of the code, artwork, or name are reserved.
