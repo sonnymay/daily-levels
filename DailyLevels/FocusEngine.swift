@@ -38,7 +38,10 @@ final class FocusEngine {
     @ObservationIgnored private var sessionAccumulatedSeconds: Int = 0
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private let classifier = LockClassifier()
+    @ObservationIgnored private var checkpointDay: Date?
+    @ObservationIgnored private var checkpointLevel = 0
     @ObservationIgnored static let activeStartKey = "engine.activeStart"
+    @ObservationIgnored static let activeWasLockedKey = "engine.activeWasLocked"
 
     // MARK: Init
     init(context: ModelContext, calendar: Calendar = .current) {
@@ -80,8 +83,6 @@ final class FocusEngine {
         mode = .paused
         classifier.isActive = false
         stopTicker()
-        FocusNotifications.cancelLevelUps()
-        FocusNotifications.scheduleReturn()
         now = Date()
     }
 
@@ -92,12 +93,10 @@ final class FocusEngine {
         now = t
         mode = .grinding
         classifier.isActive = true
-        UserDefaults.standard.set(t, forKey: Self.activeStartKey)   // crash marker (SPEC §5 edge 5)
+        checkpointDay = calendar.startOfDay(for: t)
+        checkpointLevel = level
+        Self.saveActiveMarker(start: t, locked: false)
         startTicker()
-        // Schedule "you leveled up" pings for the locked/background case (SPEC §6 grind-while-locked).
-        FocusNotifications.requestAuthorizationIfNeeded()
-        FocusNotifications.cancelReturn()
-        FocusNotifications.scheduleLevelUps(currentSeconds: todaySeconds)
     }
 
     // MARK: Derived display values
@@ -154,12 +153,6 @@ final class FocusEngine {
     /// `KnightClass.reachedCount` (reading it once per render, not per hero).
     var journeyLevel: Int { min(LevelMath.maxLevel, lifetimeLevels) }
 
-    /// Calm consecutive-day focus streak (days reaching at least Level 1). An unstarted
-    /// today doesn't break it — no countdown anxiety. See `StreakMath`.
-    var focusStreak: Int {
-        StreakMath.currentStreak(secondsByDay: secondsByDayIncludingLive(), today: now, calendar: calendar)
-    }
-
     /// Last 7 days, oldest → newest (rightmost = today) for the bar chart (SPEC §4).
     var weekHistory: [DaySummary] {
         let map = secondsByDayIncludingLive()
@@ -197,16 +190,20 @@ final class FocusEngine {
     private func endActiveSession(at end: Date) {
         defer {
             activeStart = nil
-            UserDefaults.standard.removeObject(forKey: Self.activeStartKey)
+            Self.clearActiveMarker()
         }
         guard let start = activeStart else { return }
+        persistSession(start: start, end: end)
+        try? context.save()
+        reloadSessions()
+    }
+
+    private func persistSession(start: Date, end: Date) {
         for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
             let seconds = Int(seg.end.timeIntervalSince(seg.start))
             guard seconds > 0 else { continue }
             context.insert(FocusSession(startAt: seg.start, endAt: seg.end, durationSeconds: seconds))
         }
-        try? context.save()
-        reloadSessions()
     }
 
     private func reloadSessions() {
@@ -215,23 +212,71 @@ final class FocusEngine {
         completedSecondsByDay = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
     }
 
-    /// SPEC §5 edge 5: if the app was killed mid-session we can't *prove* the user was
-    /// grinding, so we conservatively discard the leftover marker and count zero.
+    /// A foreground crash keeps only prior checkpoints. If iOS terminated the app while
+    /// the phone was confirmed locked, recover that locked stretch generously, capped at
+    /// one full daily climb. This favors the user's earned progress over anti-cheat rules.
     private func recoverFromColdLaunch() {
-        Self.discardUnprovenActiveStart(defaults: .standard)
+        if let interval = Self.coldLaunchRecoveryInterval() {
+            persistSession(start: interval.start, end: interval.end)
+            try? context.save()
+            reloadSessions()
+        }
+        Self.discardUnprovenActiveStart()
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
-        if defaults.object(forKey: activeStartKey) != nil {
-            defaults.removeObject(forKey: activeStartKey)
+        defaults.removeObject(forKey: activeStartKey)
+        defaults.removeObject(forKey: activeWasLockedKey)
+    }
+
+    static func coldLaunchRecoveryInterval(defaults: UserDefaults = .standard,
+                                           now: Date = Date()) -> DateInterval? {
+        guard defaults.bool(forKey: activeWasLockedKey),
+              let start = defaults.object(forKey: activeStartKey) as? Date,
+              start < now else { return nil }
+        let maximum = TimeInterval(LevelMath.maxLevel * LevelMath.secondsPerLevel)
+        return DateInterval(start: start, end: min(now, start.addingTimeInterval(maximum)))
+    }
+
+    private static func saveActiveMarker(start: Date, locked: Bool,
+                                         defaults: UserDefaults = .standard) {
+        defaults.set(start, forKey: activeStartKey)
+        defaults.set(locked, forKey: activeWasLockedKey)
+    }
+
+    private static func clearActiveMarker(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: activeStartKey)
+        defaults.removeObject(forKey: activeWasLockedKey)
+    }
+
+    /// Bank the current stretch without ending the user's logical focus session.
+    private func checkpointActiveSession(at end: Date, locked: Bool) {
+        guard mode == .grinding, let start = activeStart else { return }
+        now = end
+        if end > start {
+            sessionAccumulatedSeconds += Int(end.timeIntervalSince(start))
+            endActiveSession(at: end)
         }
+        activeStart = end
+        checkpointDay = calendar.startOfDay(for: end)
+        checkpointLevel = level
+        Self.saveActiveMarker(start: end, locked: locked)
     }
 
     // MARK: Ticker
     private func startTicker() {
         stopTicker()
         ticker = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.now = Date() }
+            MainActor.assumeIsolated { self?.tick(at: Date()) }
+        }
+    }
+
+    private func tick(at date: Date) {
+        now = date
+        guard mode == .grinding else { return }
+        let day = calendar.startOfDay(for: date)
+        if checkpointDay != day || level > checkpointLevel {
+            checkpointActiveSession(at: date, locked: false)
         }
     }
     private func stopTicker() {
@@ -249,6 +294,7 @@ final class FocusEngine {
         // Screenshot / demo launches shouldn't be covered by the first-run intro sheet.
         if args.contains("-seedDemoData") || args.contains("-autoStart") {
             UserDefaults.standard.set(true, forKey: "hasSeenIntro")
+            UserDefaults.standard.set(true, forKey: "knightPaywallShown")
         }
         // `-todayMinutes N` overrides today's seeded focus time (drives class for screenshots).
         var todayMinutes = 20
@@ -286,14 +332,20 @@ final class FocusEngine {
         now = Date()
         mode = .grinding
         classifier.isActive = true
+        checkpointDay = calendar.startOfDay(for: now)
+        checkpointLevel = level
         startTicker()
     }
 #endif
 
     // MARK: Lock classifier wiring (SPEC §6)
     private func wireClassifier() {
-        // Phone locked → keep grinding; nothing to change, time keeps accruing.
-        classifier.onLockDetected = { /* keep grinding */ }
+        // Bank everything earned before suspension, then mark the remaining stretch as
+        // confirmed-locked so a system termination can recover it on next launch.
+        classifier.onLockDetected = { [weak self] in
+            guard let self, self.mode == .grinding else { return }
+            self.checkpointActiveSession(at: Date(), locked: true)
+        }
 
         // Confirmed app switch → sleep. End the session at the moment of backgrounding
         // so the time spent in the other app never counts.
@@ -306,8 +358,6 @@ final class FocusEngine {
             self.mode = .paused
             self.classifier.isActive = false
             self.stopTicker()
-            FocusNotifications.cancelLevelUps()
-            FocusNotifications.scheduleReturn()
         }
 
         // Returned to the app. If we're still grinding (locked the whole time, or came back
@@ -316,6 +366,9 @@ final class FocusEngine {
             guard let self else { return }
             if self.mode == .grinding {
                 self.now = Date()
+                Self.saveActiveMarker(start: self.activeStart ?? self.now, locked: false)
+                self.checkpointDay = self.calendar.startOfDay(for: self.now)
+                self.checkpointLevel = self.level
                 self.startTicker()
             }
         }
