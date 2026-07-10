@@ -101,12 +101,18 @@ struct HeroCollectionSheet: View {
 
     private var unlockCTA: some View {
         Button { showPaywall = true } label: {
-            Text("Unlock all 10 heroes · \(store.priceText)")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Theme.green, in: Capsule())
+            Group {
+                if let price = store.priceText {
+                    Text("Unlock 7 more heroes · \(price)")
+                } else {
+                    Text("Unlock 7 more heroes")
+                }
+            }
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Theme.green, in: Capsule())
         }
         .buttonStyle(.pressable(scale: 0.97))
         .padding(.top, 4)

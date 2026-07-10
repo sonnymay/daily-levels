@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # Generates DailyLevels/Localizable.xcstrings from a translation table.
 # Languages: es, pt-BR, de, fr, ja. All non-English flagged needs_review.
-import json, collections
+import collections
+import json
+from pathlib import Path
 
 LANGS = ["es", "pt-BR", "de", "fr", "ja"]
 
@@ -58,24 +60,25 @@ add("Opens the Pro unlock","Abre el desbloqueo Pro","Abre o desbloqueio Pro","Ö
 # --- Intro sheet ---
 add("Welcome to Daily Levels","Te damos la bienvenida a Daily Levels","Boas-vindas ao Daily Levels","Willkommen bei Daily Levels","Bienvenue dans Daily Levels","Daily Levelsへようこそ")
 add("Focus to level up — every 5 minutes is one level.","Concéntrate para subir de nivel: cada 5 minutos es un nivel.","Foque para subir de nível — cada 5 minutos é um nível.","Fokussiere, um aufzusteigen — alle 5 Minuten ein Level.","Concentre-toi pour monter de niveau — 5 minutes = un niveau.","集中してレベルアップ — 5分ごとに1レベル。")
-add("Lock your phone — your focus keeps counting.","Bloquea el teléfono: tu foco sigue contando.","Bloqueie o telefone — seu foco continua contando.","Sperre dein Telefon — dein Fokus zählt weiter.","Verrouille ton téléphone — ton focus continue de compter.","スマホをロックしても集中はカウント継続。")
-add("Switch apps and your hero rests until you return.","Cambia de app y tu héroe descansa hasta que vuelvas.","Troque de app e seu herói descansa até você voltar.","Wechsle die App und dein Held ruht, bis du zurückkommst.","Change d’appli et ton héros se repose jusqu’à ton retour.","アプリを切り替えると、戻るまでヒーローは休憩します。")
+add("Locking counts. Switching apps pauses your hero.","Bloquear el teléfono cuenta. Cambiar de app pausa a tu héroe.","Bloquear o telefone conta. Trocar de app pausa seu herói.","Sperren zählt. Ein App-Wechsel pausiert deinen Helden.","Verrouiller compte. Changer d’app met ton héros en pause.","ロック中もカウント。アプリを切り替えるとヒーローは一時停止します。")
 add("Start focusing","Empezar a concentrarte","Começar a focar","Fokussieren beginnen","Commencer à se concentrer","集中を始める")
 
 # --- Paywall ---
 add("One-time unlock. Yours forever.","Desbloqueo único. Tuyo para siempre.","Desbloqueio único. Seu para sempre.","Einmalige Freischaltung. Für immer deins.","Déblocage unique. À toi pour toujours.","一度の解除で、ずっとあなたのもの。")
-add("Evolve to Mythic","Evoluciona hasta Mítico","Evolua até Mítico","Bis Mythisch entwickeln","Évolue jusqu’à Mythique","ミシックまで進化")
-add("Unlock your hero's full journey — Knight, Crusader, all the way to Mythic.","Desbloquea el viaje completo de tu héroe: Caballero, Cruzado y hasta Mítico.","Desbloqueie a jornada completa do seu herói — Cavaleiro, Cruzado, até Mítico.","Schalte die ganze Reise deines Helden frei — Ritter, Kreuzritter, bis Mythisch.","Débloque tout le parcours de ton héros — Chevalier, Croisé, jusqu’à Mythique.","ヒーローの全行程を解除 — ナイト、クルセイダー、ミシックまで。")
-add("All 10 classes","Las 10 clases","Todas as 10 classes","Alle 10 Klassen","Les 10 classes","全10クラス")
-add("See every class your focus earns, not just the first three.","Ve todas las clases que gana tu concentración, no solo las tres primeras.","Veja todas as classes que seu foco conquista, não só as três primeiras.","Sieh jede Klasse, die dein Fokus verdient — nicht nur die ersten drei.","Vois toutes les classes que ton focus débloque, pas seulement les trois premières.","最初の3つだけでなく、集中で得られる全クラスを表示。")
-add("No ads, no tracking","Sin anuncios ni rastreo","Sem anúncios, sem rastreamento","Keine Werbung, kein Tracking","Sans pub, sans suivi","広告なし、トラッキングなし")
-add("No accounts, no analytics, no ads — ever. Your focus stays on your phone.","Sin cuentas, sin analíticas, sin anuncios, nunca. Tu concentración se queda en tu teléfono.","Sem contas, sem análises, sem anúncios — nunca. Seu foco fica no seu telefone.","Keine Konten, keine Analyse, keine Werbung — niemals. Dein Fokus bleibt auf deinem Telefon.","Pas de comptes, pas d’analyses, pas de pub — jamais. Ton focus reste sur ton téléphone.","アカウントも分析も広告も一切なし。集中はあなたのスマホの中だけ。")
-add("Support an indie dev","Apoya a un dev independiente","Apoie um dev indie","Unterstütze einen Indie-Entwickler","Soutiens un dév indé","個人開発者を応援")
-add("A one-time purchase keeps Daily Levels calm and ad-free.","Una compra única mantiene Daily Levels tranquilo y sin anuncios.","Uma compra única mantém o Daily Levels calmo e sem anúncios.","Ein einmaliger Kauf hält Daily Levels ruhig und werbefrei.","Un achat unique garde Daily Levels calme et sans pub.","一度の購入でDaily Levelsを静かで広告なしに保てます。")
-add("Unlock Pro · %@","Desbloquear Pro · %@","Desbloquear Pro · %@","Pro freischalten · %@","Débloquer Pro · %@","Proを解除 · %@")
+add("7 more hero evolutions","7 evoluciones de héroe más","Mais 7 evoluções de herói","7 weitere Heldenentwicklungen","7 évolutions de héros en plus","さらに7段階のヒーロー進化")
+add("Unlock Knight, Crusader, Champion, Paladin, Hero, Legend, and Mythic.","Desbloquea Caballero, Cruzado, Campeón, Paladín, Héroe, Leyenda y Mítico.","Desbloqueie Cavaleiro, Cruzado, Campeão, Paladino, Herói, Lenda e Mítico.","Schalte Ritter, Kreuzritter, Champion, Paladin, Held, Legende und Mythisch frei.","Débloque Chevalier, Croisé, Champion, Paladin, Héros, Légende et Mythique.","ナイト、クルセイダー、チャンピオン、パラディン、ヒーロー、レジェンド、ミシックを解除。")
+add("Earn every evolution","Gana cada evolución","Conquiste cada evolução","Verdiene jede Entwicklung","Mérite chaque évolution","すべての進化を獲得")
+add("Your focus still does the work. New hero art appears as your journey level grows.","Tu concentración sigue haciendo el trabajo. Aparecen nuevos héroes a medida que crece tu nivel de viaje.","Seu foco ainda faz o trabalho. Novos heróis aparecem conforme seu nível de jornada cresce.","Dein Fokus leistet weiterhin die Arbeit. Mit deinem Reiselevel erscheint neue Heldenkunst.","Ta concentration fait toujours le travail. De nouveaux héros apparaissent à mesure que ton niveau de parcours augmente.","集中した分だけ進みます。旅のレベルが上がると新しいヒーローアートが現れます。")
+add("One purchase. Yours forever.","Una compra. Tuyo para siempre.","Uma compra. Seu para sempre.","Ein Kauf. Für immer deins.","Un achat. À toi pour toujours.","一度の購入で、ずっとあなたのもの。")
+add("No subscription and no renewal. Restore it on any device using your Apple Account.","Sin suscripción ni renovación. Restáuralo en cualquier dispositivo con tu cuenta de Apple.","Sem assinatura nem renovação. Restaure em qualquer dispositivo com sua Conta Apple.","Kein Abo und keine Verlängerung. Stelle es mit deinem Apple Account auf jedem Gerät wieder her.","Sans abonnement ni renouvellement. Restaure-le sur tout appareil avec ton compte Apple.","サブスクリプションも更新もありません。Apple Accountでどのデバイスでも復元できます。")
+add("Private and ad-free for everyone","Privado y sin anuncios para todos","Privado e sem anúncios para todos","Privat und werbefrei für alle","Privé et sans publicité pour tout le monde","すべての人にプライベートで広告なし")
+add("Unlock 7 heroes · %@","Desbloquear 7 héroes · %@","Desbloquear 7 heróis · %@","7 Helden freischalten · %@","Débloquer 7 héros · %@","7人のヒーローを解除 · %@")
+add("Retry loading price","Reintentar cargar el precio","Tentar carregar o preço novamente","Preis erneut laden","Réessayer de charger le prix","価格を再読み込み")
 add("Restore Purchases","Restaurar compras","Restaurar compras","Käufe wiederherstellen","Restaurer les achats","購入を復元")
 add("Privacy Policy","Política de privacidad","Política de Privacidade","Datenschutzrichtlinie","Politique de confidentialité","プライバシーポリシー")
 add("Terms","Términos","Termos","Nutzungsbedingungen","Conditions","利用規約")
+add("Purchase failed","Error en la compra","Falha na compra","Kauf fehlgeschlagen","Échec de l’achat","購入に失敗しました")
+add("Couldn’t reach the App Store. Check your connection and try again.","No se pudo conectar con la App Store. Revisa tu conexión e inténtalo de nuevo.","Não foi possível acessar a App Store. Verifique sua conexão e tente novamente.","App Store nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.","Impossible de joindre l’App Store. Vérifie ta connexion et réessaie.","App Storeに接続できませんでした。接続を確認して、もう一度お試しください。")
 
 # --- Hero panel ---
 add("Unlock Pro to evolve","Desbloquea Pro para evolucionar","Desbloqueie o Pro para evoluir","Pro freischalten zum Aufsteigen","Débloquer Pro pour évoluer","Proで進化を解除")
@@ -87,32 +90,16 @@ add("Resting by the campfire","Descansando junto a la fogata","Descansando perto
 
 # --- History card ---
 add("Focus History","Historial de concentración","Histórico de foco","Fokus-Verlauf","Historique de focus","集中の履歴")
-add("History","Historial","Histórico","Verlauf","Historique","履歴")
 add("Levels earned each day · resets at midnight","Niveles ganados cada día · se reinicia a medianoche","Níveis ganhos por dia · reinicia à meia-noite","Täglich erreichte Level · Reset um Mitternacht","Niveaux gagnés chaque jour · réinitialisé à minuit","毎日獲得したレベル · 深夜にリセット")
 add("%lld min focus time","%lld min de foco","%lld min de foco","%lld Min. Fokuszeit","%lld min de focus","集中時間%lld分")
-add("%lld-day focus streak","Racha de %lld días","Sequência de %lld dias","%lld-Tage-Serie","Série de %lld jours","%lld日連続")
-add("%lld day focus streak","Racha de concentración de %lld días","Sequência de foco de %lld dias","%lld Tage Fokus-Serie","Série de concentration de %lld jours","%lld日間の集中連続記録")
-
-# --- Notifications ---
-add("New class unlocked — keep grinding!","¡Nueva clase desbloqueada! Sigue entrenando.","Nova classe desbloqueada — continue treinando!","Neue Klasse freigeschaltet — weiter grinden!","Nouvelle classe débloquée — continue !","新しいクラスを解除 — その調子で修行を！")
-add("You're at level %lld. Keep going.","Estás en el nivel %lld. ¡Sigue así!","Você está no nível %lld. Continue!","Du bist auf Level %lld. Weiter so!","Tu es au niveau %lld. Continue !","レベル%lldです。その調子！")
-
-# --- Growth: milestone share, free-ceiling nudge, onboarding ---
-add("You reached %@!","¡Alcanzaste %@!","Você alcançou %@!","%@ erreicht!","%@ atteint !","%@に到達！")
-add("Show a friend how far your focus has climbed.","Muestra a un amigo hasta dónde llegó tu concentración.","Mostre a um amigo até onde seu foco chegou.","Zeig einem Freund, wie weit dein Fokus geklettert ist.","Montre à un ami jusqu’où ta concentration t’a mené.","あなたの集中がどこまで登ったか友だちに見せよう。")
-add("Share your climb","Comparte tu ascenso","Compartilhe sua escalada","Deinen Aufstieg teilen","Partager ton ascension","登りを共有")
-add("Maybe later","Quizás más tarde","Talvez depois","Vielleicht später","Plus tard","あとで")
-add("You've reached the free climb","Llegaste al límite gratuito","Você chegou ao limite gratuito","Du hast den kostenlosen Aufstieg erreicht","Tu as atteint le palier gratuit","無料の範囲に到達しました")
-add("Unlock Knight → Mythic — yours forever","Desbloquea de Caballero a Mítico, para siempre","Desbloqueie de Cavaleiro a Mítico, para sempre","Ritter bis Mythisch freischalten — für immer deins","Débloque Chevalier → Mythique, à toi pour toujours","ナイト→ミシックを解除 — ずっとあなたのもの")
-add("Come back tomorrow — your streak keeps growing.","Vuelve mañana: tu racha sigue creciendo.","Volte amanhã — sua sequência continua crescendo.","Komm morgen wieder — deine Serie wächst weiter.","Reviens demain — ta série continue de grandir.","明日も戻ってきて — 連続記録は伸び続けます。")
-add("Share your climb to inspire a friend.","Comparte tu ascenso para inspirar a un amigo.","Compartilhe sua escalada para inspirar um amigo.","Teile deinen Aufstieg und inspiriere einen Freund.","Partage ton ascension pour inspirer un ami.","登りを共有して友だちを励まそう。")
 
 # --- Hero Collection (conversion centerpiece) ---
 add("Hero Collection","Colección de héroes","Coleção de heróis","Heldensammlung","Collection de héros","ヒーローコレクション")
 add("%lld of 10 heroes reached","%lld de 10 héroes alcanzados","%lld de 10 heróis alcançados","%lld von 10 Helden erreicht","%lld héros sur 10 atteints","10人中%lld人のヒーローに到達")
 add("Your journey: lifetime level %lld · %@","Tu viaje: nivel total %lld · %@","Sua jornada: nível vitalício %lld · %@","Deine Reise: Gesamtlevel %lld · %@","Ton parcours : niveau cumulé %lld · %@","あなたの旅: 累計レベル%lld · %@")
 add("%lld of 10 reached — keep focusing to climb.","%lld de 10 alcanzados: sigue concentrándote para subir.","%lld de 10 alcançados — continue focando para subir.","%lld von 10 erreicht — bleib fokussiert, um aufzusteigen.","%lld sur 10 atteints — continue à te concentrer pour grimper.","10中%lld到達 — 集中を続けて登ろう。")
-add("Unlock all 10 heroes · %@","Desbloquea los 10 héroes · %@","Desbloqueie os 10 heróis · %@","Alle 10 Helden freischalten · %@","Débloque les 10 héros · %@","全10ヒーローを解除 · %@")
+add("Unlock 7 more heroes · %@","Desbloquea 7 héroes más · %@","Desbloqueie mais 7 heróis · %@","7 weitere Helden freischalten · %@","Débloque 7 héros de plus · %@","さらに7人のヒーローを解除 · %@")
+add("Unlock 7 more heroes","Desbloquea 7 héroes más","Desbloqueie mais 7 heróis","7 weitere Helden freischalten","Débloque 7 héros de plus","さらに7人のヒーローを解除")
 add("Reach level %lld","Llega al nivel %lld","Alcance o nível %lld","Erreiche Level %lld","Atteins le niveau %lld","レベル%lldに到達")
 add("Tap to unlock","Toca para desbloquear","Toque para desbloquear","Zum Freischalten tippen","Touche pour débloquer","タップで解除")
 add("Unlocked","Desbloqueado","Desbloqueado","Freigeschaltet","Débloqué","解除済み")
@@ -130,8 +117,8 @@ for key, vals in T.items():
     strings[key] = {"extractionState": "manual", "localizations": locs}
 
 catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
-out = "/Users/santipapmay/Documents/Daily Levels/DailyLevels/Localizable.xcstrings"
-with open(out, "w", encoding="utf-8") as f:
+out = Path(__file__).resolve().parents[1] / "DailyLevels" / "Localizable.xcstrings"
+with out.open("w", encoding="utf-8") as f:
     json.dump(catalog, f, ensure_ascii=False, indent=2)
     f.write("\n")
 print(f"wrote {out} with {len(strings)} keys × {len(LANGS)} languages")
