@@ -6,8 +6,19 @@ DerivedData/
 *.moved-aside
 *.hmap
 *.ipa
+*.xcarchive
 *.dSYM.zip
 *.dSYM
+
+## Signing and App Store Connect secrets
+*.p8
+*.p12
+*.mobileprovision
+api_key.json
+AppStoreConnectAPIKey*.json
+.env
+.env.*
+!.env.example
 
 ## Xcode user state (per-developer, not shared)
 xcuserdata/

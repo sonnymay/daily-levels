@@ -7,9 +7,8 @@ Synthesized from competitor + ASO research (2025–2026). Companion to [METADATA
 
 ## 1. Monetization model (decided)
 
-**Free app + one-time non-consumable "Daily Levels Pro" unlock.** Launch price **$6.99**
-("Founder's price"), raise to **$9.99** later. Optionally add a cheap annual sub ($4.99–$7.99/yr)
-later as a secondary option — not at launch.
+**Free app + one-time non-consumable "Daily Levels Pro" unlock.** Launch at **$6.99** and hold
+that price until real acquisition and purchase data justify a test. Do not add a subscription.
 
 **Why (not $0.99 paid, not subscription):**
 - Only ~4.9% of iOS apps are paid-upfront — paid kills the funnel (no try-before-buy) and the
@@ -20,8 +19,8 @@ later as a secondary option — not at launch.
   brand, and still preserves the free→try→buy funnel.
 
 **Free vs Pro boundary (implemented):** free hero evolves through the first 3 classes
-(Novice/Squire/Swordsman, ≤ level 30). Pro unlocks the evolution Knight → Mythic, shown via a
-tasteful "Unlock Pro to evolve" overlay on the hero + an "Daily Levels Pro" row. Code:
+(Novice/Squire/Swordsman, ≤ level 30). Pro unlocks the seven evolutions Knight → Mythic, shown via
+the locked hero state and the cumulative Hero Collection. Code:
 `Store.swift`, `PaywallView.swift`, `KnightClass.isProOnly`. Tech: **StoreKit 2 only, no RevenueCat**
 (keeps the "Data Not Collected" label; native `Product`/`Transaction` APIs).
 
@@ -48,7 +47,7 @@ classes are exactly that cosmetic surface.
 ## 2. ASO (see METADATA.md for paste-ready strings)
 
 - **Title:** `Daily Levels: Focus Timer` — keyword in the highest-weight slot.
-- **Subtitle:** `Pomodoro deep work for study`.
+- **Subtitle:** `Put your phone down. Level up.`
 - **Keywords:** new terms only (no Title/Subtitle repeats); own the uncontested **focus rpg /
   gamified focus / study rpg** long-tail.
 - **Screenshots:** frame 1 = the level-up payoff; captions are indexed since 2025 — use keywords.
@@ -68,19 +67,16 @@ classes are exactly that cosmetic surface.
 
 ---
 
-## 4. Zero-budget growth channels (pick 2–3, not all)
+## 4. Zero-budget growth channel (one lane first)
 
-1. **Reddit (highest ROI)** — story posts, *not* link drops. Subs: r/productivity, r/GetStudying,
-   r/study, r/GetDisciplined, r/ADHD (strict — contribute first), r/SideProject, r/iosapps, r/apps,
-   r/iOSProgramming (build story). Norms: 90/10 rule, warm up a 500+ karma account, post a
-   problem→solution story ("pomodoro felt like a chore, so I built one where every 5 min levels up a
-   knight"), reply to every comment (45–60 min/day). Tuesday ~9am ET tested well.
-2. **TikTok / Reels — StudyTok** — "study with me + watch my knight level up." The level-up is the
-   shareable moment. #studytok #studywithme #productivity #adhd. Post consistently yourself.
-3. **Product Hunt** — one-day credibility/backlink spike. Tue–Thu for traffic; reply to every comment.
-4. **Build-in-public on X** — slow compounding; pairs with the PH launch.
-5. **Directories / Show HN / Indie Hackers** — the "focus = RPG leveling" angle is novel enough for
-   a Show HN.
+Start with **StudyTok / Reels** for students. Post three short, real screen recordings over two weeks:
+1. Start at Novice, lock the phone, return to a higher level.
+2. A quiet 25-minute study session compressed into a class promotion.
+3. The free hero journey followed by the seven Pro evolutions.
+
+Use one campaign link for every post so App Store Connect can attribute downloads. Do not spend on
+ads or split attention across Product Hunt, directories, and several social accounts until this lane
+produces downloads.
 
 ---
 
@@ -98,28 +94,27 @@ TikTok in **early August**.
 **Pre-launch**
 - [ ] Create the IAP `com.santipapmay.DailyLevels.pro` in ASC (Non-Consumable, $6.99). *(owner)*
 - [ ] Set app price to **Free**. *(owner)*
-- [ ] Archive + upload **build 4** (first StoreKit build), attach build + IAP. *(version already bumped to 4)*
-- [ ] Title/Subtitle/Keywords per METADATA.md; 5 captioned 6.9″ screenshots; resize the preview video.
+- [ ] Archive + upload **version 1.1 build 6**, attach the first IAP, and make the app Free.
+- [ ] Confirm paid 1.0 customers are grandfathered into Pro via `AppTransaction`.
+- [ ] Title/Subtitle/Keywords per METADATA.md; 5 clean 6.9″ screenshots; resize the preview video.
 - [ ] TestFlight to 10–20 people; sandbox-test the purchase + restore; collect 2–3 testimonial quotes.
-- [ ] Warm up Reddit (500+ karma) + a TikTok/X handle; start contributing now. Line up a PH hunter.
+- [ ] Prepare the three StudyTok/Reels clips and one App Store campaign link.
 
 **Day 1**
 - [ ] Go live → ask testers/friends to download + leave a genuine rating. First ~10 reviews matter most.
-- [ ] Post the build story to r/SideProject and r/iosapps. Start an X build-in-public thread.
+- [ ] Publish clip 1: Novice → lock phone → return to a higher level.
 
-**Days 2–4**
-- [ ] One Reddit story/day, staggered + customized (r/productivity, r/GetStudying, r/ADHD if contextual).
-- [ ] First StudyTok "study with me + knight levels up" clip. Reply to everything.
+**Days 3–5**
+- [ ] Publish clip 2: the compressed 25-minute study session and class promotion.
+- [ ] Reply to every useful comment and note the exact questions people ask.
 
-**Day 5**
-- [ ] Product Hunt launch (Tue–Thu). Reply to every comment; point your audience to it.
+**Days 8–12**
+- [ ] Publish clip 3: free journey → seven Pro evolutions.
+- [ ] Compare campaign downloads and store conversion before making another product change.
 
-**Days 6–7**
-- [ ] Second TikTok angle (the level-up payoff). Submit to 3–5 free directories. Post a milestone
-      update on X + Indie Hackers. Reply to App Store reviews.
-
-**Throughout:** watch keyword rankings (App Store Connect search analytics / free AppFollow tier);
-swap weak keywords on the next version update.
+**Throughout:** use App Store Connect only. Track unique impressions, product-page views, first-time
+downloads, conversion rate, paying users, and proceeds. Low impressions means discovery; impressions
+without downloads means the listing; downloads without purchases means activation or the Pro offer.
 
 ---
 
