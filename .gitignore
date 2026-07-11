@@ -44,3 +44,6 @@ fastlane/screenshots/**/*.png
 # App Store preview videos (regenerate via simctl + ffmpeg; large binaries)
 AppStore/*.mp4
 AppStore/*.mov
+
+# Superseded pre-1.1 screenshot composites; release-ready sets are tracked separately
+AppStore/screenshots/marketing_1290/
