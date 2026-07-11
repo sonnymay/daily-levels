@@ -3,6 +3,13 @@
 This checklist is for **version 1.1 build 6** of App Store Connect app `6780007939`, bundle
 `com.santipapmay.DailyLevels`, Team `57U5D693VS`.
 
+## Current binary checkpoint
+
+- The 1.1 (6) archive completed successfully on July 10, 2026.
+- The signed binary upload completed successfully; App Store Connect reported it as processing
+  immediately after upload. Recheck processing before attaching the build to version 1.1.
+- The app has not been submitted for review. The final stop below still applies.
+
 ## Prepared in the repo
 
 - Native SwiftUI app with no third-party dependencies, tracking, account, or backend.
