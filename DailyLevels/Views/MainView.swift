@@ -292,7 +292,7 @@ private struct ProgressSection: View {
                 }
             }
             .frame(height: 12)
-            .animation(.easeInOut(duration: 0.3), value: engine.levelProgress)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: engine.levelProgress)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Level progress")
             .accessibilityValue("\(Int(engine.levelProgress * 100)) percent")
