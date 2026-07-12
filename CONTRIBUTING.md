@@ -38,8 +38,9 @@ Run the full test suite for every code change. Add or update tests when changing
 
 - Level calculations
 - Midnight session splitting
-- Streak behavior
 - Focus ledger aggregation
+- Cold-launch recovery
+- StoreKit entitlement migration
 - Localization-sensitive class names
 - Lock-versus-app-switch classification
 
@@ -51,6 +52,7 @@ Lock detection cannot be validated fully in the simulator because protected-data
 - Keep app state centralized in `FocusEngine`.
 - Avoid adding third-party dependencies unless they solve a clear problem that cannot reasonably be handled with Apple frameworks.
 - Keep user data on device and preserve the **Data Not Collected** privacy posture.
+- Preserve the minimalist scope: no streak pressure, notifications, feeds, accounts, or server features.
 - Keep accessibility labels and Dynamic Type behavior intact when changing UI.
 - Do not change `KnightClass.rawValue` values casually; they are tied to asset names and Pro gating.
 
