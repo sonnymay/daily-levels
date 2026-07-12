@@ -96,6 +96,32 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertEqual(recovered.end, now)
     }
 
+    func testColdLaunchIgnoresMarkerWithoutConfirmedLock() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        defaults.set(now.addingTimeInterval(-30 * 60), forKey: FocusEngine.activeStartKey)
+        defaults.set(false, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(defaults: defaults, now: now)
+
+        XCTAssertNil(recovered)
+    }
+
+    func testColdLaunchIgnoresFutureLockedMarkerAfterClockMovesBackward() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        defaults.set(now.addingTimeInterval(15 * 60), forKey: FocusEngine.activeStartKey)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(defaults: defaults, now: now)
+
+        XCTAssertNil(recovered)
+    }
+
     func testColdLaunchLockedRecoveryCapsAtDailyMaximum() throws {
         let suiteName = "TrustAuditTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
