@@ -1331,72 +1331,37 @@
         }
       }
     },
-    "Lock your phone — your focus keeps counting.": {
+    "Locking counts. Switching apps pauses your hero.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bloquea el teléfono: tu foco sigue contando."
+            "value": "Bloquear el teléfono cuenta. Cambiar de app pausa a tu héroe."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bloqueie o telefone — seu foco continua contando."
+            "value": "Bloquear o telefone conta. Trocar de app pausa seu herói."
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sperre dein Telefon — dein Fokus zählt weiter."
+            "value": "Sperren zählt. Ein App-Wechsel pausiert deinen Helden."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Verrouille ton téléphone — ton focus continue de compter."
+            "value": "Verrouiller compte. Changer d’app met ton héros en pause."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "スマホをロックしても集中はカウント継続。"
-          }
-        }
-      }
-    },
-    "Switch apps and your hero rests until you return.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Cambia de app y tu héroe descansa hasta que vuelvas."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Troque de app e seu herói descansa até você voltar."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Wechsle die App und dein Held ruht, bis du zurückkommst."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Change d’appli et ton héros se repose jusqu’à ton retour."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "アプリを切り替えると、戻るまでヒーローは休憩します。"
+            "value": "ロック中もカウント。アプリを切り替えるとヒーローは一時停止します。"
           }
         }
       }
@@ -1471,317 +1436,317 @@
         }
       }
     },
-    "Evolve to Mythic": {
+    "7 more hero evolutions": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Evoluciona hasta Mítico"
+            "value": "7 evoluciones de héroe más"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Evolua até Mítico"
+            "value": "Mais 7 evoluções de herói"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Bis Mythisch entwickeln"
+            "value": "7 weitere Heldenentwicklungen"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Évolue jusqu’à Mythique"
+            "value": "7 évolutions de héros en plus"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ミシックまで進化"
+            "value": "さらに7段階のヒーロー進化"
           }
         }
       }
     },
-    "Unlock your hero's full journey — Knight, Crusader, all the way to Mythic.": {
+    "Unlock Knight, Crusader, Champion, Paladin, Hero, Legend, and Mythic.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloquea el viaje completo de tu héroe: Caballero, Cruzado y hasta Mítico."
+            "value": "Desbloquea Caballero, Cruzado, Campeón, Paladín, Héroe, Leyenda y Mítico."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloqueie a jornada completa do seu herói — Cavaleiro, Cruzado, até Mítico."
+            "value": "Desbloqueie Cavaleiro, Cruzado, Campeão, Paladino, Herói, Lenda e Mítico."
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Schalte die ganze Reise deines Helden frei — Ritter, Kreuzritter, bis Mythisch."
+            "value": "Schalte Ritter, Kreuzritter, Champion, Paladin, Held, Legende und Mythisch frei."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Débloque tout le parcours de ton héros — Chevalier, Croisé, jusqu’à Mythique."
+            "value": "Débloque Chevalier, Croisé, Champion, Paladin, Héros, Légende et Mythique."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ヒーローの全行程を解除 — ナイト、クルセイダー、ミシックまで。"
+            "value": "ナイト、クルセイダー、チャンピオン、パラディン、ヒーロー、レジェンド、ミシックを解除。"
           }
         }
       }
     },
-    "All 10 classes": {
+    "Earn every evolution": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Las 10 clases"
+            "value": "Gana cada evolución"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Todas as 10 classes"
+            "value": "Conquiste cada evolução"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Alle 10 Klassen"
+            "value": "Verdiene jede Entwicklung"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Les 10 classes"
+            "value": "Mérite chaque évolution"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "全10クラス"
+            "value": "すべての進化を獲得"
           }
         }
       }
     },
-    "See every class your focus earns, not just the first three.": {
+    "Your focus still does the work. New hero art appears as your journey level grows.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Ve todas las clases que gana tu concentración, no solo las tres primeras."
+            "value": "Tu concentración sigue haciendo el trabajo. Aparecen nuevos héroes a medida que crece tu nivel de viaje."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Veja todas as classes que seu foco conquista, não só as três primeiras."
+            "value": "Seu foco ainda faz o trabalho. Novos heróis aparecem conforme seu nível de jornada cresce."
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sieh jede Klasse, die dein Fokus verdient — nicht nur die ersten drei."
+            "value": "Dein Fokus leistet weiterhin die Arbeit. Mit deinem Reiselevel erscheint neue Heldenkunst."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Vois toutes les classes que ton focus débloque, pas seulement les trois premières."
+            "value": "Ta concentration fait toujours le travail. De nouveaux héros apparaissent à mesure que ton niveau de parcours augmente."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "最初の3つだけでなく、集中で得られる全クラスを表示。"
+            "value": "集中した分だけ進みます。旅のレベルが上がると新しいヒーローアートが現れます。"
           }
         }
       }
     },
-    "No ads, no tracking": {
+    "One purchase. Yours forever.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sin anuncios ni rastreo"
+            "value": "Una compra. Tuyo para siempre."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sem anúncios, sem rastreamento"
+            "value": "Uma compra. Seu para sempre."
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Keine Werbung, kein Tracking"
+            "value": "Ein Kauf. Für immer deins."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sans pub, sans suivi"
+            "value": "Un achat. À toi pour toujours."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "広告なし、トラッキングなし"
+            "value": "一度の購入で、ずっとあなたのもの。"
           }
         }
       }
     },
-    "No accounts, no analytics, no ads — ever. Your focus stays on your phone.": {
+    "No subscription and no renewal. Restore it on any device using your Apple Account.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sin cuentas, sin analíticas, sin anuncios, nunca. Tu concentración se queda en tu teléfono."
+            "value": "Sin suscripción ni renovación. Restáuralo en cualquier dispositivo con tu cuenta de Apple."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Sem contas, sem análises, sem anúncios — nunca. Seu foco fica no seu telefone."
+            "value": "Sem assinatura nem renovação. Restaure em qualquer dispositivo com sua Conta Apple."
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Keine Konten, keine Analyse, keine Werbung — niemals. Dein Fokus bleibt auf deinem Telefon."
+            "value": "Kein Abo und keine Verlängerung. Stelle es mit deinem Apple Account auf jedem Gerät wieder her."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pas de comptes, pas d’analyses, pas de pub — jamais. Ton focus reste sur ton téléphone."
+            "value": "Sans abonnement ni renouvellement. Restaure-le sur tout appareil avec ton compte Apple."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "アカウントも分析も広告も一切なし。集中はあなたのスマホの中だけ。"
+            "value": "サブスクリプションも更新もありません。Apple Accountでどのデバイスでも復元できます。"
           }
         }
       }
     },
-    "Support an indie dev": {
+    "Private and ad-free for everyone": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Apoya a un dev independiente"
+            "value": "Privado y sin anuncios para todos"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Apoie um dev indie"
+            "value": "Privado e sem anúncios para todos"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Unterstütze einen Indie-Entwickler"
+            "value": "Privat und werbefrei für alle"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Soutiens un dév indé"
+            "value": "Privé et sans publicité pour tout le monde"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "個人開発者を応援"
+            "value": "すべての人にプライベートで広告なし"
           }
         }
       }
     },
-    "A one-time purchase keeps Daily Levels calm and ad-free.": {
+    "Unlock 7 heroes · %@": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Una compra única mantiene Daily Levels tranquilo y sin anuncios."
+            "value": "Desbloquear 7 héroes · %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Uma compra única mantém o Daily Levels calmo e sem anúncios."
+            "value": "Desbloquear 7 heróis · %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Ein einmaliger Kauf hält Daily Levels ruhig und werbefrei."
+            "value": "7 Helden freischalten · %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Un achat unique garde Daily Levels calme et sans pub."
+            "value": "Débloquer 7 héros · %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "一度の購入でDaily Levelsを静かで広告なしに保てます。"
+            "value": "7人のヒーローを解除 · %@"
           }
         }
       }
     },
-    "Unlock Pro · %@": {
+    "Retry loading price": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloquear Pro · %@"
+            "value": "Reintentar cargar el precio"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloquear Pro · %@"
+            "value": "Tentar carregar o preço novamente"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pro freischalten · %@"
+            "value": "Preis erneut laden"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Débloquer Pro · %@"
+            "value": "Réessayer de charger le prix"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Proを解除 · %@"
+            "value": "価格を再読み込み"
           }
         }
       }
@@ -1887,6 +1852,76 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "利用規約"
+          }
+        }
+      }
+    },
+    "Purchase failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Error en la compra"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Falha na compra"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kauf fehlgeschlagen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Échec de l’achat"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入に失敗しました"
+          }
+        }
+      }
+    },
+    "Couldn’t reach the App Store. Check your connection and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se pudo conectar con la App Store. Revisa tu conexión e inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não foi possível acessar a App Store. Verifique sua conexão e tente novamente."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "App Store nicht erreichbar. Prüfe deine Verbindung und versuche es erneut."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Impossible de joindre l’App Store. Vérifie ta connexion et réessaie."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "App Storeに接続できませんでした。接続を確認して、もう一度お試しください。"
           }
         }
       }
@@ -2136,41 +2171,6 @@
         }
       }
     },
-    "History": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Historial"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Histórico"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Verlauf"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "履歴"
-          }
-        }
-      }
-    },
     "Levels earned each day · resets at midnight": {
       "extractionState": "manual",
       "localizations": {
@@ -2237,426 +2237,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "集中時間%lld分"
-          }
-        }
-      }
-    },
-    "%lld-day focus streak": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Racha de %lld días"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Sequência de %lld dias"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld-Tage-Serie"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Série de %lld jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld日連続"
-          }
-        }
-      }
-    },
-    "%lld day focus streak": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Racha de concentración de %lld días"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Sequência de foco de %lld dias"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld Tage Fokus-Serie"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Série de concentration de %lld jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld日間の集中連続記録"
-          }
-        }
-      }
-    },
-    "New class unlocked — keep grinding!": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "¡Nueva clase desbloqueada! Sigue entrenando."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Nova classe desbloqueada — continue treinando!"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Neue Klasse freigeschaltet — weiter grinden!"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Nouvelle classe débloquée — continue !"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "新しいクラスを解除 — その調子で修行を！"
-          }
-        }
-      }
-    },
-    "You're at level %lld. Keep going.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Estás en el nivel %lld. ¡Sigue así!"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Você está no nível %lld. Continue!"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Du bist auf Level %lld. Weiter so!"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Tu es au niveau %lld. Continue !"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "レベル%lldです。その調子！"
-          }
-        }
-      }
-    },
-    "You reached %@!": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "¡Alcanzaste %@!"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Você alcançou %@!"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ erreicht!"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ atteint !"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@に到達！"
-          }
-        }
-      }
-    },
-    "Show a friend how far your focus has climbed.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Muestra a un amigo hasta dónde llegó tu concentración."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Mostre a um amigo até onde seu foco chegou."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Zeig einem Freund, wie weit dein Fokus geklettert ist."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Montre à un ami jusqu’où ta concentration t’a mené."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "あなたの集中がどこまで登ったか友だちに見せよう。"
-          }
-        }
-      }
-    },
-    "Share your climb": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Comparte tu ascenso"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Compartilhe sua escalada"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Deinen Aufstieg teilen"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Partager ton ascension"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "登りを共有"
-          }
-        }
-      }
-    },
-    "Maybe later": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Quizás más tarde"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Talvez depois"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Vielleicht später"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Plus tard"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "あとで"
-          }
-        }
-      }
-    },
-    "You've reached the free climb": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Llegaste al límite gratuito"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Você chegou ao limite gratuito"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Du hast den kostenlosen Aufstieg erreicht"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Tu as atteint le palier gratuit"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "無料の範囲に到達しました"
-          }
-        }
-      }
-    },
-    "Unlock Knight → Mythic — yours forever": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Desbloquea de Caballero a Mítico, para siempre"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Desbloqueie de Cavaleiro a Mítico, para sempre"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Ritter bis Mythisch freischalten — für immer deins"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Débloque Chevalier → Mythique, à toi pour toujours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ナイト→ミシックを解除 — ずっとあなたのもの"
-          }
-        }
-      }
-    },
-    "Come back tomorrow — your streak keeps growing.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Vuelve mañana: tu racha sigue creciendo."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Volte amanhã — sua sequência continua crescendo."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Komm morgen wieder — deine Serie wächst weiter."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Reviens demain — ta série continue de grandir."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "明日も戻ってきて — 連続記録は伸び続けます。"
-          }
-        }
-      }
-    },
-    "Share your climb to inspire a friend.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Comparte tu ascenso para inspirar a un amigo."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Compartilhe sua escalada para inspirar um amigo."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Teile deinen Aufstieg und inspiriere einen Freund."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Partage ton ascension pour inspirer un ami."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "登りを共有して友だちを励まそう。"
           }
         }
       }
@@ -2801,37 +2381,72 @@
         }
       }
     },
-    "Unlock all 10 heroes · %@": {
+    "Unlock 7 more heroes · %@": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloquea los 10 héroes · %@"
+            "value": "Desbloquea 7 héroes más · %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Desbloqueie os 10 heróis · %@"
+            "value": "Desbloqueie mais 7 heróis · %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Alle 10 Helden freischalten · %@"
+            "value": "7 weitere Helden freischalten · %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Débloque les 10 héros · %@"
+            "value": "Débloque 7 héros de plus · %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "全10ヒーローを解除 · %@"
+            "value": "さらに7人のヒーローを解除 · %@"
+          }
+        }
+      }
+    },
+    "Unlock 7 more heroes": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desbloquea 7 héroes más"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Desbloqueie mais 7 heróis"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "7 weitere Helden freischalten"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Débloque 7 héros de plus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "さらに7人のヒーローを解除"
           }
         }
       }

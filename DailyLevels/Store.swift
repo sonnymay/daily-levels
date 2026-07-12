@@ -20,6 +20,9 @@ import StoreKit
 final class Store {
     /// Must match the non-consumable product ID created in App Store Connect.
     static let proProductID = "com.santipapmay.DailyLevels.pro"
+    /// Build 6 is the first production build intended to be free with a Pro IAP.
+    /// Earlier production purchasers keep the full hero journey they already bought.
+    nonisolated static let firstFreemiumBuild = 6
 
     private(set) var proProduct: Product?
     private(set) var isPro = false
@@ -44,9 +47,8 @@ final class Store {
 
     deinit { updatesTask?.cancel() }
 
-    /// Price to show on the paywall; falls back to the launch "Founder's price" if the
-    /// product hasn't loaded yet (e.g. offline, or not yet live in App Store Connect).
-    var priceText: String { proProduct?.displayPrice ?? "$6.99" }
+    /// Never guess a storefront price. StoreKit supplies the user's localized value.
+    var priceText: String? { proProduct?.displayPrice }
 
     func refresh() async {
         await updateEntitlements()   // entitlements first — never block isPro on product metadata
@@ -62,7 +64,7 @@ final class Store {
     }
 
     func updateEntitlements() async {
-        var owned = false
+        var owned = await ownsLegacyPaidApp()
         for await result in Transaction.currentEntitlements {
             if case .verified(let t) = result,
                t.productID == Self.proProductID,
@@ -77,10 +79,32 @@ final class Store {
         isPro = owned
     }
 
+    /// Apple exposes the original iOS build number through AppTransaction. Production
+    /// customers who paid before the freemium switch keep Pro; sandbox/TestFlight users do not.
+    private func ownsLegacyPaidApp() async -> Bool {
+        do {
+            guard case .verified(let appTransaction) = try await AppTransaction.shared,
+                  appTransaction.environment == .production else { return false }
+            return Self.isLegacyPaidBuild(appTransaction.originalAppVersion)
+        } catch {
+            return false
+        }
+    }
+
+    nonisolated static func isLegacyPaidBuild(_ originalAppVersion: String) -> Bool {
+        guard let firstComponent = originalAppVersion.split(separator: ".").first,
+              let build = Int(firstComponent) else { return false }
+        return build < firstFreemiumBuild
+    }
+
     func purchase() async {
-        guard let product = proProduct else { await loadProducts(); return }
         isWorking = true
         defer { isWorking = false }
+        if proProduct == nil { await loadProducts() }   // first-launch / offline retry, then surface failure
+        guard let product = proProduct else {
+            lastError = String(localized: "Couldn’t reach the App Store. Check your connection and try again.")
+            return
+        }
         do {
             switch try await product.purchase() {
             case .success(let verification):
@@ -102,7 +126,8 @@ final class Store {
     func restore() async {
         isWorking = true
         defer { isWorking = false }
-        try? await AppStore.sync()
+        do { try await AppStore.sync() }
+        catch { lastError = error.localizedDescription }
         await updateEntitlements()
     }
 

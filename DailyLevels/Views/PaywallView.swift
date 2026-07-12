@@ -13,9 +13,15 @@ import StoreKit
 struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var isLoadingPrice = false
 
     private let privacyURL = URL(string: "https://github.com/sonnymay/daily-levels/blob/main/PRIVACY_POLICY.md")!
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+
+    /// Drives the failure alert off `store.lastError`; dismissing clears it.
+    private var showError: Binding<Bool> {
+        Binding(get: { store.lastError != nil }, set: { if !$0 { store.lastError = nil } })
+    }
 
     var body: some View {
         ZStack {
@@ -36,17 +42,14 @@ struct PaywallView: View {
 
                         VStack(alignment: .leading, spacing: 16) {
                             BenefitRow(icon: "figure.fencing",
-                                       title: "Evolve to Mythic",
-                                       text: "Unlock your hero’s full journey — Knight, Crusader, all the way to Mythic.")
-                            BenefitRow(icon: "lock.open.fill",
-                                       title: "All 10 classes",
-                                       text: "See every class your focus earns, not just the first three.")
-                            BenefitRow(icon: "hand.raised.fill",
-                                       title: "No ads, no tracking",
-                                       text: "No accounts, no analytics, no ads — ever. Your focus stays on your phone.")
-                            BenefitRow(icon: "heart.fill",
-                                       title: "Support an indie dev",
-                                       text: "A one-time purchase keeps Daily Levels calm and ad-free.")
+                                       title: "7 more hero evolutions",
+                                       text: "Unlock Knight, Crusader, Champion, Paladin, Hero, Legend, and Mythic.")
+                            BenefitRow(icon: "arrow.up.forward.circle.fill",
+                                       title: "Earn every evolution",
+                                       text: "Your focus still does the work. New hero art appears as your journey level grows.")
+                            BenefitRow(icon: "checkmark.seal.fill",
+                                       title: "One purchase. Yours forever.",
+                                       text: "No subscription and no renewal. Restore it on any device using your Apple Account.")
                         }
 
                         // Show the real heroes — the ones you've earned but can't yet own —
@@ -57,6 +60,10 @@ struct PaywallView: View {
                                 .foregroundStyle(Theme.ink)
                             HeroCollectionGrid()
                         }
+
+                        Label("Private and ad-free for everyone", systemImage: "hand.raised.fill")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.gray)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)
@@ -65,34 +72,62 @@ struct PaywallView: View {
                 purchaseFooter
             }
         }
+        .alert("Purchase failed", isPresented: showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(store.lastError ?? "")
+        }
+        .task {
+            if store.proProduct == nil { await loadPrice() }
+        }
     }
 
     private var purchaseFooter: some View {
         VStack(spacing: 12) {
-            Button {
-                Task { await store.purchase(); if store.isPro { dismiss() } }
-            } label: {
-                Group {
-                    if store.isWorking {
-                        ProgressView().tint(.white)
-                    } else {
-                        Text("Unlock Pro · \(store.priceText)")
+            if let price = store.priceText {
+                Button {
+                    Task { await store.purchase(); if store.isPro { dismiss() } }
+                } label: {
+                    Group {
+                        if store.isWorking {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text("Unlock 7 heroes · \(price)")
+                        }
                     }
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Theme.green, in: Capsule())
                 }
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Theme.green, in: Capsule())
+                .buttonStyle(.pressable(scale: 0.97))
+                .disabled(store.isWorking)
+            } else {
+                Button {
+                    Task { await loadPrice() }
+                } label: {
+                    Group {
+                        if isLoadingPrice {
+                            ProgressView().tint(Theme.green)
+                        } else {
+                            Text("Retry loading price")
+                        }
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                }
+                .buttonStyle(.pressable(scale: 0.97))
+                .disabled(isLoadingPrice)
             }
-            .buttonStyle(.pressable(scale: 0.97))
-            .disabled(store.isWorking)
 
             Button("Restore Purchases") {
                 Task { await store.restore(); if store.isPro { dismiss() } }
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
+            .disabled(store.isWorking)   // no double-tap → no two concurrent AppStore.sync() calls
 
             HStack(spacing: 16) {
                 Link("Privacy Policy", destination: privacyURL)
@@ -107,12 +142,18 @@ struct PaywallView: View {
         .padding(.bottom, 10)
         .background(Theme.cream)
     }
+
+    private func loadPrice() async {
+        isLoadingPrice = true
+        await store.loadProducts()
+        isLoadingPrice = false
+    }
 }
 
 private struct BenefitRow: View {
     let icon: String
-    let title: String
-    let text: String
+    let title: LocalizedStringKey   // LocalizedStringKey so the catalog actually resolves (was String → English-only)
+    let text: LocalizedStringKey
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {

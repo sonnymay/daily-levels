@@ -15,33 +15,13 @@ struct FocusHistoryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("Focus History")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(Theme.ink)
-                Spacer()
-                // "History" link is reserved for a full-history screen in v1.1 (SPEC §4/§9) —
-                // shown for parity with the mockup, intentionally inert in v1.
-                Text("History")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Theme.green)
-            }
+            Text("Focus History")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Theme.ink)
 
             Text("Levels earned each day · resets at midnight")
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
-
-            // Gentle streak — shown only at 2+ days so it rewards a habit without
-            // pressuring brand-new users (no "you'll lose it!" framing; calm green).
-            if engine.focusStreak >= 2 {
-                Label("\(engine.focusStreak)-day focus streak", systemImage: "flame.fill")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.greenDeep)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Theme.greenSoft.opacity(0.35), in: Capsule())
-                    .accessibilityLabel("\(engine.focusStreak) day focus streak")
-            }
 
             WeekBarChart(days: engine.weekHistory)
                 .frame(height: 150)
@@ -114,6 +94,9 @@ private struct WeekBarChart: View {
                                 .minimumScaleFactor(0.7)
                         }
                         .frame(maxWidth: .infinity)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(Text(isToday ? String(localized: "Today") : Format.longDate(day.date)))
+                        .accessibilityValue(Text(accessibilitySummary(for: day)))
                     }
                 }
                 .padding(.leading, 22)   // clear the y-axis labels
@@ -150,12 +133,17 @@ private struct DayRow: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.gray)
             }
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(Theme.gray.opacity(0.6))
-                .padding(.leading, 6)
         }
         .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(Format.longDate(day.date)))
+        .accessibilityValue(Text(accessibilitySummary(for: day)))
     }
+}
+
+/// Reuses existing localized strings so chart bars and rows announce the same concise result.
+private func accessibilitySummary(for day: DaySummary) -> String {
+    let level = String(localized: "Level \(day.level)")
+    let focusTime = String(localized: "\(day.focusMinutes) min focus time")
+    return "\(level), \(focusTime)"
 }

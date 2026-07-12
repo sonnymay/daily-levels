@@ -71,12 +71,12 @@ Every day starts fresh: everyone wakes up a Novice. Your class is a badge for *t
 The parts of this codebase worth reading:
 
 - **Lock vs. app-switch detection** — iOS reports "backgrounded" identically whether the user locked the phone or switched apps, but only a real lock (on a passcode device) fires `protectedDataWillBecomeUnavailable`. [`LockClassifier.swift`](DailyLevels/LockClassifier.swift) holds a `beginBackgroundTask` + 30-second grace window to tell the two apart, and is deliberately isolated in one swappable file. This one distinction is the product: locked = keep grinding, app switch = hero sleeps.
-- **Pure, tested core** — level math, midnight session-splitting, streak logic, and the per-day focus ledger are pure functions ([`LevelMath`](DailyLevels/LevelMath.swift), [`DateUtils`](DailyLevels/DateUtils.swift), [`StreakMath`](DailyLevels/StreakMath.swift), [`FocusLedger`](DailyLevels/FocusLedger.swift)) covered by **36 XCTest unit tests**, including trust audits for DST transitions, timezone changes, and cold-launch crash recovery ([`TrustAuditTests`](DailyLevelsTests/TrustAuditTests.swift)).
-- **Modern iOS 17 patterns** — `@Observable` + `@Environment` (no `ObservableObject` boilerplate) and SwiftData `@Model`. [`FocusEngine`](DailyLevels/FocusEngine.swift) is the single source of truth; views own no state and pure-derive level, class, progress, and history from a 1-second ticker plus a cached fetch.
+- **Pure, tested core** — level math, midnight session-splitting, and the per-day focus ledger are pure functions ([`LevelMath`](DailyLevels/LevelMath.swift), [`DateUtils`](DailyLevels/DateUtils.swift), [`FocusLedger`](DailyLevels/FocusLedger.swift)) covered by **39 XCTest unit tests**, including trust audits for DST transitions, timezone changes, and cold-launch crash recovery ([`TrustAuditTests`](DailyLevelsTests/TrustAuditTests.swift)).
+- **Modern iOS 17 patterns** — `@Observable` + `@Environment` (no `ObservableObject` boilerplate) and SwiftData `@Model`. [`FocusEngine`](DailyLevels/FocusEngine.swift) is the single source of truth for focus state, level, class, progress, and history.
 - **StoreKit 2, no middleman** — non-consumable Pro unlock with on-device transaction verification and Restore Purchases ([`Store.swift`](DailyLevels/Store.swift)). Skipping RevenueCat keeps the App Store privacy label at **Data Not Collected**. The screenshot/testing backdoor (`-unlockPro`) is compiled out of Release builds.
 - **Conversion-driven redesign** — the original Pro gate keyed off the *daily* level, which resets at midnight, so ~95% of users could never see the paid art (Knight = 2.6 focused hours in a single day). The [Hero Collection](DailyLevels/Views/HeroCollectionView.swift) fixes it: all 10 heroes are visible from day one and fill up with the cumulative journey level, so Pro classes become something users can *see coming* within a week.
 - **Localization with guardrails** — a String Catalog covers 6 languages (EN, ES, PT-BR, DE, FR, JA). `KnightClass.displayName` localizes while `rawValue` stays English (it drives asset filenames and Pro gating), pinned by [`LocalizationStabilityTests`](DailyLevelsTests/LocalizationStabilityTests.swift).
-- **Hand-rolled where it counts** — gapless hero animation via an AVFoundation looping player ([`LoopingVideoView`](DailyLevels/Views/LoopingVideoView.swift)); 10 per-class clips compressed 122 MB → 21 MB; a 1080×1080 share card rendered with `ImageRenderer` ([`ShareCardView`](DailyLevels/Views/ShareCardView.swift)); a custom bar chart matching the mockup exactly.
+- **Hand-rolled where it counts** — gapless hero animation via an AVFoundation looping player ([`LoopingVideoView`](DailyLevels/Views/LoopingVideoView.swift)); 10 compact per-class clips; and a lightweight custom history chart with no charting dependency.
 
 ---
 
@@ -86,12 +86,11 @@ The parts of this codebase worth reading:
 - **Lock detection** — phone locked = still grinding; another app = sleeping.
 - **10-class daily ladder** — Novice → Mythic, fresh every midnight.
 - **Hero Collection** — a lifetime journey level that never resets fills a 10-hero gallery.
-- **7-day focus history** — soft bar chart, day list, and a calm streak chip (no countdown anxiety — an unstarted today never "breaks" it).
-- **Share your day** — a rendered share card for milestones.
+- **7-day focus history** — a soft bar chart and simple day list, with no streak pressure.
 - **Free + one-time Pro unlock** — no subscription (StoreKit 2).
 - **No account, no tracking** — everything on device (SwiftData); privacy label: Data Not Collected.
 - **Localized** — English, Spanish, Portuguese (BR), German, French, Japanese.
-- **Home Screen widget** — staged in [`widget/`](widget/) for v1.1 (see [`WIDGET_SETUP.md`](WIDGET_SETUP.md)).
+- **Accessible by design** — VoiceOver summaries, Dynamic Type, and Reduce Motion support.
 
 ---
 
@@ -102,19 +101,16 @@ DailyLevels/
 ├── LevelMath.swift            # pure: level = floor(minutes / 5)        ← unit-tested
 ├── KnightClass.swift          # pure: 10-class ladder + localized names ← unit-tested
 ├── DateUtils.swift            # pure: split sessions at midnight        ← unit-tested
-├── StreakMath.swift           # pure: calm consecutive-day streak       ← unit-tested
 ├── FocusLedger.swift          # pure: per-day seconds aggregation       ← unit-tested
 ├── Models.swift               # SwiftData @Model FocusSession + DaySummary
 ├── LockClassifier.swift       # lock vs. app-switch — isolated & swappable
 ├── FocusEngine.swift          # @Observable single source of truth
 ├── Store.swift                # StoreKit 2 Pro unlock entitlement
-├── FocusNotifications.swift   # local level-up pings while locked
 ├── Haptics.swift · Theme.swift
 ├── Localizable.xcstrings      # String Catalog · 6 languages
 └── Views/                     # MainView, HeroScenePanel, PaywallView,
-                               # HeroCollectionView, ShareCardView, FocusHistoryCard, …
-DailyLevelsTests/              # 36 unit tests (math, midnight, i18n, trust audits)
-widget/                        # WidgetKit extension, staged for v1.1
+                               # HeroCollectionView, FocusHistoryCard, …
+DailyLevelsTests/              # 39 unit tests (math, midnight, i18n, trust audits)
 AppStore/                      # metadata, ASO copy, screenshots, growth playbook
 SPEC.md                        # full product spec — the source of truth
 ```

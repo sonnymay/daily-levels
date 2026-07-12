@@ -16,17 +16,16 @@ Daily Levels: Focus Timer
 
 ## Subtitle (30 chars max)
 ```
-Pomodoro deep work for study
+Put your phone down. Level up.
 ```
-(28 chars. Adds pomodoro / deep work / study. Alt, more emotional: `Make focusing feel rewarding`.)
+(30 chars. States the distinctive behavior and payoff without claiming Pomodoro features.)
 
 ## Keywords (100 chars max, comma-separated, NO spaces, no repeats of Title/Subtitle)
 ```
-concentration,productivity,adhd,session,reading,homework,attention,gamified,rpg,habit,grind,mindful
+study,deepwork,productivity,concentration,adhd,session,homework,attention,gamified,rpg,habit,grind
 ```
-(99 chars. Deliberately omits focus/timer/pomodoro/deep/work/study — already in Title+Subtitle
-(dropped "deepfocus" which duplicated those + pushed it to 101). The **rpg / gamified / grind**
-terms are a near-uncontested long-tail our hero mechanic can own; "mindful" adds a fresh lane.)
+(98 chars. Deliberately omits words already present in the Title/Subtitle and avoids misleading
+Pomodoro or app-blocking terms. The **rpg / gamified / grind** terms describe the real differentiator.)
 
 ## Promotional text (170 chars, editable anytime without review)
 ```
@@ -37,11 +36,11 @@ Free to start. Every 5 minutes of focus levels up your hero — Novice to Mythic
 - **Type:** Non-Consumable
 - **Reference Name:** Daily Levels Pro
 - **Product ID:** `com.santipapmay.DailyLevels.pro`  ← must match `Store.proProductID` in code
-- **Price:** launch **Tier $6.99** ("Founder's price"); plan to raise to **$9.99** later
+- **Price:** launch **$6.99**; hold this price until acquisition and purchase data justify a test
 - **Display Name:** `Daily Levels Pro`
-- **Description:** `Evolve your hero through all 10 classes — Knight to Mythic. No ads, no tracking. One-time unlock, yours forever.`
+- **Description:** `Unlock seven hero evolutions — Knight through Mythic. One purchase, yours forever.`
 - **Review screenshot:** use the paywall screenshot (1290×2796 or any required size)
-- Submit the IAP **together with** the app version that contains it (first StoreKit build = build 4).
+- Submit the IAP **together with** version 1.1 build 6, the first production freemium build.
 
 ## Description (4000 chars max)
 ```
@@ -78,20 +77,19 @@ Everything stays on your device. No account, no sign-up, no servers, no tracking
 Start your climb today.
 ```
 
-## Screenshots (6, captioned — indexed for ASO since 2025)
-Upload order leads with the payoff, then mechanic, aspiration, proof, the offer, the calm.
-Caption text is **baked into each PNG** in `screenshots/captioned/`:
-1. `01_levelup.png` — **"Watch your hero level up"** (the differentiator / payoff)
-2. `02_lock.png` — **"Lock your phone, focus keeps counting"** (trust + core mechanic)
-3. `03_mythic.png` — **"Climb all the way to Mythic"** (aspiration / class ladder)
-4. `04_history.png` — **"See your focus add up"** (the 7-day proof)
-5. `05_paywall.png` — **"No subscription — unlock Pro once"** (conversion / pricing trust)
-6. `06_intro.png` — **"Calm. One screen. No noise."** (the calm promise)
+## Screenshots (5-image release story)
+Upload only a concise five-frame story, in this order:
+1. **"Every 5 minutes levels up your hero"** — immediate payoff, free Novice art
+2. **"Lock your phone. Focus keeps counting."** — the distinctive trust promise
+3. **"One screen. One button. No pressure."** — the deliberately calm product
+4. **"See every focused day add up"** — the seven-day history proof
+5. **"Unlock 7 more heroes once"** — the cumulative Hero Collection with clear Pro badges
 
-Size **1290×2796 (6.9″ iPhone)** — iPhone-only app, so this is the only required set; ASC derives
-smaller sizes. PNG for crisp text.
-> Note: `06_intro.png` shows the 3-row first-run intro; the app now ships a 5-row intro (added the
-> "come back tomorrow / streak" and "share your climb" rows) — optional refresh before upload.
+Upload the five files, in numeric order, from `screenshots/release_6_9/` to the 6.9-inch iPhone slot
+and from `screenshots/release_13_inch/` to the required 13-inch iPad slot. The files are opaque
+**1320×2868** and **2064×2752** PNGs respectively. Never use `screenshots/captioned/` or
+`screenshots/marketing_1290/`; those are older composites with stale UI and, in some files, broken
+alpha masks. Any screenshot showing Knight through Mythic must visibly identify the Pro requirement.
 
 ## App Preview video (optional, high-impact for a gamified app)
 A 15–30s clip: timer running → minutes climb → hero levels up / changes class.
@@ -134,30 +132,30 @@ Keywords ≤100 (comma, no spaces), and keywords never repeat Title/Subtitle wor
 
 ### 🇪🇸 Spanish (es)
 - **Title:** `Daily Levels: Enfoque`
-- **Subtitle:** `Pomodoro para estudiar mejor`
+- **Subtitle:** `Deja el móvil. Sube de nivel`
 - **Keywords:** `concentracion,productividad,tdah,sesion,lectura,deberes,atencion,gamificado,rpg,habito`
 - **Captions 1–2:** "Sube de nivel mientras te concentras" · "Bloquea el móvil: el foco sigue"
 
 ### 🇧🇷 Portuguese — Brazil (pt-BR)
 - **Title:** `Daily Levels: Foco`
-- **Subtitle:** `Pomodoro para estudar melhor`
+- **Subtitle:** `Deixe o celular. Suba de nível`
 - **Keywords:** `concentracao,produtividade,tdah,sessao,leitura,licao,atencao,gamificado,rpg,habito`
 - **Captions 1–2:** "Suba de nível enquanto foca" · "Bloqueie o celular: o foco continua"
 
 ### 🇩🇪 German (de)
 - **Title:** `Daily Levels: Fokus-Timer`
-- **Subtitle:** `Pomodoro für tiefes Lernen`
+- **Subtitle:** `Handy weg. Held steigt auf.`
 - **Keywords:** `konzentration,produktivitaet,adhs,sitzung,lesen,hausaufgaben,aufmerksamkeit,rpg,gewohnheit`
 - **Captions 1–2:** "Fokussiere und steige auf" · "Sperre dein Telefon — der Fokus zählt weiter"
 
 ### 🇫🇷 French (fr)
 - **Title:** `Daily Levels: Concentration`
-- **Subtitle:** `Pomodoro pour mieux étudier`
+- **Subtitle:** `Posez le téléphone. Progressez`
 - **Keywords:** `productivite,tdah,session,lecture,devoirs,attention,gamifie,rpg,habitude,minuteur`
 - **Captions 1–2:** "Monte de niveau en te concentrant" · "Verrouille ton téléphone, le focus continue"
 
 ### 🇯🇵 Japanese (ja)
 - **Title:** `Daily Levels: 集中タイマー`
-- **Subtitle:** `勉強がはかどるポモドーロ`
+- **Subtitle:** `スマホを置いてレベルアップ`
 - **Keywords:** `集中,生産性,ADHD,勉強,セッション,読書,宿題,習慣,RPG,ゲーム化`
 - **Captions 1–2:** "集中するほどレベルアップ" · "スマホをロックしても集中は続く"

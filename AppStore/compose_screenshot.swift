@@ -1,65 +1,136 @@
 import AppKit
 
-// usage: swift compose.swift device.png out.png "Line 1" "Line 2"
-let a = CommandLine.arguments
-let devPath = a[1], outPath = a[2], l1 = a[3], l2 = a[4]
-
-let W = 1290, H = 2796
-func rgb(_ r: Int, _ g: Int, _ b: Int) -> NSColor {
-    NSColor(srgbRed: CGFloat(r)/255, green: CGFloat(g)/255, blue: CGFloat(b)/255, alpha: 1)
+// Usage:
+// swift compose_screenshot.swift input.png output.png "Headline" "Subtext" [width] [height]
+let arguments = CommandLine.arguments
+guard arguments.count >= 5 else {
+    fatalError("Expected input, output, headline, and subtext")
 }
-let cream = rgb(0xF3, 0xF0, 0xE8)
-let ink   = rgb(0x1B, 0x1B, 0x1D)
-let green = rgb(0x5E, 0x8C, 0x3E)
 
-guard let devRep = NSBitmapImageRep(data: try! Data(contentsOf: URL(fileURLWithPath: devPath))),
-      let devCG = devRep.cgImage else { fatalError("cannot load \(devPath)") }
+let inputPath = arguments[1]
+let outputPath = arguments[2]
+let headline = arguments[3].replacingOccurrences(of: "\\n", with: "\n")
+let subtext = arguments[4].replacingOccurrences(of: "\\n", with: "\n")
+let width = arguments.count > 5 ? Int(arguments[5]) ?? 1320 : 1320
+let height = arguments.count > 6 ? Int(arguments[6]) ?? 2868 : 2868
 
-// Crop the status bar + Dynamic Island (~152px) and home indicator (~40px) so it merges
-// cleanly into the cream canvas (no floating island pill).
-let crop = devCG.cropping(to: CGRect(x: 0, y: 152, width: devCG.width, height: devCG.height - 192))!
-let targetW = 1010.0
-let scale = targetW / Double(crop.width)
-let destW = targetW, destH = Double(crop.height) * scale
-let destX = (Double(W) - destW) / 2
-let destY = 90.0   // bottom margin (origin is bottom-left)
+func color(_ hex: Int) -> NSColor {
+    NSColor(
+        srgbRed: CGFloat((hex >> 16) & 0xff) / 255,
+        green: CGFloat((hex >> 8) & 0xff) / 255,
+        blue: CGFloat(hex & 0xff) / 255,
+        alpha: 1
+    )
+}
 
-let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: W, pixelsHigh: H,
-    bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-    colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+let forest = color(0x1B4332)
+let cream = color(0xF7F4EC)
+let ink = color(0x171918)
 
+guard let sourceRep = NSBitmapImageRep(data: try Data(contentsOf: URL(fileURLWithPath: inputPath))),
+      let source = sourceRep.cgImage else {
+    fatalError("Could not read \(inputPath)")
+}
+
+let colorSpace = CGColorSpaceCreateDeviceRGB()
+let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue)
+guard let cg = CGContext(
+    data: nil,
+    width: width,
+    height: height,
+    bitsPerComponent: 8,
+    bytesPerRow: width * 4,
+    space: colorSpace,
+    bitmapInfo: bitmapInfo.rawValue
+) else {
+    fatalError("Could not create output canvas")
+}
+
+let context = NSGraphicsContext(cgContext: cg, flipped: false)
 NSGraphicsContext.saveGraphicsState()
-let gctx = NSGraphicsContext(bitmapImageRep: rep)!
-NSGraphicsContext.current = gctx
-let ctx = gctx.cgContext
+NSGraphicsContext.current = context
 
-// Background
-ctx.setFillColor(cream.cgColor)
-ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
+// Every output pixel starts opaque. This prevents transparent simulator masks from becoming black
+// blocks after App Store Connect or other image processors flatten the PNG.
+cg.setFillColor(cream.cgColor)
+cg.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
-// Device (subtle drop shadow for separation)
-ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: -8), blur: 28, color: NSColor.black.withAlphaComponent(0.18).cgColor)
-ctx.draw(crop, in: CGRect(x: destX, y: destY, width: destW, height: destH))
-ctx.restoreGState()
+let headerHeight = CGFloat(height) * 0.33
+cg.setFillColor(forest.cgColor)
+cg.fill(CGRect(x: 0, y: CGFloat(height) - headerHeight, width: CGFloat(width), height: headerHeight))
 
-// Captions (origin bottom-left; top of canvas is large y)
-func drawCentered(_ s: String, y: CGFloat, color: NSColor) {
-    let style = NSMutableParagraphStyle(); style.alignment = .center
-    let attrs: [NSAttributedString.Key: Any] = [
-        .font: NSFont.systemFont(ofSize: 84, weight: .bold),
+let phoneWidth = CGFloat(width) * 0.76
+let phoneHeight = phoneWidth * CGFloat(source.height) / CGFloat(source.width)
+let phoneX = (CGFloat(width) - phoneWidth) / 2
+let phoneY = max(54, CGFloat(height) - headerHeight - phoneHeight + CGFloat(height) * 0.11)
+let phoneRect = CGRect(x: phoneX, y: phoneY, width: phoneWidth, height: phoneHeight)
+let bezel = max(14, CGFloat(width) * 0.014)
+let cornerRadius = max(52, CGFloat(width) * 0.055)
+
+cg.saveGState()
+cg.setShadow(
+    offset: CGSize(width: 0, height: -12),
+    blur: 34,
+    color: NSColor.black.withAlphaComponent(0.2).cgColor
+)
+cg.setFillColor(ink.cgColor)
+cg.addPath(CGPath(roundedRect: phoneRect.insetBy(dx: -bezel, dy: -bezel),
+                  cornerWidth: cornerRadius + bezel,
+                  cornerHeight: cornerRadius + bezel,
+                  transform: nil))
+cg.fillPath()
+cg.restoreGState()
+
+cg.saveGState()
+cg.addPath(CGPath(roundedRect: phoneRect,
+                  cornerWidth: cornerRadius,
+                  cornerHeight: cornerRadius,
+                  transform: nil))
+cg.clip()
+cg.setFillColor(cream.cgColor)
+cg.fill(phoneRect)
+cg.setBlendMode(.normal)
+cg.draw(source, in: phoneRect)
+cg.restoreGState()
+
+func drawCentered(_ text: String, y: CGFloat, height: CGFloat, size: CGFloat, color: NSColor) {
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.alignment = .center
+    paragraph.lineBreakMode = .byWordWrapping
+    let attributes: [NSAttributedString.Key: Any] = [
+        .font: NSFont.systemFont(ofSize: size, weight: .bold),
         .foregroundColor: color,
-        .paragraphStyle: style,
+        .paragraphStyle: paragraph
     ]
-    let str = NSAttributedString(string: s, attributes: attrs)
-    let size = str.size()
-    str.draw(at: CGPoint(x: (CGFloat(W) - size.width)/2, y: y))
+    NSAttributedString(string: text, attributes: attributes).draw(
+        with: CGRect(x: CGFloat(width) * 0.08,
+                     y: y,
+                     width: CGFloat(width) * 0.84,
+                     height: height),
+        options: [.usesLineFragmentOrigin, .usesFontLeading]
+    )
 }
-drawCentered(l1, y: CGFloat(H) - 300, color: ink)
-drawCentered(l2, y: CGFloat(H) - 410, color: green)
+
+drawCentered(
+    headline,
+    y: CGFloat(height) - headerHeight * 0.48,
+    height: headerHeight * 0.3,
+    size: CGFloat(width) * 0.06,
+    color: cream
+)
+drawCentered(
+    subtext,
+    y: CGFloat(height) - headerHeight * 0.68,
+    height: headerHeight * 0.18,
+    size: CGFloat(width) * 0.029,
+    color: cream.withAlphaComponent(0.9)
+)
 
 NSGraphicsContext.restoreGraphicsState()
 
-let out = rep.representation(using: .png, properties: [:])!
-try! out.write(to: URL(fileURLWithPath: outPath))
-print("wrote \(outPath)")
+guard let outputImage = cg.makeImage(),
+      let png = NSBitmapImageRep(cgImage: outputImage).representation(using: .png, properties: [:]) else {
+    fatalError("Could not encode output PNG")
+}
+try png.write(to: URL(fileURLWithPath: outputPath))
+print("Wrote \(width)x\(height) screenshot to \(outputPath)")

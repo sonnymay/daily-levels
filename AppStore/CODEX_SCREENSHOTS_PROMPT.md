@@ -2,6 +2,20 @@
 
 Paste the fenced block into Codex. Self-contained.
 
+## Screenshot content (what to capture before uploading)
+
+Tell the app's story in 5 shots. Use `-seedDemoData -autoStart -todayMinutes 45` launch args
+and toggle `-unlockPro` where noted. Capture at 1242×2688 (iPhone 6.5" / Xcode Simulator
+iPhone 15 Plus). Name them 01–05 in order — Apple shows the first 3 in search results.
+
+| File | Screen state | What it shows |
+|------|-------------|---------------|
+| `01_grind.png` | Timer running, Swordsman class, ~25 min focus | The core loop: hero animating, level counter climbing. Caption: "Every 5 minutes — you level up." |
+| `02_collection.png` | Hero Collection sheet, 3 of 10 reached, Knight/Crusader veiled with "Pro" badge | The progression ladder. Caption: "10 heroes to unlock. Your progress never resets." |
+| `03_lock.png` | Main screen, phone-locked state (grinding indicator active) | The differentiator. Caption: "Lock your phone. Your hero keeps grinding." |
+| `04_paywall.png` | PaywallView, price showing | One-time price clearly visible. Caption: "No subscription. Ever. $6.99 once." |
+| `05_streak.png` | FocusHistoryCard, 5-day streak chip visible, `-unlockPro` on, Paladin class | Retention hook + Pro art flex. Caption: "Build the habit. Watch your hero evolve." |
+
 ```
 Upload App Store screenshots for an iOS app that is already fully configured in App Store
 Connect. Do NOT submit the app for review — only upload the screenshots and report back.
@@ -10,7 +24,7 @@ FACTS
 - App: "Daily Levels", App ID 6780007939, bundle com.santipapmay.DailyLevels
 - Apple Team ID: 57U5D693VS, App Store Connect Issuer ID: 69a6de7a-0b32-47e3-e053-5b8c7c11a4d1
 - Version: 1.0 (en-US), status "Prepare for Submission"
-- Screenshots to upload: 10 PNGs at ~/Downloads/dl_screens/ named 01_novice.png … 10_mythic.png,
+- Screenshots to upload: 5 PNGs at ~/Downloads/dl_screens/ named 01_grind.png … 05_streak.png,
   each 1242×2688 (iPhone 6.5" display). Upload in that numeric order (Apple shows the first 3 in search).
   These go in the iPhone 6.5" Display slot.
 
@@ -23,7 +37,7 @@ PREFERRED METHOD — fastlane deliver (headless via App Store Connect API key):
      Then `mkdir -p ~/.appstoreconnect/private_keys && mv ~/Downloads/AuthKey_*.p8 ~/.appstoreconnect/private_keys/`.
    - Build the fastlane api_key JSON (key_id from filename, issuer_id above, key contents from the .p8).
 3. Arrange screenshots for fastlane: create a temp dir, e.g. /tmp/dl_fastlane/screenshots/en-US/
-   and copy the 10 files there keeping the 01..10 prefixes (fastlane orders alphabetically,
+   and copy the 5 files there keeping the 01..05 prefixes (fastlane orders alphabetically,
    and detects the 6.5" display from the 1242×2688 dimensions).
 4. Run, from a temp dir:
    fastlane deliver \
@@ -34,10 +48,10 @@ PREFERRED METHOD — fastlane deliver (headless via App Store Connect API key):
      --screenshots_path /tmp/dl_fastlane/screenshots \
      --force true
    (--force skips the HTML preview confirmation; deliver will NOT submit for review.)
-5. Verify in App Store Connect that the 1.0 version now shows 10 iPhone 6.5" screenshots.
+5. Verify in App Store Connect that the 1.0 version now shows 5 iPhone 6.5" screenshots.
 
 FALLBACK — if fastlane/API key is not workable, use macOS UI automation: open Finder at
-~/Downloads/dl_screens/, select all 10, and drag them onto the screenshot drop zone on the
+~/Downloads/dl_screens/, select all 5, and drag them onto the screenshot drop zone on the
 Daily Levels 1.0 version page in the browser (requires the page open + Accessibility permission).
 
 CONSTRAINTS: do not submit for review, do not enter my Apple password or do 2FA yourself

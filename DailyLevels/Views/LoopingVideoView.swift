@@ -15,12 +15,14 @@ import AVFoundation
 
 struct LoopingVideoView: UIViewRepresentable {
     let url: URL
+    var isPlaying = true
 
     func makeUIView(context: Context) -> LoopingPlayerUIView {
-        LoopingPlayerUIView(url: url)
+        LoopingPlayerUIView(url: url, isPlaying: isPlaying)
     }
 
     func updateUIView(_ uiView: LoopingPlayerUIView, context: Context) {
+        uiView.setPlaying(isPlaying)
         uiView.setURL(url)
     }
 }
@@ -33,8 +35,10 @@ final class LoopingPlayerUIView: UIView {
     private let queuePlayer = AVQueuePlayer()
     private var looper: AVPlayerLooper?
     private var currentURL: URL?
+    private var isPlaying: Bool
 
-    init(url: URL) {
+    init(url: URL, isPlaying: Bool) {
+        self.isPlaying = isPlaying
         super.init(frame: .zero)
         queuePlayer.isMuted = true
         playerLayer.player = queuePlayer
@@ -47,8 +51,25 @@ final class LoopingPlayerUIView: UIView {
     func setURL(_ url: URL) {
         guard url != currentURL else { return }
         currentURL = url
+        looper?.disableLooping()   // release the old looper before it's replaced (avoids two loopers on one player)
         let item = AVPlayerItem(url: url)
         looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
-        queuePlayer.play()
+        if isPlaying { queuePlayer.play() }
+    }
+
+    func setPlaying(_ shouldPlay: Bool) {
+        guard shouldPlay != isPlaying else { return }
+        isPlaying = shouldPlay
+        if shouldPlay {
+            queuePlayer.play()
+        } else {
+            queuePlayer.pause()
+        }
+    }
+
+    deinit {
+        looper?.disableLooping()
+        queuePlayer.pause()
+        queuePlayer.removeAllItems()
     }
 }

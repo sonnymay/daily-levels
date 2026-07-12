@@ -41,15 +41,15 @@ final class LockClassifier {
         // `queue: .main` guarantees these closures run on the main thread, matching @MainActor.
         nc.addObserver(forName: UIApplication.didEnterBackgroundNotification,
                        object: nil, queue: .main) { [weak self] _ in
-            self?.handleEnterBackground()
+            Task { @MainActor in self?.handleEnterBackground() }
         }
         nc.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
                        object: nil, queue: .main) { [weak self] _ in
-            self?.handleLock()
+            Task { @MainActor in self?.handleLock() }
         }
         nc.addObserver(forName: UIApplication.willEnterForegroundNotification,
                        object: nil, queue: .main) { [weak self] _ in
-            self?.handleEnterForeground()
+            Task { @MainActor in self?.handleEnterForeground() }
         }
     }
 

@@ -32,6 +32,7 @@ enum HeroSceneAsset {
 }
 
 struct HeroScenePanel: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let grinding: Bool
     /// Current daily class name (e.g. "Novice"). Drives which grinding clip plays so the
     /// hero's gear visually matches the class. Lowercased to match the bundled filenames.
@@ -51,7 +52,7 @@ struct HeroScenePanel: View {
             if let url = videoURL {
                 // `.id(url)` forces SwiftUI to rebuild the player view when the class clip
                 // changes (e.g. Novice → Squire), so the new video actually swaps in.
-                LoopingVideoView(url: url).id(url)
+                LoopingVideoView(url: url, isPlaying: !reduceMotion).id(url)
             } else if let image = stillImage {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {

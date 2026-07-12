@@ -6,8 +6,19 @@ DerivedData/
 *.moved-aside
 *.hmap
 *.ipa
+*.xcarchive
 *.dSYM.zip
 *.dSYM
+
+## Signing and App Store Connect secrets
+*.p8
+*.p12
+*.mobileprovision
+api_key.json
+AppStoreConnectAPIKey*.json
+.env
+.env.*
+!.env.example
 
 ## Xcode user state (per-developer, not shared)
 xcuserdata/
@@ -33,3 +44,6 @@ fastlane/screenshots/**/*.png
 # App Store preview videos (regenerate via simctl + ffmpeg; large binaries)
 AppStore/*.mp4
 AppStore/*.mov
+
+# Superseded pre-1.1 screenshot composites; release-ready sets are tracked separately
+AppStore/screenshots/marketing_1290/

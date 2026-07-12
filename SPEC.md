@@ -1,15 +1,12 @@
-# Minute Knight — Product Spec v1.0
+# Daily Levels — Product Spec v1.1
 
-> Working name: **Minute Knight** (pun on "midnight" — when daily levels reset).
-> Backup names: 5 Minute Knight, Knightly. Confirm App Store availability before release.
->
 > One-liner: *A focus timer where every 5 minutes of focus levels up your hero. Stay off your phone; the hero grinds. Resets at midnight.*
 
 ---
 
 ## 1. What this app is (and is not)
 
-**Is:** A calm, minimal focus timer (like Forest) with light RPG visuals as motivation. One screen. Two buttons states (Start/Pause). Daily progress like the iPhone Health step counter.
+**Is:** A calm, minimal focus timer with light RPG visuals as motivation. One screen. One primary button whose state is Start, Pause, or Resume. Daily progress feels as glanceable as an iPhone Health metric.
 
 **Is NOT:** A game. No inventory, quests, coins, HP systems, monsters-as-gameplay, battles, or rewards economy. The hero scene is **visual motivation only**.
 
@@ -24,7 +21,7 @@
 | Focus → level rate | **5 minutes of focus = 1 level** |
 | Daily level | `min(100, floor(todayFocusMinutes / 5))` — resets at **midnight local time**. Caps at **100** (500 min = 8h20m, a perfect deep-work day) |
 | History | Previous days kept forever (date, level reached, total focus time) |
-| Hero (lifetime) level | Sum of all levels ever earned; never resets; shown as a badge |
+| Hero journey level | Sum of all daily levels ever earned, capped at 100; never resets; drives the Hero Collection |
 | Daily class | Based on **today's** level (see §3); resets at midnight with the level |
 
 **Examples:** 20 min = Level 4 · 25 min = Level 5 · 60 min = Level 12 · 65 min = Level 13.
@@ -77,10 +74,11 @@ Top to bottom:
 2. **Header (right):** Class badge — current daily class (e.g., "Novice"). Tap target may later show the class ladder.
 3. **Hero scene panel:** Rounded card with pixel-art scene. Two animation states: grinding (hero walks/fights a slime) and sleeping (hero by campfire). Original character design — NOT Ragnarok Online assets (IP).
 4. **Progress bar:** Fill = minutes into current level (0–5 min). Left label: "20 min focused today" + "Current session 12:34" beneath. Right label: "Next level in X min" (never show "0 min" — show "Level up!" moment instead).
-5. **Focus History card:** Title "Focus History" + caption "Levels earned each day · resets at midnight". Small bar chart: last 7 days, oldest→newest, rightmost bar = "Today" in darker green, others soft green. Below chart: list of recent days — `Date · Level N · X min focus time` with chevron. "History" link reserved for a full-history screen (v1.1, not v1).
-6. **Bottom button:** One large pill button. Grinding → green "⏸ Pause". Paused/idle → "▶ Start". Icon must always match the action.
+5. **Focus History card:** Title "Focus History" + caption "Levels earned each day · resets at midnight". Small bar chart: last 7 days, oldest→newest, rightmost bar = "Today" in darker green, others soft green. Below chart: a compact, non-interactive list of recent days — `Date · Level N · X min focus time`. Do not show links or chevrons unless they lead somewhere.
+6. **Hero Collection row:** One secondary row opens a sheet showing the cumulative 10-hero journey and the one-time Pro unlock. It must not compete visually with Start/Pause.
+7. **Bottom button:** One large pill button. Grinding → green "⏸ Pause". Paused → "▶ Resume". Idle → "▶ Start". Icon must always match the action.
 
-No tab bar. No settings screen in v1 (or a single sheet at most). No other buttons.
+No tab bar, feed, settings screen, streak counter, or always-visible share control. Start/Pause/Resume remains the only primary action.
 
 ---
 
@@ -103,14 +101,14 @@ Hero
 - lifetimeLevels: Int    // sum of all DailySummary.level (or recompute)
 ```
 
-Storage: local first (SwiftData/CoreData or SQLite). No accounts, no backend in v1. iCloud sync = later.
+Storage: SwiftData on device. No account, backend, analytics, advertising SDK, or sync.
 
 ### Edge cases (must handle)
 1. **Session crosses midnight:** split into two sessions at 12:00:00 AM local so each day gets its own minutes. Daily level/class reset applies at the split.
 2. **Sleeping time never counts.** Only grinding seconds accumulate.
-3. **Timezone change / DST:** "midnight" = local time at that moment; acceptable v1 simplification.
+3. **Timezone change / DST:** derive each day using the current local calendar; 23-hour and 25-hour days still map to exactly one local date.
 4. **Clock tampering:** ignore for v1 (single-player, who cares).
-5. **App killed mid-session:** persist session start; on relaunch, recover using last-known state conservatively (count only provable grinding time).
+5. **App killed mid-session:** persist a checkpoint whenever a level is earned or local midnight changes. A foreground crash keeps those banked checkpoints and discards only the unproven remainder. Once iOS confirms the phone is locked, persist a locked marker; if the process is terminated, recover that locked interval on relaunch, capped at the 100-level daily maximum.
 
 ---
 
@@ -122,10 +120,10 @@ Storage: local first (SwiftData/CoreData or SQLite). No accounts, no backend in 
 - On `didEnterBackground`: start a ~30s background task + grace timer; assume nothing yet.
 - If `protectedDataWillBecomeUnavailable` fires → device locked → classify **LOCKED**, keep counting time.
 - If grace timer expires with no lock notification → classify **APP SWITCH** → stop counting from background time; hero sleeps.
-- On `willEnterForeground` / `protectedDataDidBecomeAvailable`: reconcile elapsed time according to classification.
+- On `willEnterForeground`: reconcile elapsed time according to classification and clear the recoverable locked marker.
 
 **Known caveats (verify in prototype):**
-- Requires a device passcode; without one, protected-data notifications never fire → fallback: treat all backgrounding as grinding (be generous, stay kind).
+- Requires a device passcode for reliable protected-data notifications. Without one, iOS may classify locking as an app switch after the grace period.
 - Lock notification can be delayed (passcode grace period settings). Tune the grace window on real hardware.
 - Must test on a **physical iPhone with passcode** — simulator is unreliable for this.
 
@@ -135,11 +133,11 @@ Storage: local first (SwiftData/CoreData or SQLite). No accounts, no backend in 
 
 ## 7. Tech stack (recommendation)
 
-**SwiftUI, native iOS.** Rationale: single screen, but the hard parts (protected-data notifications, background tasks, local notifications, Live Activity later) are all native APIs. React Native would need a custom native module for exactly the risky part. App is small enough that SwiftUI is learnable in days, and AI codegen handles SwiftUI well.
+**SwiftUI, native iOS.** The hard parts are protected-data notifications, background tasks, local-calendar math, SwiftData, and StoreKit 2. The app has no third-party dependencies and makes no network calls of its own.
 
 If RN is strongly preferred (existing familiarity): RN UI + one small native Swift module for lock detection. Acceptable, more moving parts.
 
-Sprites: layered PNG sprite sheets (AI-generated, then cleaned). Two animations minimum: grind loop, sleep loop. No video.
+Hero media: one compressed looping grind video plus one sleeping still per class, with static-image and built-in fallbacks.
 
 ---
 
@@ -153,14 +151,10 @@ Sprites: layered PNG sprite sheets (AI-generated, then cleaned). Two animations 
 
 ## 9. Explicitly out of scope for v1
 
-Tabs · full History screen · settings beyond minimum · streaks · daily goal card · loot/items/coins/HP · multiple zones or monsters-as-content · accounts/sync · widgets/Live Activities · Android.
-
-(Good v1.1 candidates: full history screen, streaks, Live Activity on lock screen, class-change celebration share card.)
+Tabs · full History screen · settings beyond minimum · streaks · daily goal card · loot/items/coins/HP · multiple zones or monsters-as-content · accounts/sync · notifications · widgets/Live Activities · Android.
 
 ## 10. Open items
 
-- [ ] Confirm "Minute Knight" availability on App Store (then reserve the name in App Store Connect)
-- [ ] Final character design (original, not RO) — sprite sheet generation
-- [ ] Grace-window tuning after prototype (start at 30s)
-- [ ] App icon
-- [ ] Write onboarding copy (first-launch tooltip or empty-state message)
+- [ ] Verify lock-vs-app-switch behavior on a physical passcode-enabled iPhone using `TESTING.md`.
+- [ ] Tune the 30-second grace window only if hardware evidence calls for it.
+- [ ] Sandbox-test purchase, restore, and paid-1.0 grandfathering before release.
