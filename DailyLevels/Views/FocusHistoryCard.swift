@@ -94,6 +94,9 @@ private struct WeekBarChart: View {
                                 .minimumScaleFactor(0.7)
                         }
                         .frame(maxWidth: .infinity)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(Text(isToday ? String(localized: "Today") : Format.longDate(day.date)))
+                        .accessibilityValue(Text(accessibilitySummary(for: day)))
                     }
                 }
                 .padding(.leading, 22)   // clear the y-axis labels
@@ -132,6 +135,15 @@ private struct DayRow: View {
             }
         }
         .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(Format.longDate(day.date)))
+        .accessibilityValue(Text(accessibilitySummary(for: day)))
     }
+}
+
+/// Reuses existing localized strings so chart bars and rows announce the same concise result.
+private func accessibilitySummary(for day: DaySummary) -> String {
+    let level = String(localized: "Level \(day.level)")
+    let focusTime = String(localized: "\(day.focusMinutes) min focus time")
+    return "\(level), \(focusTime)"
 }
