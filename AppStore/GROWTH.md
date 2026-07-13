@@ -94,7 +94,7 @@ TikTok in **early August**.
 **Pre-launch**
 - [ ] Create the IAP `com.santipapmay.DailyLevels.pro` in ASC (Non-Consumable, $6.99). *(owner)*
 - [ ] Set app price to **Free**. *(owner)*
-- [ ] Archive + upload **version 1.1 build 6**, attach the first IAP, and make the app Free.
+- [ ] Upload **version 1.1 build 7**, attach the first IAP, and make the app Free.
 - [ ] Confirm paid 1.0 customers are grandfathered into Pro via `AppTransaction`.
 - [ ] Title/Subtitle/Keywords per METADATA.md; 5 clean 6.9″ screenshots; resize the preview video.
 - [ ] TestFlight to 10–20 people; sandbox-test the purchase + restore; collect 2–3 testimonial quotes.

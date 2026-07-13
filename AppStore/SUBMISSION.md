@@ -1,13 +1,16 @@
 # Daily Levels - App Store 1.1 submission
 
-This checklist is for **version 1.1 build 6** of App Store Connect app `6780007939`, bundle
+This checklist is for **version 1.1 build 7** of App Store Connect app `6780007939`, bundle
 `com.santipapmay.DailyLevels`, Team `57U5D693VS`.
 
 ## Current binary checkpoint
 
-- The 1.1 (6) archive completed successfully on July 10, 2026.
-- The signed binary upload completed successfully; App Store Connect reported it as processing
-  immediately after upload. Recheck processing before attaching the build to version 1.1.
+- Build 1.1 (6) uploaded successfully on July 10, 2026, but it predates the final accessibility
+  improvements and is not the release candidate.
+- The 1.1 (7) archive completed successfully on July 12, 2026 at
+  `/tmp/DailyLevels-1.1-7.xcarchive` from merged `main` commit `d37e362`.
+- Build 7 upload has not completed: Xcode reported `exportArchive Failed to Use Accounts`. Sign in
+  again under Xcode Settings > Accounts or install an App Store Connect API key, then retry export.
 - The app has not been submitted for review. The final stop below still applies.
 
 ## Prepared in the repo
@@ -28,7 +31,7 @@ This checklist is for **version 1.1 build 6** of App Store Connect app `67800079
    locking keeps focus active and switching apps pauses at the background timestamp.
 2. In Xcode with the local StoreKit configuration, test a new purchase, cancellation, pending state,
    and Restore Purchases.
-3. Install build 6 over the public paid 1.0 app and confirm the user receives Pro automatically.
+3. Install build 7 over the public paid 1.0 app and confirm the user receives Pro automatically.
 4. Confirm the five files in `screenshots/release_6_9/` are opaque 1320x2868 PNGs and the five in
    `screenshots/release_13_inch/` are opaque 2064x2752 PNGs. Any paid hero shown in marketing must
    be labeled as requiring Pro.
@@ -39,14 +42,14 @@ This checklist is for **version 1.1 build 6** of App Store Connect app `67800079
 cd "/Users/santipapmay/Documents/Documents - Santipap’s MacBook Air/Daily Levels"
 xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels -configuration Release \
   -destination "generic/platform=iOS" \
-  -archivePath /tmp/DailyLevels-1.1-6.xcarchive \
+  -archivePath /tmp/DailyLevels-1.1-7.xcarchive \
   DEVELOPMENT_TEAM=57U5D693VS CODE_SIGN_STYLE=Automatic \
   -allowProvisioningUpdates archive
 
 xcodebuild -exportArchive \
-  -archivePath /tmp/DailyLevels-1.1-6.xcarchive \
+  -archivePath /tmp/DailyLevels-1.1-7.xcarchive \
   -exportOptionsPlist /tmp/UploadOptions.plist \
-  -exportPath /tmp/DailyLevels-1.1-6-export \
+  -exportPath /tmp/DailyLevels-1.1-7-export \
   -allowProvisioningUpdates
 ```
 
@@ -61,14 +64,14 @@ xcodebuild -exportArchive \
    `METADATA.md`, including English (U.S.) display name and description.
 4. Upload `screenshots/release_6_9/` and `screenshots/release_13_inch/` in numeric order to their
    matching 6.9-inch iPhone and 13-inch iPad slots.
-5. Attach build **1.1 (6)** and the Pro IAP to the version.
+5. Attach build **1.1 (7)** and the Pro IAP to the version.
 6. Confirm age rating **9+**, export compliance **No**, IDFA **No**, and privacy **Data Not Collected**.
 7. Verify the price, screenshots, build, IAP, review contact, support URL, and release option.
 
 ## Final stop
 
 Do not click **Submit for Review** or release the app until the owner explicitly confirms the final
-summary: Daily Levels, version 1.1, build 6, Free, one $6.99-equivalent non-consumable, screenshot
+summary: Daily Levels, version 1.1, build 7, Free, one $6.99-equivalent non-consumable, screenshot
 counts for every required device family, and paid-1.0 users grandfathered into Pro.
 
 Apple password entry, 2FA, legal agreements, the physical lock-button test, and final submission are
