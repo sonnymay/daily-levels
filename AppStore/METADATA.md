@@ -40,7 +40,7 @@ Free to start. Every 5 minutes of focus levels up your hero — Novice to Mythic
 - **Display Name:** `Daily Levels Pro`
 - **Description:** `Unlock seven hero evolutions — Knight through Mythic. One purchase, yours forever.`
 - **Review screenshot:** use the paywall screenshot (1290×2796 or any required size)
-- Submit the IAP **together with** version 1.1 build 6, the first production freemium build.
+- Submit the IAP **together with** version 1.1 build 7, the production freemium release candidate.
 
 ## Description (4000 chars max)
 ```

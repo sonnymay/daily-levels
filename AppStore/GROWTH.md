@@ -94,7 +94,7 @@ TikTok in **early August**.
 **Pre-launch**
 - [ ] Create the IAP `com.santipapmay.DailyLevels.pro` in ASC (Non-Consumable, $6.99). *(owner)*
 - [ ] Set app price to **Free**. *(owner)*
-- [ ] Archive + upload **version 1.1 build 6**, attach the first IAP, and make the app Free.
+- [ ] Upload **version 1.1 build 7**, attach the first IAP, and make the app Free.
 - [ ] Confirm paid 1.0 customers are grandfathered into Pro via `AppTransaction`.
 - [ ] Title/Subtitle/Keywords per METADATA.md; 5 clean 6.9″ screenshots; resize the preview video.
 - [ ] TestFlight to 10–20 people; sandbox-test the purchase + restore; collect 2–3 testimonial quotes.
@@ -115,6 +115,33 @@ TikTok in **early August**.
 **Throughout:** use App Store Connect only. Track unique impressions, product-page views, first-time
 downloads, conversion rate, paying users, and proceeds. Low impressions means discovery; impressions
 without downloads means the listing; downloads without purchases means activation or the Pro offer.
+
+---
+
+## 7. Two-week measurement loop
+
+Do not add analytics code or a tracking SDK. Once a week, copy these aggregate values from App Store
+Connect into one private note or spreadsheet:
+
+| Date range | Impressions | Product-page views | First-time downloads | Pro units | Proceeds | Change running |
+|---|---:|---:|---:|---:|---:|---|
+| Week 1 |  |  |  |  |  | None - baseline |
+| Week 2 |  |  |  |  |  |  |
+
+Wait for a full 14-day window before changing the product page. If the sample is still tiny, keep
+collecting rather than treating a handful of people as a trend. Diagnose in this order:
+
+1. **Few impressions:** improve distribution first - one campaign link, one StudyTok/Reels lane,
+   and accurate search terms. Do not redesign the app.
+2. **Views but few downloads:** change one listing variable, starting with screenshot 1 or the
+   subtitle. Hold everything else steady for the next window.
+3. **Downloads but few Pro purchases:** review whether users reach the Hero Collection and understand
+   the one-time offer. Test copy or timing before changing price.
+4. **Purchases are appearing:** leave the funnel alone long enough to establish a baseline. Spend the
+   next cycle on reliability, reviews, and support feedback.
+
+Record the date and exact variable for every experiment. Never add streak guilt, notifications,
+accounts, ads, or cross-app tracking to lift a metric; those would invalidate the product promise.
 
 ---
 
