@@ -118,6 +118,33 @@ without downloads means the listing; downloads without purchases means activatio
 
 ---
 
+## 7. Two-week measurement loop
+
+Do not add analytics code or a tracking SDK. Once a week, copy these aggregate values from App Store
+Connect into one private note or spreadsheet:
+
+| Date range | Impressions | Product-page views | First-time downloads | Pro units | Proceeds | Change running |
+|---|---:|---:|---:|---:|---:|---|
+| Week 1 |  |  |  |  |  | None - baseline |
+| Week 2 |  |  |  |  |  |  |
+
+Wait for a full 14-day window before changing the product page. If the sample is still tiny, keep
+collecting rather than treating a handful of people as a trend. Diagnose in this order:
+
+1. **Few impressions:** improve distribution first - one campaign link, one StudyTok/Reels lane,
+   and accurate search terms. Do not redesign the app.
+2. **Views but few downloads:** change one listing variable, starting with screenshot 1 or the
+   subtitle. Hold everything else steady for the next window.
+3. **Downloads but few Pro purchases:** review whether users reach the Hero Collection and understand
+   the one-time offer. Test copy or timing before changing price.
+4. **Purchases are appearing:** leave the funnel alone long enough to establish a baseline. Spend the
+   next cycle on reliability, reviews, and support feedback.
+
+Record the date and exact variable for every experiment. Never add streak guilt, notifications,
+accounts, ads, or cross-app tracking to lift a metric; those would invalidate the product promise.
+
+---
+
 ## Sources
 - RevenueCat — State of Subscription Apps 2025/2026 (conversion + price benchmarks)
 - Finch $30M ARR breakdown (sparrowapps.io); Opal $10M ARR (speedinvest.com)
