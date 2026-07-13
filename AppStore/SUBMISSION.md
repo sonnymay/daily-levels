@@ -27,12 +27,13 @@ This checklist is for **version 1.1 build 7** of App Store Connect app `67800079
 
 ## Required checks before submission
 
-1. Run tests A-D in [`../TESTING.md`](../TESTING.md) on a physical iPhone with a passcode. Confirm
+1. Run `./AppStore/validate_release.sh 1.1 7` and require a clean release-preflight result.
+2. Run tests A-D in [`../TESTING.md`](../TESTING.md) on a physical iPhone with a passcode. Confirm
    locking keeps focus active and switching apps pauses at the background timestamp.
-2. In Xcode with the local StoreKit configuration, test a new purchase, cancellation, pending state,
+3. In Xcode with the local StoreKit configuration, test a new purchase, cancellation, pending state,
    and Restore Purchases.
-3. Install build 7 over the public paid 1.0 app and confirm the user receives Pro automatically.
-4. Confirm the five files in `screenshots/release_6_9/` are opaque 1320x2868 PNGs and the five in
+4. Install build 7 over the public paid 1.0 app and confirm the user receives Pro automatically.
+5. Confirm the five files in `screenshots/release_6_9/` are opaque 1320x2868 PNGs and the five in
    `screenshots/release_13_inch/` are opaque 2064x2752 PNGs. Any paid hero shown in marketing must
    be labeled as requiring Pro.
 
