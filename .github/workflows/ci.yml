@@ -16,6 +16,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Validate App Store release inputs
+        run: ./AppStore/validate_release.sh 1.1 7
+
       - name: Build & run unit tests
         run: |
           xcodebuild -project DailyLevels.xcodeproj \
