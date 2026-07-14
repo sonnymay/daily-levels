@@ -16,6 +16,45 @@
 
 import UIKit
 
+struct LockClassificationState {
+    enum ForegroundOutcome: Equatable {
+        case locked
+        case appSwitch(Date)
+    }
+
+    private(set) var backgroundedAt: Date?
+    private(set) var sawLock = false
+
+    mutating func enterBackground(at date: Date) {
+        backgroundedAt = date
+        sawLock = false
+    }
+
+    mutating func detectLock() -> Bool {
+        guard backgroundedAt != nil else { return false }
+        sawLock = true
+        return true
+    }
+
+    mutating func graceExpired() -> Date? {
+        guard !sawLock, let date = backgroundedAt else { return nil }
+        reset()
+        return date
+    }
+
+    mutating func enterForeground() -> ForegroundOutcome? {
+        guard let date = backgroundedAt else { return nil }
+        let outcome: ForegroundOutcome = sawLock ? .locked : .appSwitch(date)
+        reset()
+        return outcome
+    }
+
+    private mutating func reset() {
+        backgroundedAt = nil
+        sawLock = false
+    }
+}
+
 @MainActor
 final class LockClassifier {
 
@@ -31,8 +70,7 @@ final class LockClassifier {
     var onAppSwitchDetected: ((_ backgroundedAt: Date) -> Void)?
     var onEnterForeground: ((_ sawLock: Bool) -> Void)?
 
-    private var backgroundedAt: Date?
-    private var sawLock = false
+    private var state = LockClassificationState()
     private var graceTimer: Timer?
     private var bgTask: UIBackgroundTaskIdentifier = .invalid
 
@@ -55,8 +93,7 @@ final class LockClassifier {
 
     private func handleEnterBackground() {
         guard isActive else { return }
-        backgroundedAt = Date()
-        sawLock = false
+        state.enterBackground(at: Date())
 
         // Keep the process alive long enough to observe a lock notification.
         bgTask = UIApplication.shared.beginBackgroundTask(withName: "lock-classify") { [weak self] in
@@ -71,8 +108,7 @@ final class LockClassifier {
     }
 
     private func handleLock() {
-        guard isActive, backgroundedAt != nil else { return }
-        sawLock = true
+        guard isActive, state.detectLock() else { return }
         // It's a real lock — no need to wait out the grace window.
         graceTimer?.invalidate()
         graceTimer = nil
@@ -82,20 +118,26 @@ final class LockClassifier {
     private func graceExpired() {
         graceTimer?.invalidate()
         graceTimer = nil
-        if !sawLock, let bgAt = backgroundedAt {
+        if let bgAt = state.graceExpired() {
             onAppSwitchDetected?(bgAt)   // they left for another app — sleep, don't count away-time
         }
         endBackgroundTask()
     }
 
     private func handleEnterForeground() {
-        guard let _ = backgroundedAt else { return }
+        guard let outcome = state.enterForeground() else { return }
         graceTimer?.invalidate()
         graceTimer = nil
-        let lockedThisTrip = sawLock
-        backgroundedAt = nil
-        sawLock = false
         endBackgroundTask()
+
+        let lockedThisTrip: Bool
+        switch outcome {
+        case .locked:
+            lockedThisTrip = true
+        case .appSwitch(let backgroundedAt):
+            lockedThisTrip = false
+            onAppSwitchDetected?(backgroundedAt)
+        }
         onEnterForeground?(lockedThisTrip)
     }
 

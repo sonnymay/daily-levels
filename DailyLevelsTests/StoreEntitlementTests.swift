@@ -15,6 +15,8 @@ final class StoreEntitlementTests: XCTestCase {
 
     func testVersionLikeAndInvalidValuesFailClosed() {
         XCTAssertTrue(Store.isLegacyPaidBuild("2.0"))
+        XCTAssertFalse(Store.isLegacyPaidBuild("0"))
+        XCTAssertFalse(Store.isLegacyPaidBuild("-1"))
         XCTAssertFalse(Store.isLegacyPaidBuild("not-a-build"))
         XCTAssertFalse(Store.isLegacyPaidBuild(""))
     }

@@ -93,7 +93,8 @@ final class Store {
 
     nonisolated static func isLegacyPaidBuild(_ originalAppVersion: String) -> Bool {
         guard let firstComponent = originalAppVersion.split(separator: ".").first,
-              let build = Int(firstComponent) else { return false }
+              let build = Int(firstComponent),
+              build > 0 else { return false }
         return build < firstFreemiumBuild
     }
 
