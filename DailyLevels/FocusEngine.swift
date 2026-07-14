@@ -360,8 +360,8 @@ final class FocusEngine {
             self.stopTicker()
         }
 
-        // Returned to the app. If we're still grinding (locked the whole time, or came back
-        // within the grace window), just resume the live clock.
+        // Returning after a confirmed lock keeps grinding. App switches are paused first,
+        // including quick returns that happen before the classifier's grace timer expires.
         classifier.onEnterForeground = { [weak self] _ in
             guard let self else { return }
             if self.mode == .grinding {
