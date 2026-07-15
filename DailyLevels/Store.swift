@@ -56,6 +56,7 @@ final class Store {
     }
 
     func loadProducts() async {
+        lastError = nil
         do {
             proProduct = try await Product.products(for: [Self.proProductID]).first
         } catch {
@@ -99,6 +100,8 @@ final class Store {
     }
 
     func purchase() async {
+        guard !isWorking else { return }
+        lastError = nil
         isWorking = true
         defer { isWorking = false }
         if proProduct == nil { await loadProducts() }   // first-launch / offline retry, then surface failure
@@ -125,6 +128,8 @@ final class Store {
 
     /// Wire to the paywall's "Restore Purchases" button (required by App Review).
     func restore() async {
+        guard !isWorking else { return }
+        lastError = nil
         isWorking = true
         defer { isWorking = false }
         do { try await AppStore.sync() }

@@ -73,7 +73,7 @@ enum KnightClass: String, CaseIterable {
 
     /// Localized, user-facing class name. Distinct from `rawValue` (which stays English for
     /// asset filenames + gating). `LocalizedStringResource` works in both SwiftUI `Text(...)`
-    /// and `String(localized:)` (notifications), so every surface localizes from one source.
+    /// and `String(localized:)` (UI and accessibility copy), so every surface localizes from one source.
     var displayName: LocalizedStringResource {
         switch self {
         case .novice:    return LocalizedStringResource("Novice",    comment: "Knight class name")

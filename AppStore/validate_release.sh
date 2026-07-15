@@ -22,16 +22,20 @@ check_screenshot_set() {
     local expected_height="$3"
     local dir="$root/$relative_dir"
     local files=()
-    local file metadata width height alpha format name
+    local file metadata width height alpha format name index expected_prefix
 
     shopt -s nullglob
     files=("$dir"/*.png)
     shopt -u nullglob
     [[ ${#files[@]} -eq 5 ]] || fail "$relative_dir must contain exactly 5 PNG files"
 
-    for file in "${files[@]}"; do
+    for index in "${!files[@]}"; do
+        file="${files[$index]}"
         name="$(basename "$file")"
         [[ "$name" =~ ^[0-9][0-9]_.+\.png$ ]] || fail "$relative_dir/$name needs a numeric ordering prefix"
+        expected_prefix="$(printf '%02d_' "$((index + 1))")"
+        [[ "${name:0:3}" == "$expected_prefix" ]] ||
+            fail "$relative_dir must use consecutive 01_ through 05_ screenshot prefixes"
         metadata="$(sips -g pixelWidth -g pixelHeight -g hasAlpha -g format "$file" 2>/dev/null)"
         width="$(printf '%s\n' "$metadata" | awk '/pixelWidth:/ { print $2 }')"
         height="$(printf '%s\n' "$metadata" | awk '/pixelHeight:/ { print $2 }')"
@@ -59,8 +63,28 @@ check_screenshot_set "AppStore/screenshots/release_13_inch" 2064 2752
 tracked_secrets="$(git -C "$root" ls-files | grep -E '\.(p8|p12|mobileprovision|ipa|xcarchive)$|(^|/)api_key\.json$|AuthKey_' || true)"
 [[ -z "$tracked_secrets" ]] || fail "a signing key, profile, archive, or API credential is tracked"
 
+storekit_config="$root/DailyLevels.storekit"
+scheme="$root/DailyLevels.xcodeproj/xcshareddata/xcschemes/DailyLevels.xcscheme"
+if ! storekit_values="$(ruby -rjson -e '
+    config = JSON.parse(File.read(ARGV.fetch(0)))
+    products = config.fetch("products")
+    product = products.fetch(0)
+    puts [products.length, product.fetch("productID"), product.fetch("type")].join("\t")
+' "$storekit_config" 2>/dev/null)"; then
+    fail "DailyLevels.storekit is not valid JSON"
+fi
+IFS=$'\t' read -r storekit_product_count storekit_product_id storekit_product_type <<< "$storekit_values"
+[[ "$storekit_product_count" == "1" ]] ||
+    fail "DailyLevels.storekit must contain exactly one product"
+[[ "$storekit_product_id" == "com.santipapmay.DailyLevels.pro" ]] ||
+    fail "DailyLevels.storekit has the wrong product ID"
+[[ "$storekit_product_type" == "NonConsumable" ]] ||
+    fail "Daily Levels Pro must be non-consumable"
+grep -q 'identifier = "../../DailyLevels.storekit"' "$scheme" ||
+    fail "the shared scheme is not using DailyLevels.storekit"
+
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/DailyLevels/Store.swift" || fail "StoreKit product ID is missing from Store.swift"
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/AppStore/METADATA.md" || fail "StoreKit product ID is missing from METADATA.md"
 
-printf 'Release validation passed: Daily Levels %s (%s), 10 screenshots, no tracked secrets.\n' \
+printf 'Release validation passed: Daily Levels %s (%s), 10 ordered screenshots, StoreKit config, no tracked secrets.\n' \
     "$expected_version" "$expected_build"

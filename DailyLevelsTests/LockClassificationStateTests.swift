@@ -27,6 +27,27 @@ final class LockClassificationStateTests: XCTestCase {
 
         XCTAssertEqual(state.graceExpired(), backgroundedAt)
         XCTAssertNil(state.graceExpired())
+        XCTAssertFalse(state.detectLock())
         XCTAssertNil(state.enterForeground())
+    }
+
+    func testLockWithoutPendingBackgroundIsIgnored() {
+        var state = LockClassificationState()
+
+        XCTAssertFalse(state.detectLock())
+        XCTAssertFalse(state.sawLock)
+        XCTAssertNil(state.enterForeground())
+    }
+
+    func testNewBackgroundTripClearsPreviousLockSignal() {
+        let secondBackground = backgroundedAt.addingTimeInterval(10)
+        var state = LockClassificationState()
+        state.enterBackground(at: backgroundedAt)
+        XCTAssertTrue(state.detectLock())
+
+        state.enterBackground(at: secondBackground)
+
+        XCTAssertFalse(state.sawLock)
+        XCTAssertEqual(state.enterForeground(), .appSwitch(secondBackground))
     }
 }
