@@ -65,12 +65,20 @@ tracked_secrets="$(git -C "$root" ls-files | grep -E '\.(p8|p12|mobileprovision|
 
 storekit_config="$root/DailyLevels.storekit"
 scheme="$root/DailyLevels.xcodeproj/xcshareddata/xcschemes/DailyLevels.xcscheme"
-plutil -lint "$storekit_config" >/dev/null || fail "DailyLevels.storekit is not valid"
-[[ "$(plutil -extract products raw -o - "$storekit_config")" == "1" ]] ||
+if ! storekit_values="$(ruby -rjson -e '
+    config = JSON.parse(File.read(ARGV.fetch(0)))
+    products = config.fetch("products")
+    product = products.fetch(0)
+    puts [products.length, product.fetch("productID"), product.fetch("type")].join("\t")
+' "$storekit_config" 2>/dev/null)"; then
+    fail "DailyLevels.storekit is not valid JSON"
+fi
+IFS=$'\t' read -r storekit_product_count storekit_product_id storekit_product_type <<< "$storekit_values"
+[[ "$storekit_product_count" == "1" ]] ||
     fail "DailyLevels.storekit must contain exactly one product"
-[[ "$(plutil -extract products.0.productID raw -o - "$storekit_config")" == "com.santipapmay.DailyLevels.pro" ]] ||
+[[ "$storekit_product_id" == "com.santipapmay.DailyLevels.pro" ]] ||
     fail "DailyLevels.storekit has the wrong product ID"
-[[ "$(plutil -extract products.0.type raw -o - "$storekit_config")" == "NonConsumable" ]] ||
+[[ "$storekit_product_type" == "NonConsumable" ]] ||
     fail "Daily Levels Pro must be non-consumable"
 grep -q 'identifier = "../../DailyLevels.storekit"' "$scheme" ||
     fail "the shared scheme is not using DailyLevels.storekit"
