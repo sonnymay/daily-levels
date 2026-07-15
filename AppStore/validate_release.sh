@@ -49,6 +49,38 @@ check_screenshot_set() {
     done
 }
 
+check_hero_assets() {
+    local classes=(novice squire swordsman knight crusader champion paladin hero legend mythic)
+    local grind_files=()
+    local sleep_files=()
+    local class_name grind_file sleep_file metadata width height alpha format
+
+    shopt -s nullglob
+    grind_files=("$root/DailyLevels"/*_grind.mp4)
+    sleep_files=("$root/DailyLevels"/*_sleep.png)
+    shopt -u nullglob
+    [[ ${#grind_files[@]} -eq ${#classes[@]} ]] || fail "DailyLevels must contain exactly 10 class grind videos"
+    [[ ${#sleep_files[@]} -eq ${#classes[@]} ]] || fail "DailyLevels must contain exactly 10 class sleep images"
+
+    for class_name in "${classes[@]}"; do
+        grind_file="$root/DailyLevels/${class_name}_grind.mp4"
+        sleep_file="$root/DailyLevels/${class_name}_sleep.png"
+        [[ -s "$grind_file" ]] || fail "${class_name}_grind.mp4 is missing or empty"
+        file "$grind_file" | grep -q 'ISO Media.*MP4' || fail "${class_name}_grind.mp4 is not an MP4 file"
+        [[ -s "$sleep_file" ]] || fail "${class_name}_sleep.png is missing or empty"
+
+        metadata="$(sips -g pixelWidth -g pixelHeight -g hasAlpha -g format "$sleep_file" 2>/dev/null)"
+        width="$(printf '%s\n' "$metadata" | awk '/pixelWidth:/ { print $2 }')"
+        height="$(printf '%s\n' "$metadata" | awk '/pixelHeight:/ { print $2 }')"
+        alpha="$(printf '%s\n' "$metadata" | awk '/hasAlpha:/ { print $2 }')"
+        format="$(printf '%s\n' "$metadata" | awk '/format:/ { print $2 }')"
+        [[ "$width" == "1448" && "$height" == "1086" ]] ||
+            fail "${class_name}_sleep.png is ${width}x${height}; expected 1448x1086"
+        [[ "$alpha" == "no" ]] || fail "${class_name}_sleep.png must be opaque"
+        [[ "$format" == "png" ]] || fail "${class_name}_sleep.png must be a PNG"
+    done
+}
+
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
     -target DailyLevels -configuration Release -showBuildSettings)"
 
@@ -59,6 +91,7 @@ build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
 
 check_screenshot_set "AppStore/screenshots/release_6_9" 1320 2868
 check_screenshot_set "AppStore/screenshots/release_13_inch" 2064 2752
+check_hero_assets
 
 tracked_secrets="$(git -C "$root" ls-files | grep -E '\.(p8|p12|mobileprovision|ipa|xcarchive)$|(^|/)api_key\.json$|AuthKey_' || true)"
 [[ -z "$tracked_secrets" ]] || fail "a signing key, profile, archive, or API credential is tracked"
@@ -86,5 +119,5 @@ grep -q 'identifier = "../../DailyLevels.storekit"' "$scheme" ||
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/DailyLevels/Store.swift" || fail "StoreKit product ID is missing from Store.swift"
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/AppStore/METADATA.md" || fail "StoreKit product ID is missing from METADATA.md"
 
-printf 'Release validation passed: Daily Levels %s (%s), 10 ordered screenshots, StoreKit config, no tracked secrets.\n' \
+printf 'Release validation passed: Daily Levels %s (%s), 10 ordered screenshots, 10 hero asset pairs, StoreKit config, no tracked secrets.\n' \
     "$expected_version" "$expected_build"
