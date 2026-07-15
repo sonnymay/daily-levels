@@ -3,8 +3,8 @@
 //  Daily Levels
 //
 //  A seamless looping video player using only AVFoundation (no third-party deps).
-//  Drop `grind_loop.mp4` / `sleep_loop.mp4` into the app target and HeroScenePanel
-//  plays them automatically. This is the wiring for the Kling loop clips.
+//  HeroScenePanel supplies the current class's bundled `<class>_grind.mp4` clip.
+//  Paused heroes use still `<class>_sleep.png` artwork instead of this player.
 //
 //  Swift note: `UIViewRepresentable` is the bridge that lets a UIKit view appear inside
 //  SwiftUI — React analogy: a thin wrapper component around a non-React DOM widget.
@@ -22,8 +22,8 @@ struct LoopingVideoView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: LoopingPlayerUIView, context: Context) {
-        uiView.setPlaying(isPlaying)
         uiView.setURL(url)
+        uiView.setPlaying(isPlaying)
     }
 }
 
@@ -51,7 +51,9 @@ final class LoopingPlayerUIView: UIView {
     func setURL(_ url: URL) {
         guard url != currentURL else { return }
         currentURL = url
-        looper?.disableLooping()   // release the old looper before it's replaced (avoids two loopers on one player)
+        looper?.disableLooping()
+        looper = nil
+        queuePlayer.removeAllItems()
         let item = AVPlayerItem(url: url)
         looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
         if isPlaying { queuePlayer.play() }
