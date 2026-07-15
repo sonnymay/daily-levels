@@ -76,14 +76,15 @@ final class FocusEngine {
 
     func pause() {
         guard mode == .grinding else { return }
+        let pausedAt = Date()
         if let s = activeStart {
-            sessionAccumulatedSeconds += max(0, Int(Date().timeIntervalSince(s)))  // bank the live stretch
+            sessionAccumulatedSeconds += max(0, Int(pausedAt.timeIntervalSince(s)))  // bank the live stretch
         }
-        endActiveSession(at: Date())
+        endActiveSession(at: pausedAt)
         mode = .paused
         classifier.isActive = false
         stopTicker()
-        now = Date()
+        now = pausedAt
     }
 
     /// Shared start/resume mechanics: open a new grinding stretch and start the clock.
@@ -116,9 +117,12 @@ final class FocusEngine {
     /// Focused seconds in the current session (the "Current session mm:ss" line):
     /// earlier banked stretches + the live stretch. Holds its value while paused.
     var currentSessionSeconds: Int {
-        let live = (mode == .grinding && activeStart != nil)
-            ? max(0, Int(now.timeIntervalSince(activeStart!)))
-            : 0
+        let live: Int
+        if mode == .grinding, let activeStart {
+            live = max(0, Int(now.timeIntervalSince(activeStart)))
+        } else {
+            live = 0
+        }
         return sessionAccumulatedSeconds + live
     }
 
