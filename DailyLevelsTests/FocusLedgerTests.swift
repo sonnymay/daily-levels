@@ -16,8 +16,8 @@ final class FocusLedgerTests: XCTestCase {
         return calendar
     }
 
-    private func date(day: Int, hour: Int) -> Date {
-        calendar.date(from: DateComponents(year: 2026, month: 7, day: day, hour: hour))!
+    private func date(day: Int, hour: Int, minute: Int = 0) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 7, day: day, hour: hour, minute: minute))!
     }
 
     func testSegmentsOnTheSameDayAreAddedTogether() {
@@ -58,5 +58,18 @@ final class FocusLedgerTests: XCTestCase {
         let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
 
         XCTAssertEqual(result, [day: 10 * 60])
+    }
+
+    func testLegacySegmentCrossingMidnightIsSplitBetweenDays() {
+        let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
+        let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
+        let segment = FocusSegment(
+            startAt: date(day: 12, hour: 23, minute: 59),
+            durationSeconds: 2 * 60
+        )
+
+        let result = FocusLedger.secondsByDay(segments: [segment], calendar: calendar)
+
+        XCTAssertEqual(result, [firstDay: 60, secondDay: 60])
     }
 }

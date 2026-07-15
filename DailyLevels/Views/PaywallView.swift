@@ -14,6 +14,7 @@ struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var isLoadingPrice = false
+    @State private var showNoPurchase = false
 
     private let privacyURL = URL(string: "https://github.com/sonnymay/daily-levels/blob/main/PRIVACY_POLICY.md")!
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
@@ -77,6 +78,11 @@ struct PaywallView: View {
         } message: {
             Text(store.lastError ?? "")
         }
+        .alert("No Purchase Found", isPresented: $showNoPurchase) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("No previous Daily Levels Pro purchase was found for this Apple Account.")
+        }
         .task {
             if store.proProduct == nil { await loadPrice() }
         }
@@ -123,7 +129,14 @@ struct PaywallView: View {
             }
 
             Button("Restore Purchases") {
-                Task { await store.restore(); if store.isPro { dismiss() } }
+                Task {
+                    await store.restore()
+                    if store.isPro {
+                        dismiss()
+                    } else if store.lastError == nil {
+                        showNoPurchase = true
+                    }
+                }
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
