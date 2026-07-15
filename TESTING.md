@@ -1,6 +1,6 @@
 # Daily Levels release testing
 
-Use this checklist for the release candidate. The 45 unit tests cover level math, local-day
+Use this checklist for the release candidate. The 48 unit tests cover level math, local-day
 aggregation, midnight splitting, DST and timezone changes, cold-launch recovery, entitlement
 migration, and the lock-classification state machine. The tests below verify the iOS lifecycle
 behavior that only a physical device can prove.

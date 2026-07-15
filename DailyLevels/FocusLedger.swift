@@ -18,8 +18,12 @@ enum FocusLedger {
                              calendar: Calendar = .current) -> [Date: Int] {
         var secondsByDay: [Date: Int] = [:]
         for segment in segments where segment.durationSeconds > 0 {
-            let day = calendar.startOfDay(for: segment.startAt)
-            secondsByDay[day, default: 0] += segment.durationSeconds
+            let end = segment.startAt.addingTimeInterval(TimeInterval(segment.durationSeconds))
+            for slice in DateUtils.splitAtMidnights(start: segment.startAt, end: end, calendar: calendar) {
+                let day = calendar.startOfDay(for: slice.start)
+                let seconds = Int(slice.end.timeIntervalSince(slice.start).rounded())
+                secondsByDay[day, default: 0] += seconds
+            }
         }
         return secondsByDay
     }
