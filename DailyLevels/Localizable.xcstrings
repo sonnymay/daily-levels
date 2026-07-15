@@ -1856,6 +1856,76 @@
         }
       }
     },
+    "No Purchase Found": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se encontró ninguna compra"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhuma compra encontrada"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kein Kauf gefunden"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun achat trouvé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入が見つかりません"
+          }
+        }
+      }
+    },
+    "No previous Daily Levels Pro purchase was found for this Apple Account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se encontró ninguna compra anterior de Daily Levels Pro para esta cuenta de Apple."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nenhuma compra anterior do Daily Levels Pro foi encontrada para esta Conta Apple."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Für diesen Apple Account wurde kein früherer Kauf von Daily Levels Pro gefunden."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aucun achat antérieur de Daily Levels Pro n’a été trouvé pour ce compte Apple."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このApple Accountでは、Daily Levels Proの以前の購入が見つかりませんでした。"
+          }
+        }
+      }
+    },
     "Purchase failed": {
       "extractionState": "manual",
       "localizations": {
