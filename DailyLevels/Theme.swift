@@ -11,7 +11,7 @@ enum Theme {
     static let cream     = Color(hex: 0xF3F0E8)   // app background
     static let card      = Color(hex: 0xFBFAF5)   // history card surface
     static let ink       = Color(hex: 0x1B1B1D)   // primary text
-    static let gray      = Color(hex: 0x8A8A8E)   // secondary text
+    static let gray      = Color(hex: 0x6A6A70)   // secondary text; AA contrast on cream/card
     static let green     = Color(hex: 0x5E8C3E)   // button + accent
     static let greenDeep = Color(hex: 0x4C7A33)   // filled progress + "Today" bar
     static let greenSoft = Color(hex: 0xC3DBA4)   // past-day bars
