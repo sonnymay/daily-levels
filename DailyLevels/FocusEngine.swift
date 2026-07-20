@@ -148,9 +148,11 @@ final class FocusEngine {
         return max(1, Int(ceil(Double(remaining) / 60.0)))
     }
 
-    /// Sum of every day's level, ever (SPEC §2 "Hero lifetime level"; never resets).
+    /// Complete five-minute blocks across all focus time (SPEC §2 "Hero lifetime level").
+    /// Partial blocks carry across midnight, so earned journey progress is never discarded.
     var lifetimeLevels: Int {
-        secondsByDayIncludingLive().values.reduce(0) { $0 + LevelMath.level(forFocusMinutes: $1 / 60) }
+        let totalSeconds = secondsByDayIncludingLive().values.reduce(0, +)
+        return LevelMath.earnedLevels(forFocusSeconds: totalSeconds)
     }
 
     /// Cumulative "journey" level for the Hero Collection — `lifetimeLevels` mapped onto

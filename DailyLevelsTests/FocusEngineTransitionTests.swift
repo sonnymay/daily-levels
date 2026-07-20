@@ -68,4 +68,36 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.todaySeconds, 0)
         XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
     }
+
+    func testJourneyCarriesPartialFocusAcrossLocalDays() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let firstStart = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 18, hour: 20
+        )))
+        let secondStart = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 19, hour: 9
+        )))
+        container.mainContext.insert(FocusSession(
+            startAt: firstStart,
+            endAt: firstStart.addingTimeInterval(4 * 60),
+            durationSeconds: 4 * 60
+        ))
+        container.mainContext.insert(FocusSession(
+            startAt: secondStart,
+            endAt: secondStart.addingTimeInterval(60),
+            durationSeconds: 60
+        ))
+        try container.mainContext.save()
+
+        let engine = FocusEngine(context: container.mainContext,
+                                 calendar: calendar,
+                                 defaults: defaults)
+
+        XCTAssertEqual(engine.lifetimeLevels, 1)
+        XCTAssertEqual(engine.journeyLevel, 1)
+    }
 }

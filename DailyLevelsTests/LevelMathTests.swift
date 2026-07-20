@@ -37,6 +37,13 @@ final class LevelMathTests: XCTestCase {
         XCTAssertEqual(LevelMath.level(forFocusMinutes: 5000), 100)
     }
 
+    func testLifetimeEarnedLevelsUseEveryCompleteFiveMinuteBlockWithoutDailyCap() {
+        XCTAssertEqual(LevelMath.earnedLevels(forFocusSeconds: -1), 0)
+        XCTAssertEqual(LevelMath.earnedLevels(forFocusSeconds: 4 * 60 + 59), 0)
+        XCTAssertEqual(LevelMath.earnedLevels(forFocusSeconds: 5 * 60), 1)
+        XCTAssertEqual(LevelMath.earnedLevels(forFocusSeconds: 505 * 60), 101)
+    }
+
     func testMinutesIntoLevel() {
         XCTAssertEqual(LevelMath.minutesIntoLevel(0), 0)
         XCTAssertEqual(LevelMath.minutesIntoLevel(3), 3)
