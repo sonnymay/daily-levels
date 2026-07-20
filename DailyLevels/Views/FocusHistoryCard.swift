@@ -73,6 +73,7 @@ private struct WeekBarChart: View {
                             .frame(height: 1)
                     }
                     .position(x: geo.size.width / 2 + 11, y: y)
+                    .accessibilityHidden(true)
                 }
 
                 // Bars
@@ -84,7 +85,9 @@ private struct WeekBarChart: View {
                             Capsule(style: .continuous)
                                 .fill(isToday ? Theme.greenDeep : Theme.greenSoft)
                                 .frame(width: 22,
-                                       height: max(2, plotH * CGFloat(day.level) / CGFloat(top)))
+                                       height: day.level == 0
+                                           ? 0
+                                           : max(2, plotH * CGFloat(day.level) / CGFloat(top)))
                                 .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: day.level)
                             Text(isToday ? "Today" : Format.shortDate(day.date))
                                 .font(.caption2.weight(isToday ? .bold : .regular))
