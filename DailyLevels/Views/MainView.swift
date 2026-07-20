@@ -39,15 +39,7 @@ struct MainView: View {
                         classPulse: classPulse,
                         celebration: celebration
                     )
-                    HeroScenePanel(grinding: engine.isGrinding,
-                                   className: heroArtClass.rawValue,
-                                   locked: heroLocked,
-                                   displayName: heroArtClass.displayName)
-                        .onTapGesture {
-                            guard heroLocked else { return }
-                            Haptics.actionTap()
-                            showPaywall = true
-                        }
+                    heroScene
                         // A soft green ring flashes around the hero on level-up (matches the
                         // panel's 22pt corner). `levelPulse` only increments when motion is on,
                         // so Reduce Motion users never see it.
@@ -128,6 +120,27 @@ struct MainView: View {
             knightPaywallShown = true
             showPaywall = true
         }
+    }
+
+    @ViewBuilder private var heroScene: some View {
+        if heroLocked {
+            Button {
+                Haptics.actionTap()
+                showPaywall = true
+            } label: {
+                heroScenePanel
+            }
+            .buttonStyle(.plain)
+        } else {
+            heroScenePanel
+        }
+    }
+
+    private var heroScenePanel: some View {
+        HeroScenePanel(grinding: engine.isGrinding,
+                       className: heroArtClass.rawValue,
+                       locked: heroLocked,
+                       displayName: heroArtClass.displayName)
     }
 
     /// Ask only after a real class promotion, several days in, and once per app version.

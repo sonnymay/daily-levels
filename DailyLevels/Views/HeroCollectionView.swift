@@ -158,7 +158,25 @@ private struct HeroClassCard: View {
     /// Earned-but-not-owned: the conversion moment (tap → paywall).
     private var unlockable: Bool { reached && proLocked }
 
+    @ViewBuilder
     var body: some View {
+        if unlockable {
+            Button {
+                Haptics.actionTap()
+                onUnlock()
+            } label: {
+                cardContent
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(accessibilityLabel)
+        } else {
+            cardContent
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(accessibilityLabel)
+        }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: 8) {
             art
             Text(knightClass.displayName)
@@ -170,10 +188,6 @@ private struct HeroClassCard: View {
         .frame(maxWidth: .infinity)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .onTapGesture { if unlockable { Haptics.actionTap(); onUnlock() } }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityAddTraits(unlockable ? .isButton : [])
     }
 
     private var art: some View {
