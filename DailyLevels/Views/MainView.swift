@@ -301,7 +301,9 @@ private struct ProgressSection: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Theme.track)
                     Capsule().fill(Theme.greenDeep)
-                        .frame(width: max(8, geo.size.width * engine.levelProgress))
+                        .frame(width: engine.levelProgress == 0
+                               ? 0
+                               : max(8, geo.size.width * engine.levelProgress))
                 }
             }
             .frame(height: 12)
