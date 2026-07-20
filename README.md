@@ -71,7 +71,7 @@ Every day starts fresh: everyone wakes up a Novice. Your class is a badge for *t
 The parts of this codebase worth reading:
 
 - **Lock vs. app-switch detection** — iOS reports "backgrounded" identically whether the user locked the phone or switched apps, but only a real lock (on a passcode device) fires `protectedDataWillBecomeUnavailable`. [`LockClassifier.swift`](DailyLevels/LockClassifier.swift) holds a `beginBackgroundTask` + 30-second grace window to tell the two apart, and is deliberately isolated in one swappable file. This one distinction is the product: locked = keep grinding, app switch = hero sleeps.
-- **Pure, tested core** — level math, midnight session-splitting, and the per-day focus ledger are pure functions ([`LevelMath`](DailyLevels/LevelMath.swift), [`DateUtils`](DailyLevels/DateUtils.swift), [`FocusLedger`](DailyLevels/FocusLedger.swift)) covered by **52 XCTest unit tests**, including trust audits for DST transitions, timezone changes, lock classification, foreground transitions, and cold-launch crash recovery ([`TrustAuditTests`](DailyLevelsTests/TrustAuditTests.swift), [`FocusEngineTransitionTests`](DailyLevelsTests/FocusEngineTransitionTests.swift)).
+- **Pure, tested core** — level math, midnight session-splitting, and the per-day focus ledger are pure functions ([`LevelMath`](DailyLevels/LevelMath.swift), [`DateUtils`](DailyLevels/DateUtils.swift), [`FocusLedger`](DailyLevels/FocusLedger.swift)) covered by **54 XCTest unit tests**, including trust audits for DST transitions, timezone changes, lock classification, foreground transitions, and cold-launch crash recovery ([`TrustAuditTests`](DailyLevelsTests/TrustAuditTests.swift), [`FocusEngineTransitionTests`](DailyLevelsTests/FocusEngineTransitionTests.swift)).
 - **Modern iOS 17 patterns** — `@Observable` + `@Environment` (no `ObservableObject` boilerplate) and SwiftData `@Model`. [`FocusEngine`](DailyLevels/FocusEngine.swift) is the single source of truth for focus state, level, class, progress, and history.
 - **StoreKit 2, no middleman** — non-consumable Pro unlock with on-device transaction verification and Restore Purchases ([`Store.swift`](DailyLevels/Store.swift)). Skipping RevenueCat keeps the App Store privacy label at **Data Not Collected**. The screenshot/testing backdoor (`-unlockPro`) is compiled out of Release builds.
 - **Conversion-driven redesign** — the original Pro gate keyed off the *daily* level, which resets at midnight, so ~95% of users could never see the paid art (Knight = 2.6 focused hours in a single day). The [Hero Collection](DailyLevels/Views/HeroCollectionView.swift) fixes it: all 10 heroes are visible from day one and fill up with the cumulative journey level, so Pro classes become something users can *see coming* within a week.
@@ -110,7 +110,7 @@ DailyLevels/
 ├── Localizable.xcstrings      # String Catalog · 6 languages
 └── Views/                     # MainView, HeroScenePanel, PaywallView,
                                # HeroCollectionView, FocusHistoryCard, …
-DailyLevelsTests/              # 52 unit tests (math, midnight, i18n, trust audits)
+DailyLevelsTests/              # 54 unit tests (math, midnight, i18n, trust audits)
 AppStore/                      # metadata, ASO copy, screenshots, growth playbook
 SPEC.md                        # full product spec — the source of truth
 ```
