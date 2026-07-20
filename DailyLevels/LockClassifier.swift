@@ -73,22 +73,37 @@ final class LockClassifier {
     private var state = LockClassificationState()
     private var graceTimer: Timer?
     private var bgTask: UIBackgroundTaskIdentifier = .invalid
+    private var observerTokens: [NSObjectProtocol] = []
 
     init() {
         let nc = NotificationCenter.default
         // `queue: .main` guarantees these closures run on the main thread, matching @MainActor.
-        nc.addObserver(forName: UIApplication.didEnterBackgroundNotification,
-                       object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.handleEnterBackground() }
+        observerTokens = [
+            nc.addObserver(forName: UIApplication.didEnterBackgroundNotification,
+                           object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.handleEnterBackground() }
+            },
+            nc.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
+                           object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.handleLock() }
+            },
+            nc.addObserver(forName: UIApplication.willEnterForegroundNotification,
+                           object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.handleEnterForeground() }
+            }
+        ]
+    }
+
+    deinit {
+        graceTimer?.invalidate()
+        if bgTask != .invalid {
+            let task = bgTask
+            Task { @MainActor in
+                UIApplication.shared.endBackgroundTask(task)
+            }
         }
-        nc.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
-                       object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.handleLock() }
-        }
-        nc.addObserver(forName: UIApplication.willEnterForegroundNotification,
-                       object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.handleEnterForeground() }
-        }
+        let center = NotificationCenter.default
+        observerTokens.forEach(center.removeObserver)
     }
 
     private func handleEnterBackground() {

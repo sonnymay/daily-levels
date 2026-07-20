@@ -59,6 +59,7 @@ final class FocusEngine {
     }
 
     deinit {
+        ticker?.invalidate()
         let center = NotificationCenter.default
         timeObservers.forEach(center.removeObserver)
     }
