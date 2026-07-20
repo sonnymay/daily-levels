@@ -21,6 +21,12 @@ enum LevelMath {
         min(maxLevel, max(0, minutes / minutesPerLevel))
     }
 
+    /// Complete five-minute blocks earned across all focus time. Unlike the daily level,
+    /// this does not cap at 100; callers may project it onto a finite journey separately.
+    static func earnedLevels(forFocusSeconds seconds: Int) -> Int {
+        max(0, seconds) / secondsPerLevel
+    }
+
     /// Whole minutes accumulated *into* the current (unfinished) level: 0...4.
     static func minutesIntoLevel(_ minutes: Int) -> Int {
         ((minutes % minutesPerLevel) + minutesPerLevel) % minutesPerLevel

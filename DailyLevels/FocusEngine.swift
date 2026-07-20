@@ -31,6 +31,7 @@ final class FocusEngine {
     // MARK: Non-observed internals
     @ObservationIgnored private let context: ModelContext
     @ObservationIgnored private let calendar: Calendar
+    @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var activeStart: Date?            // start of current grinding stretch
     /// Focused seconds already banked in the *current logical session* from earlier stretches
     /// (before the latest resume). Drives the "Current session" clock so it survives pause/resume.
@@ -44,9 +45,12 @@ final class FocusEngine {
     @ObservationIgnored static let activeWasLockedKey = "engine.activeWasLocked"
 
     // MARK: Init
-    init(context: ModelContext, calendar: Calendar = .current) {
+    init(context: ModelContext,
+         calendar: Calendar = .current,
+         defaults: UserDefaults = .standard) {
         self.context = context
         self.calendar = calendar
+        self.defaults = defaults
         reloadSessions()
         recoverFromColdLaunch()
         wireClassifier()
@@ -96,7 +100,7 @@ final class FocusEngine {
         classifier.isActive = true
         checkpointDay = calendar.startOfDay(for: t)
         checkpointLevel = level
-        Self.saveActiveMarker(start: t, locked: false)
+        Self.saveActiveMarker(start: t, locked: false, defaults: defaults)
         startTicker()
     }
 
@@ -144,9 +148,11 @@ final class FocusEngine {
         return max(1, Int(ceil(Double(remaining) / 60.0)))
     }
 
-    /// Sum of every day's level, ever (SPEC §2 "Hero lifetime level"; never resets).
+    /// Complete five-minute blocks across all focus time (SPEC §2 "Hero lifetime level").
+    /// Partial blocks carry across midnight, so earned journey progress is never discarded.
     var lifetimeLevels: Int {
-        secondsByDayIncludingLive().values.reduce(0) { $0 + LevelMath.level(forFocusMinutes: $1 / 60) }
+        let totalSeconds = secondsByDayIncludingLive().values.reduce(0, +)
+        return LevelMath.earnedLevels(forFocusSeconds: totalSeconds)
     }
 
     /// Cumulative "journey" level for the Hero Collection — `lifetimeLevels` mapped onto
@@ -194,7 +200,7 @@ final class FocusEngine {
     private func endActiveSession(at end: Date) {
         defer {
             activeStart = nil
-            Self.clearActiveMarker()
+            Self.clearActiveMarker(defaults: defaults)
         }
         guard let start = activeStart else { return }
         persistSession(start: start, end: end)
@@ -220,12 +226,12 @@ final class FocusEngine {
     /// the phone was confirmed locked, recover that locked stretch generously, capped at
     /// one full daily climb. This favors the user's earned progress over anti-cheat rules.
     private func recoverFromColdLaunch() {
-        if let interval = Self.coldLaunchRecoveryInterval() {
+        if let interval = Self.coldLaunchRecoveryInterval(defaults: defaults) {
             persistSession(start: interval.start, end: interval.end)
             try? context.save()
             reloadSessions()
         }
-        Self.discardUnprovenActiveStart()
+        Self.discardUnprovenActiveStart(defaults: defaults)
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
@@ -264,7 +270,29 @@ final class FocusEngine {
         activeStart = end
         checkpointDay = calendar.startOfDay(for: end)
         checkpointLevel = level
-        Self.saveActiveMarker(start: end, locked: locked)
+        Self.saveActiveMarker(start: end, locked: locked, defaults: defaults)
+    }
+
+    /// A confirmed lock is earned focus. Persist that completed locked stretch as soon as
+    /// the app returns, then begin a fresh foreground checkpoint at the same instant.
+    func continueGrindingAfterLock(at returnedAt: Date) {
+        guard mode == .grinding else { return }
+        checkpointActiveSession(at: returnedAt, locked: false)
+        startTicker()
+    }
+
+    /// An app switch pauses at the background boundary, but the screen should render using
+    /// the current foreground day when the decision is made (especially across midnight).
+    func pauseAfterAppSwitch(backgroundedAt: Date, observedAt: Date) {
+        guard mode == .grinding else { return }
+        if let start = activeStart {
+            sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(start)))
+        }
+        endActiveSession(at: backgroundedAt)
+        mode = .paused
+        classifier.isActive = false
+        stopTicker()
+        now = observedAt
     }
 
     // MARK: Ticker
@@ -354,27 +382,14 @@ final class FocusEngine {
         // Confirmed app switch → sleep. End the session at the moment of backgrounding
         // so the time spent in the other app never counts.
         classifier.onAppSwitchDetected = { [weak self] backgroundedAt in
-            guard let self, self.mode == .grinding else { return }
-            if let s = self.activeStart {
-                self.sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(s)))
-            }
-            self.endActiveSession(at: backgroundedAt)
-            self.mode = .paused
-            self.classifier.isActive = false
-            self.stopTicker()
+            self?.pauseAfterAppSwitch(backgroundedAt: backgroundedAt, observedAt: Date())
         }
 
         // Returning after a confirmed lock keeps grinding. App switches are paused first,
         // including quick returns that happen before the classifier's grace timer expires.
-        classifier.onEnterForeground = { [weak self] _ in
-            guard let self else { return }
-            if self.mode == .grinding {
-                self.now = Date()
-                Self.saveActiveMarker(start: self.activeStart ?? self.now, locked: false)
-                self.checkpointDay = self.calendar.startOfDay(for: self.now)
-                self.checkpointLevel = self.level
-                self.startTicker()
-            }
+        classifier.onEnterForeground = { [weak self] wasLocked in
+            guard let self, wasLocked else { return }
+            self.continueGrindingAfterLock(at: Date())
         }
     }
 }
