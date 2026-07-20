@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit   // \.requestReview
+import Accessibility
 
 struct MainView: View {
     @Environment(FocusEngine.self) private var engine
@@ -157,6 +158,7 @@ struct MainView: View {
 
     private func showCelebration(level: Int, knightClass: KnightClass, classChanged: Bool) {
         let next = LevelCelebration(level: level, knightClass: knightClass, classChanged: classChanged)
+        AccessibilityNotification.Announcement(next.accessibilityText).post()
         if reduceMotion {
             celebration = next
         } else {
