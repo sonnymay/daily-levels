@@ -31,6 +31,7 @@ final class FocusEngine {
     // MARK: Non-observed internals
     @ObservationIgnored private let context: ModelContext
     @ObservationIgnored private let calendar: Calendar
+    @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var activeStart: Date?            // start of current grinding stretch
     /// Focused seconds already banked in the *current logical session* from earlier stretches
     /// (before the latest resume). Drives the "Current session" clock so it survives pause/resume.
@@ -44,9 +45,12 @@ final class FocusEngine {
     @ObservationIgnored static let activeWasLockedKey = "engine.activeWasLocked"
 
     // MARK: Init
-    init(context: ModelContext, calendar: Calendar = .current) {
+    init(context: ModelContext,
+         calendar: Calendar = .current,
+         defaults: UserDefaults = .standard) {
         self.context = context
         self.calendar = calendar
+        self.defaults = defaults
         reloadSessions()
         recoverFromColdLaunch()
         wireClassifier()
@@ -96,7 +100,7 @@ final class FocusEngine {
         classifier.isActive = true
         checkpointDay = calendar.startOfDay(for: t)
         checkpointLevel = level
-        Self.saveActiveMarker(start: t, locked: false)
+        Self.saveActiveMarker(start: t, locked: false, defaults: defaults)
         startTicker()
     }
 
@@ -194,7 +198,7 @@ final class FocusEngine {
     private func endActiveSession(at end: Date) {
         defer {
             activeStart = nil
-            Self.clearActiveMarker()
+            Self.clearActiveMarker(defaults: defaults)
         }
         guard let start = activeStart else { return }
         persistSession(start: start, end: end)
@@ -220,12 +224,12 @@ final class FocusEngine {
     /// the phone was confirmed locked, recover that locked stretch generously, capped at
     /// one full daily climb. This favors the user's earned progress over anti-cheat rules.
     private func recoverFromColdLaunch() {
-        if let interval = Self.coldLaunchRecoveryInterval() {
+        if let interval = Self.coldLaunchRecoveryInterval(defaults: defaults) {
             persistSession(start: interval.start, end: interval.end)
             try? context.save()
             reloadSessions()
         }
-        Self.discardUnprovenActiveStart()
+        Self.discardUnprovenActiveStart(defaults: defaults)
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
@@ -264,7 +268,15 @@ final class FocusEngine {
         activeStart = end
         checkpointDay = calendar.startOfDay(for: end)
         checkpointLevel = level
-        Self.saveActiveMarker(start: end, locked: locked)
+        Self.saveActiveMarker(start: end, locked: locked, defaults: defaults)
+    }
+
+    /// A confirmed lock is earned focus. Persist that completed locked stretch as soon as
+    /// the app returns, then begin a fresh foreground checkpoint at the same instant.
+    func continueGrindingAfterLock(at returnedAt: Date) {
+        guard mode == .grinding else { return }
+        checkpointActiveSession(at: returnedAt, locked: false)
+        startTicker()
     }
 
     // MARK: Ticker
@@ -366,15 +378,9 @@ final class FocusEngine {
 
         // Returning after a confirmed lock keeps grinding. App switches are paused first,
         // including quick returns that happen before the classifier's grace timer expires.
-        classifier.onEnterForeground = { [weak self] _ in
-            guard let self else { return }
-            if self.mode == .grinding {
-                self.now = Date()
-                Self.saveActiveMarker(start: self.activeStart ?? self.now, locked: false)
-                self.checkpointDay = self.calendar.startOfDay(for: self.now)
-                self.checkpointLevel = self.level
-                self.startTicker()
-            }
+        classifier.onEnterForeground = { [weak self] wasLocked in
+            guard let self, wasLocked else { return }
+            self.continueGrindingAfterLock(at: Date())
         }
     }
 }

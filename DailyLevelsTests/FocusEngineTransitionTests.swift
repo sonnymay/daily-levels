@@ -1,0 +1,51 @@
+//
+//  FocusEngineTransitionTests.swift
+//  DailyLevelsTests
+//
+//  Integration coverage for trust-sensitive engine transitions using isolated
+//  SwiftData and UserDefaults stores.
+//
+
+import SwiftData
+import XCTest
+@testable import DailyLevels
+
+@MainActor
+final class FocusEngineTransitionTests: XCTestCase {
+    private var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    private func makeEngine() throws -> (FocusEngine, ModelContainer, UserDefaults, String) {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let engine = FocusEngine(context: container.mainContext,
+                                 calendar: calendar,
+                                 defaults: defaults)
+        return (engine, container, defaults, suiteName)
+    }
+
+    func testReturningFromLockPersistsEarnedStretchAndStartsFreshMarker() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let startedAt = engine.now
+        let returnedAt = startedAt.addingTimeInterval(10 * 60)
+
+        engine.continueGrindingAfterLock(at: returnedAt)
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 10 * 60)
+        XCTAssertEqual(engine.completedSecondsByDay[calendar.startOfDay(for: startedAt)], 10 * 60)
+        XCTAssertEqual(engine.currentSessionSeconds, 10 * 60)
+        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, returnedAt)
+        XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+
+        engine.pause()
+    }
+}
