@@ -279,6 +279,20 @@ final class FocusEngine {
         startTicker()
     }
 
+    /// An app switch pauses at the background boundary, but the screen should render using
+    /// the current foreground day when the decision is made (especially across midnight).
+    func pauseAfterAppSwitch(backgroundedAt: Date, observedAt: Date) {
+        guard mode == .grinding else { return }
+        if let start = activeStart {
+            sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(start)))
+        }
+        endActiveSession(at: backgroundedAt)
+        mode = .paused
+        classifier.isActive = false
+        stopTicker()
+        now = observedAt
+    }
+
     // MARK: Ticker
     private func startTicker() {
         stopTicker()
@@ -366,14 +380,7 @@ final class FocusEngine {
         // Confirmed app switch → sleep. End the session at the moment of backgrounding
         // so the time spent in the other app never counts.
         classifier.onAppSwitchDetected = { [weak self] backgroundedAt in
-            guard let self, self.mode == .grinding else { return }
-            if let s = self.activeStart {
-                self.sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(s)))
-            }
-            self.endActiveSession(at: backgroundedAt)
-            self.mode = .paused
-            self.classifier.isActive = false
-            self.stopTicker()
+            self?.pauseAfterAppSwitch(backgroundedAt: backgroundedAt, observedAt: Date())
         }
 
         // Returning after a confirmed lock keeps grinding. App switches are paused first,

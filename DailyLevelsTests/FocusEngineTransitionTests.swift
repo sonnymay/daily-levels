@@ -48,4 +48,24 @@ final class FocusEngineTransitionTests: XCTestCase {
 
         engine.pause()
     }
+
+    func testAppSwitchPausesAtBackgroundBoundaryAndRefreshesTheCurrentDay() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let startedAt = engine.now
+        let backgroundedAt = startedAt.addingTimeInterval(2 * 60)
+        let returnedAt = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: startedAt))
+
+        engine.pauseAfterAppSwitch(backgroundedAt: backgroundedAt, observedAt: returnedAt)
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
+        XCTAssertTrue(engine.isPaused)
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
+        XCTAssertEqual(engine.now, returnedAt)
+        XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: returnedAt))
+        XCTAssertEqual(engine.todaySeconds, 0)
+        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+    }
 }
