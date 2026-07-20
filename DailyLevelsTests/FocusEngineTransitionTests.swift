@@ -100,4 +100,46 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.lifetimeLevels, 1)
         XCTAssertEqual(engine.journeyLevel, 1)
     }
+
+    func testEnvironmentRefreshMovesAnIdleEngineToTheCurrentDay() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let nextDay = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: engine.now))
+
+        engine.refreshCurrentEnvironment(at: nextDay, calendar: calendar)
+
+        XCTAssertEqual(engine.now, nextDay)
+        XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: nextDay))
+        XCTAssertEqual(engine.recentDays.first?.date, calendar.startOfDay(for: nextDay))
+        _ = container
+    }
+
+    func testEnvironmentRefreshReattributesHistoryAfterTimezoneChange() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 19, hour: 23, minute: 30
+        )))
+        let end = start.addingTimeInterval(60 * 60)
+        container.mainContext.insert(FocusSession(
+            startAt: start,
+            endAt: end,
+            durationSeconds: 60 * 60
+        ))
+        try container.mainContext.save()
+        let engine = FocusEngine(context: container.mainContext,
+                                 calendar: calendar,
+                                 defaults: defaults)
+        XCTAssertEqual(engine.completedSecondsByDay.count, 2)
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+
+        engine.refreshCurrentEnvironment(at: end, calendar: tokyo)
+
+        XCTAssertEqual(engine.completedSecondsByDay.count, 1)
+        XCTAssertEqual(engine.completedSecondsByDay.values.first, 60 * 60)
+    }
 }

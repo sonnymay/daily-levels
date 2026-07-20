@@ -30,7 +30,7 @@ final class FocusEngine {
 
     // MARK: Non-observed internals
     @ObservationIgnored private let context: ModelContext
-    @ObservationIgnored private let calendar: Calendar
+    @ObservationIgnored private var calendar: Calendar
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var activeStart: Date?            // start of current grinding stretch
     /// Focused seconds already banked in the *current logical session* from earlier stretches
@@ -38,6 +38,7 @@ final class FocusEngine {
     /// Pure display state — daily totals come from persisted sessions, never from this.
     @ObservationIgnored private var sessionAccumulatedSeconds: Int = 0
     @ObservationIgnored private var ticker: Timer?
+    @ObservationIgnored private var timeObservers: [NSObjectProtocol] = []
     @ObservationIgnored private let classifier = LockClassifier()
     @ObservationIgnored private var checkpointDay: Date?
     @ObservationIgnored private var checkpointLevel = 0
@@ -46,7 +47,7 @@ final class FocusEngine {
 
     // MARK: Init
     init(context: ModelContext,
-         calendar: Calendar = .current,
+         calendar: Calendar = .autoupdatingCurrent,
          defaults: UserDefaults = .standard) {
         self.context = context
         self.calendar = calendar
@@ -54,6 +55,12 @@ final class FocusEngine {
         reloadSessions()
         recoverFromColdLaunch()
         wireClassifier()
+        wireTimeObservers()
+    }
+
+    deinit {
+        let center = NotificationCenter.default
+        timeObservers.forEach(center.removeObserver)
     }
 
     // MARK: Public actions (the one Start/Pause/Resume button)
@@ -295,6 +302,14 @@ final class FocusEngine {
         now = observedAt
     }
 
+    /// Refresh cached day attribution whenever iOS reports a meaningful clock change or
+    /// the app returns. This keeps idle/paused screens correct across midnight and timezone moves.
+    func refreshCurrentEnvironment(at date: Date, calendar: Calendar) {
+        self.calendar = calendar
+        now = date
+        reloadSessions()
+    }
+
     // MARK: Ticker
     private func startTicker() {
         stopTicker()
@@ -390,6 +405,19 @@ final class FocusEngine {
         classifier.onEnterForeground = { [weak self] wasLocked in
             guard let self, wasLocked else { return }
             self.continueGrindingAfterLock(at: Date())
+        }
+    }
+
+    private func wireTimeObservers() {
+        let center = NotificationCenter.default
+        let names = [UIApplication.didBecomeActiveNotification,
+                     UIApplication.significantTimeChangeNotification]
+        timeObservers = names.map { name in
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    self?.refreshCurrentEnvironment(at: Date(), calendar: .autoupdatingCurrent)
+                }
+            }
         }
     }
 }
