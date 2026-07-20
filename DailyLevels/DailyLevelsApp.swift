@@ -16,9 +16,13 @@ struct DailyLevelsApp: App {
     @State private var store = Store()
 
     init() {
-        // One local SwiftData store for FocusSession. `try!` is acceptable here: if the
+        // Unit tests supply their own isolated containers; keep the otherwise-unused app host
+        // in memory so it never races the simulator's Application Support directory setup.
+        let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: isTesting)
+        // Production still uses one local SwiftData store. `try!` is acceptable here: if the
         // on-device store can't open, the app genuinely can't function.
-        let container = try! ModelContainer(for: FocusSession.self)
+        let container = try! ModelContainer(for: FocusSession.self, configurations: configuration)
         self.container = container
         let engine = FocusEngine(context: container.mainContext)
         #if DEBUG
