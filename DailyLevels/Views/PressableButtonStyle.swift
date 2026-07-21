@@ -27,3 +27,19 @@ extension ButtonStyle where Self == PressableButtonStyle {
     static var pressable: PressableButtonStyle { PressableButtonStyle() }
     static func pressable(scale: CGFloat) -> PressableButtonStyle { PressableButtonStyle(scale: scale) }
 }
+
+struct SheetCloseButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+                .frame(width: 44, height: 44)
+                .background(Theme.badgeBg, in: Circle())
+        }
+        .buttonStyle(.pressable(scale: 0.94))
+        .accessibilityLabel("Close")
+    }
+}

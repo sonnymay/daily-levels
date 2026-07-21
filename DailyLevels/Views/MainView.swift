@@ -204,51 +204,65 @@ private struct LevelCelebration: Identifiable, Equatable {
 private struct HeaderView: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let levelPulse: Int
     let classPulse: Int
     let celebration: LevelCelebration?
 
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Today")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.gray)
-
-                Text("Level \(engine.level)")
-                    .font(.system(size: 46, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .contentTransition(.numericText(value: Double(engine.level)))
-                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
-                    .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
-                        content
-                            .scaleEffect(scale, anchor: .leading)
-                            .foregroundStyle(scale > 1 ? Theme.greenDeep : Theme.ink)
-                    } animation: { _ in
-                        .easeOut(duration: 0.18)
-                    }
-
-                Text("\(engine.todayMinutes) min focused today")
-                    .font(.callout)
-                    .foregroundStyle(Theme.gray)
-                    .contentTransition(.numericText(value: Double(engine.todayMinutes)))
-                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
-
-                Label("5 min = 1 level", systemImage: "hourglass")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.gray)
-                    .padding(.top, 4)
-
-                if let celebration {
-                    CelebrationChip(celebration: celebration)
-                        .padding(.top, 8)
-                        .transition(.scale(scale: 0.92, anchor: .leading).combined(with: .opacity))
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    levelSummary
+                    ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
+                }
+            } else {
+                HStack(alignment: .top) {
+                    levelSummary
+                    Spacer()
+                    ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
                 }
             }
-            Spacer()
-            ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var levelSummary: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Today")
+                .font(.subheadline)
+                .foregroundStyle(Theme.gray)
+
+            Text("Level \(engine.level)")
+                .font(.system(size: 46, weight: .bold))
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(engine.level)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
+                .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
+                    content
+                        .scaleEffect(scale, anchor: .leading)
+                        .foregroundStyle(scale > 1 ? Theme.greenDeep : Theme.ink)
+                } animation: { _ in
+                    .easeOut(duration: 0.18)
+                }
+
+            Text("\(engine.todayMinutes) min focused today")
+                .font(.callout)
+                .foregroundStyle(Theme.gray)
+                .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
+
+            Label("5 min = 1 level", systemImage: "hourglass")
+                .font(.footnote)
+                .foregroundStyle(Theme.gray)
+                .padding(.top, 4)
+
+            if let celebration {
+                CelebrationChip(celebration: celebration)
+                    .padding(.top, 8)
+                    .transition(.scale(scale: 0.92, anchor: .leading).combined(with: .opacity))
+            }
+        }
     }
 }
 
@@ -259,6 +273,8 @@ private struct ClassBadge: View {
     var body: some View {
         Text(name)
             .font(.subheadline.weight(.medium))
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
@@ -295,6 +311,8 @@ private struct CelebrationChip: View {
 private struct ProgressSection: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .title) private var sessionClockSize: CGFloat = 34
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -314,38 +332,56 @@ private struct ProgressSection: View {
             .accessibilityLabel("Level progress")
             .accessibilityValue("\(Int(engine.levelProgress * 100)) percent")
 
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("\(engine.todayMinutes) min focused today")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Theme.ink)
-                        .contentTransition(.numericText(value: Double(engine.todayMinutes)))
-                        .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
-
-                    if engine.isGrinding || engine.isPaused {
-                        Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
-                            .font(.caption)
-                            .foregroundStyle(Theme.gray)
-                        // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
-                        // width so the timer doesn't shift left/right as the seconds tick.
-                        // While paused it holds its value; resume continues from here.
-                        Text(Format.clock(engine.currentSessionSeconds))
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
-                    } else {
-                        Text("Ready to focus")
-                            .font(.footnote)
-                            .foregroundStyle(Theme.gray)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 12) {
+                        sessionSummary
+                        Text(progressLabel)
+                            .foregroundStyle(progressLabelColor)
+                    }
+                } else {
+                    HStack(alignment: .top) {
+                        sessionSummary
+                        Spacer()
+                        Text(progressLabel)
+                            .foregroundStyle(progressLabelColor)
                     }
                 }
-                Spacer()
-                Text(progressLabel)
-                    .font(.subheadline)
-                    .foregroundStyle(engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray)
             }
+            .font(.subheadline)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var sessionSummary: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("\(engine.todayMinutes) min focused today")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
+
+            if engine.isGrinding || engine.isPaused {
+                Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
+                    .font(.caption)
+                    .foregroundStyle(Theme.gray)
+                // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
+                // width so the timer doesn't shift left/right as the seconds tick.
+                // While paused it holds its value; resume continues from here.
+                Text(Format.clock(engine.currentSessionSeconds))
+                    .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+            } else {
+                Text("Ready to focus")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.gray)
+            }
+        }
+    }
+
+    private var progressLabelColor: Color {
+        engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray
     }
 
     private var progressLabel: LocalizedStringKey {
@@ -390,25 +426,39 @@ private struct StartPauseButton: View {
 // MARK: - First-run intro (one-time, explains the core loop)
 
 private struct IntroSheet: View {
+    @Environment(\.dismiss) private var dismiss
     let onStart: () -> Void
 
     var body: some View {
         ZStack {
             Theme.cream.ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 22) {
-                Text("Welcome to Daily Levels")
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(Theme.ink)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    IntroRow(icon: "hourglass",
-                             text: "Focus to level up — every 5 minutes is one level.")
-                    IntroRow(icon: "lock.fill",
-                             text: "Locking counts. Switching apps pauses your hero.")
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    SheetCloseButton { dismiss() }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .background(Theme.cream)
 
-                Spacer(minLength: 0)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        Text("Welcome to Daily Levels")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(Theme.ink)
+
+                        VStack(alignment: .leading, spacing: 16) {
+                            IntroRow(icon: "hourglass",
+                                     text: "Focus to level up — every 5 minutes is one level.")
+                            IntroRow(icon: "lock.fill",
+                                     text: "Locking counts. Switching apps pauses your hero.")
+                        }
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 12)
+                    .padding(.bottom, 20)
+                }
 
                 Button(action: onStart) {
                     Text("Start focusing")
@@ -419,8 +469,10 @@ private struct IntroSheet: View {
                         .background(Theme.green, in: Capsule())
                 }
                 .buttonStyle(.pressable(scale: 0.97))
+                .padding(.horizontal, 28)
+                .padding(.vertical, 16)
+                .background(Theme.cream)
             }
-            .padding(28)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -440,6 +492,7 @@ private struct IntroRow: View {
             Text(text)
                 .font(.callout)
                 .foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
     }

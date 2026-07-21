@@ -78,6 +78,15 @@ struct HeroCollectionSheet: View {
                 .padding(20)
             }
         }
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                SheetCloseButton { dismiss() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .background(Theme.cream)
+        }
         .sheet(isPresented: $showPaywall) { PaywallView() }
         .presentationDragIndicator(.visible)
     }
@@ -124,11 +133,17 @@ struct HeroCollectionSheet: View {
 struct HeroCollectionGrid: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Called when a Pro-locked hero is tapped (opens the paywall). No-op when already on it.
     var onUnlock: () -> Void = {}
 
-    private let columns = [GridItem(.flexible(), spacing: 12),
-                           GridItem(.flexible(), spacing: 12)]
+    private var columns: [GridItem] {
+        if dynamicTypeSize.isAccessibilitySize {
+            return [GridItem(.flexible())]
+        }
+        return [GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)]
+    }
 
     var body: some View {
         // Read the (cumulative) journey level once, not once per card.
