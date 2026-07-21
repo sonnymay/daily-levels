@@ -26,6 +26,8 @@ struct FocusHistoryCard: View {
             WeekBarChart(days: engine.weekHistory)
                 .frame(height: 150)
                 .padding(.top, 2)
+                // Keep this fixed-format chart legible while surrounding prose continues scaling.
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             VStack(spacing: 0) {
                 ForEach(engine.recentDays) { day in
@@ -121,26 +123,45 @@ private struct Line: Shape {
 // MARK: - Day list row
 
 private struct DayRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let day: DaySummary
+
     var body: some View {
-        HStack {
-            Text(Format.longDate(day.date))
-                .font(.body)
-                .foregroundStyle(Theme.ink)
-            Spacer()
-            VStack(alignment: .trailing, spacing: 1) {
-                Text("Level \(day.level)")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Theme.green)
-                Text("\(day.focusMinutes) min focus time")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.gray)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    date
+                    result
+                }
+            } else {
+                HStack {
+                    date
+                    Spacer()
+                    result
+                }
             }
         }
         .padding(.vertical, 12)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(Format.longDate(day.date)))
         .accessibilityValue(Text(accessibilitySummary(for: day)))
+    }
+
+    private var date: some View {
+        Text(Format.longDate(day.date))
+            .font(.body)
+            .foregroundStyle(Theme.ink)
+    }
+
+    private var result: some View {
+        VStack(alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing, spacing: 1) {
+            Text("Level \(day.level)")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Theme.greenDeep)
+            Text("\(day.focusMinutes) min focus time")
+                .font(.footnote)
+                .foregroundStyle(Theme.gray)
+        }
     }
 }
 

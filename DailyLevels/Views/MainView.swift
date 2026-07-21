@@ -311,6 +311,8 @@ private struct CelebrationChip: View {
 private struct ProgressSection: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .title) private var sessionClockSize: CGFloat = 34
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -330,38 +332,56 @@ private struct ProgressSection: View {
             .accessibilityLabel("Level progress")
             .accessibilityValue("\(Int(engine.levelProgress * 100)) percent")
 
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("\(engine.todayMinutes) min focused today")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Theme.ink)
-                        .contentTransition(.numericText(value: Double(engine.todayMinutes)))
-                        .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
-
-                    if engine.isGrinding || engine.isPaused {
-                        Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
-                            .font(.caption)
-                            .foregroundStyle(Theme.gray)
-                        // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
-                        // width so the timer doesn't shift left/right as the seconds tick.
-                        // While paused it holds its value; resume continues from here.
-                        Text(Format.clock(engine.currentSessionSeconds))
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
-                    } else {
-                        Text("Ready to focus")
-                            .font(.footnote)
-                            .foregroundStyle(Theme.gray)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 12) {
+                        sessionSummary
+                        Text(progressLabel)
+                            .foregroundStyle(progressLabelColor)
+                    }
+                } else {
+                    HStack(alignment: .top) {
+                        sessionSummary
+                        Spacer()
+                        Text(progressLabel)
+                            .foregroundStyle(progressLabelColor)
                     }
                 }
-                Spacer()
-                Text(progressLabel)
-                    .font(.subheadline)
-                    .foregroundStyle(engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray)
             }
+            .font(.subheadline)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var sessionSummary: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("\(engine.todayMinutes) min focused today")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
+
+            if engine.isGrinding || engine.isPaused {
+                Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
+                    .font(.caption)
+                    .foregroundStyle(Theme.gray)
+                // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
+                // width so the timer doesn't shift left/right as the seconds tick.
+                // While paused it holds its value; resume continues from here.
+                Text(Format.clock(engine.currentSessionSeconds))
+                    .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+            } else {
+                Text("Ready to focus")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.gray)
+            }
+        }
+    }
+
+    private var progressLabelColor: Color {
+        engine.isMaxLevel || engine.isLevelUpMoment ? Theme.greenDeep : Theme.gray
     }
 
     private var progressLabel: LocalizedStringKey {
