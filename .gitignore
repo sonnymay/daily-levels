@@ -33,6 +33,10 @@ xcuserdata/
 ## macOS
 .DS_Store
 
+## Python helper caches
+__pycache__/
+*.py[cod]
+
 ## CocoaPods / Carthage (not used, but ignore if ever added)
 Pods/
 Carthage/Build/
