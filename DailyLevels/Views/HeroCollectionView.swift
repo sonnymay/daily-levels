@@ -78,6 +78,15 @@ struct HeroCollectionSheet: View {
                 .padding(20)
             }
         }
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                SheetCloseButton { dismiss() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .background(Theme.cream)
+        }
         .sheet(isPresented: $showPaywall) { PaywallView() }
         .presentationDragIndicator(.visible)
     }

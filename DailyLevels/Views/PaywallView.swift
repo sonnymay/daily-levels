@@ -73,6 +73,15 @@ struct PaywallView: View {
                 purchaseFooter
             }
         }
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                SheetCloseButton { dismiss() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .background(Theme.cream)
+        }
         .alert("Purchase failed", isPresented: showError) {
             Button("OK", role: .cancel) { }
         } message: {
