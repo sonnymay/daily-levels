@@ -204,51 +204,65 @@ private struct LevelCelebration: Identifiable, Equatable {
 private struct HeaderView: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let levelPulse: Int
     let classPulse: Int
     let celebration: LevelCelebration?
 
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Today")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.gray)
-
-                Text("Level \(engine.level)")
-                    .font(.system(size: 46, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .contentTransition(.numericText(value: Double(engine.level)))
-                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
-                    .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
-                        content
-                            .scaleEffect(scale, anchor: .leading)
-                            .foregroundStyle(scale > 1 ? Theme.greenDeep : Theme.ink)
-                    } animation: { _ in
-                        .easeOut(duration: 0.18)
-                    }
-
-                Text("\(engine.todayMinutes) min focused today")
-                    .font(.callout)
-                    .foregroundStyle(Theme.gray)
-                    .contentTransition(.numericText(value: Double(engine.todayMinutes)))
-                    .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
-
-                Label("5 min = 1 level", systemImage: "hourglass")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.gray)
-                    .padding(.top, 4)
-
-                if let celebration {
-                    CelebrationChip(celebration: celebration)
-                        .padding(.top, 8)
-                        .transition(.scale(scale: 0.92, anchor: .leading).combined(with: .opacity))
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    levelSummary
+                    ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
+                }
+            } else {
+                HStack(alignment: .top) {
+                    levelSummary
+                    Spacer()
+                    ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
                 }
             }
-            Spacer()
-            ClassBadge(name: engine.knightClass.displayName, pulse: classPulse)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var levelSummary: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Today")
+                .font(.subheadline)
+                .foregroundStyle(Theme.gray)
+
+            Text("Level \(engine.level)")
+                .font(.system(size: 46, weight: .bold))
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.numericText(value: Double(engine.level)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
+                .phaseAnimator([1.0, 1.08, 1.0], trigger: levelPulse) { content, scale in
+                    content
+                        .scaleEffect(scale, anchor: .leading)
+                        .foregroundStyle(scale > 1 ? Theme.greenDeep : Theme.ink)
+                } animation: { _ in
+                    .easeOut(duration: 0.18)
+                }
+
+            Text("\(engine.todayMinutes) min focused today")
+                .font(.callout)
+                .foregroundStyle(Theme.gray)
+                .contentTransition(.numericText(value: Double(engine.todayMinutes)))
+                .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
+
+            Label("5 min = 1 level", systemImage: "hourglass")
+                .font(.footnote)
+                .foregroundStyle(Theme.gray)
+                .padding(.top, 4)
+
+            if let celebration {
+                CelebrationChip(celebration: celebration)
+                    .padding(.top, 8)
+                    .transition(.scale(scale: 0.92, anchor: .leading).combined(with: .opacity))
+            }
+        }
     }
 }
 
@@ -259,6 +273,8 @@ private struct ClassBadge: View {
     var body: some View {
         Text(name)
             .font(.subheadline.weight(.medium))
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
