@@ -28,11 +28,20 @@ jobs:
       - name: Validate App Store release inputs
         run: ./AppStore/validate_release.sh 1.1 7
 
+      - name: Test simulator selection
+        run: python3 -m unittest scripts/test_resolve_ios_simulator.py
+
+      - name: Select iOS Simulator
+        id: simulator
+        run: |
+          simulator_id="$(./scripts/resolve_ios_simulator.py)"
+          echo "id=$simulator_id" >> "$GITHUB_OUTPUT"
+
       - name: Build & run unit tests
         run: |
           xcodebuild -project DailyLevels.xcodeproj \
             -scheme DailyLevels \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "platform=iOS Simulator,id=${{ steps.simulator.outputs.id }}" \
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             test
