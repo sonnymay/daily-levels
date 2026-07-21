@@ -426,25 +426,39 @@ private struct StartPauseButton: View {
 // MARK: - First-run intro (one-time, explains the core loop)
 
 private struct IntroSheet: View {
+    @Environment(\.dismiss) private var dismiss
     let onStart: () -> Void
 
     var body: some View {
         ZStack {
             Theme.cream.ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 22) {
-                Text("Welcome to Daily Levels")
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(Theme.ink)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    IntroRow(icon: "hourglass",
-                             text: "Focus to level up — every 5 minutes is one level.")
-                    IntroRow(icon: "lock.fill",
-                             text: "Locking counts. Switching apps pauses your hero.")
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    SheetCloseButton { dismiss() }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .background(Theme.cream)
 
-                Spacer(minLength: 0)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        Text("Welcome to Daily Levels")
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(Theme.ink)
+
+                        VStack(alignment: .leading, spacing: 16) {
+                            IntroRow(icon: "hourglass",
+                                     text: "Focus to level up — every 5 minutes is one level.")
+                            IntroRow(icon: "lock.fill",
+                                     text: "Locking counts. Switching apps pauses your hero.")
+                        }
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.top, 12)
+                    .padding(.bottom, 20)
+                }
 
                 Button(action: onStart) {
                     Text("Start focusing")
@@ -455,8 +469,10 @@ private struct IntroSheet: View {
                         .background(Theme.green, in: Capsule())
                 }
                 .buttonStyle(.pressable(scale: 0.97))
+                .padding(.horizontal, 28)
+                .padding(.vertical, 16)
+                .background(Theme.cream)
             }
-            .padding(28)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
@@ -476,6 +492,7 @@ private struct IntroRow: View {
             Text(text)
                 .font(.callout)
                 .foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
     }
