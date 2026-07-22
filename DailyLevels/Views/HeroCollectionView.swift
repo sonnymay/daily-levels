@@ -107,13 +107,7 @@ struct HeroCollectionSheet: View {
             Theme.cream.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    SheetCloseButton { dismiss() }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 4)
-                .background(Theme.cream)
+                SheetCloseRow { dismiss() }
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
