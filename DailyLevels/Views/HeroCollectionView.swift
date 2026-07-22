@@ -105,23 +105,25 @@ struct HeroCollectionSheet: View {
     var body: some View {
         ZStack {
             Theme.cream.ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    header
-                    HeroCollectionGrid { showPaywall = true }
-                    if !store.isPro { unlockCTA }
+
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    SheetCloseButton { dismiss() }
                 }
-                .padding(20)
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .background(Theme.cream)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        header
+                        HeroCollectionGrid { showPaywall = true }
+                        if !store.isPro { unlockCTA }
+                    }
+                    .padding(20)
+                }
             }
-        }
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Spacer()
-                SheetCloseButton { dismiss() }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .background(Theme.cream)
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
         .presentationDragIndicator(.visible)

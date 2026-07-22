@@ -30,6 +30,14 @@ struct PaywallView: View {
             Theme.cream.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    SheetCloseButton { dismiss() }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .background(Theme.cream)
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         VStack(alignment: .leading, spacing: 6) {
@@ -79,15 +87,6 @@ struct PaywallView: View {
                     purchaseFooter
                 }
             }
-        }
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Spacer()
-                SheetCloseButton { dismiss() }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .background(Theme.cream)
         }
         .alert("Purchase failed", isPresented: showError) {
             Button("OK", role: .cancel) { }
