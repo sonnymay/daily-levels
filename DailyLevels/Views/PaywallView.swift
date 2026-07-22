@@ -105,7 +105,10 @@ struct PaywallView: View {
                 } label: {
                     Group {
                         if store.isWorking {
-                            ProgressView().tint(.white)
+                            HStack(spacing: 8) {
+                                ProgressView().tint(.white)
+                                Text("Completing purchase…")
+                            }
                         } else {
                             Text("Unlock 7 heroes · \(price)")
                         }
@@ -124,7 +127,10 @@ struct PaywallView: View {
                 } label: {
                     Group {
                         if isLoadingPrice {
-                            ProgressView().tint(Theme.green)
+                            HStack(spacing: 8) {
+                                ProgressView().tint(Theme.green)
+                                Text("Loading price…")
+                            }
                         } else {
                             Text("Retry loading price")
                         }

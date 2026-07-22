@@ -1751,6 +1751,41 @@
         }
       }
     },
+    "Completing purchase…": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Completando la compra…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Concluindo a compra…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kauf wird abgeschlossen…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Finalisation de l’achat…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入手続き中…"
+          }
+        }
+      }
+    },
     "Retry loading price": {
       "extractionState": "manual",
       "localizations": {
@@ -1782,6 +1817,41 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "価格を再読み込み"
+          }
+        }
+      }
+    },
+    "Loading price…": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cargando el precio…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Carregando o preço…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preis wird geladen…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chargement du prix…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "価格を読み込み中…"
           }
         }
       }
