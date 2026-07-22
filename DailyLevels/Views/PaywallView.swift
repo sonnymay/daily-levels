@@ -157,10 +157,16 @@ struct PaywallView: View {
             .foregroundStyle(Theme.gray)
             .disabled(store.isWorking)   // no double-tap → no two concurrent AppStore.sync() calls
 
-            HStack(spacing: 16) {
-                Link("Privacy Policy", destination: privacyURL)
-                Text("·").foregroundStyle(Theme.gray)
-                Link("Terms", destination: termsURL)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) {
+                    Link("Privacy Policy", destination: privacyURL)
+                    Text("·").foregroundStyle(Theme.gray)
+                    Link("Terms", destination: termsURL)
+                }
+                VStack(spacing: 8) {
+                    Link("Privacy Policy", destination: privacyURL)
+                    Link("Terms", destination: termsURL)
+                }
             }
             .font(.caption)
             .tint(Theme.gray)
