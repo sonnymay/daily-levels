@@ -62,6 +62,7 @@ add("Welcome to Daily Levels","Te damos la bienvenida a Daily Levels","Boas-vind
 add("Focus to level up — every 5 minutes is one level.","Concéntrate para subir de nivel: cada 5 minutos es un nivel.","Foque para subir de nível — cada 5 minutos é um nível.","Fokussiere, um aufzusteigen — alle 5 Minuten ein Level.","Concentre-toi pour monter de niveau — 5 minutes = un niveau.","集中してレベルアップ — 5分ごとに1レベル。")
 add("Locking counts. Switching apps pauses your hero.","Bloquear el teléfono cuenta. Cambiar de app pausa a tu héroe.","Bloquear o telefone conta. Trocar de app pausa seu herói.","Sperren zählt. Ein App-Wechsel pausiert deinen Helden.","Verrouiller compte. Changer d’app met ton héros en pause.","ロック中もカウント。アプリを切り替えるとヒーローは一時停止します。")
 add("Start focusing","Empezar a concentrarte","Começar a focar","Fokussieren beginnen","Commencer à se concentrer","集中を始める")
+add("Close","Cerrar","Fechar","Schließen","Fermer","閉じる")
 
 # --- Paywall ---
 add("One-time unlock. Yours forever.","Desbloqueo único. Tuyo para siempre.","Desbloqueio único. Seu para sempre.","Einmalige Freischaltung. Für immer deins.","Déblocage unique. À toi pour toujours.","一度の解除で、ずっとあなたのもの。")
@@ -79,6 +80,8 @@ add("Privacy Policy","Política de privacidad","Política de Privacidade","Daten
 add("Terms","Términos","Termos","Nutzungsbedingungen","Conditions","利用規約")
 add("Purchase failed","Error en la compra","Falha na compra","Kauf fehlgeschlagen","Échec de l’achat","購入に失敗しました")
 add("Couldn’t reach the App Store. Check your connection and try again.","No se pudo conectar con la App Store. Revisa tu conexión e inténtalo de nuevo.","Não foi possível acessar a App Store. Verifique sua conexão e tente novamente.","App Store nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.","Impossible de joindre l’App Store. Vérifie ta connexion et réessaie.","App Storeに接続できませんでした。接続を確認して、もう一度お試しください。")
+add("No Purchase Found","No se encontró ninguna compra","Nenhuma compra encontrada","Kein Kauf gefunden","Aucun achat trouvé","購入が見つかりません")
+add("No previous Daily Levels Pro purchase was found for this Apple Account.","No se encontró ninguna compra anterior de Daily Levels Pro para esta cuenta de Apple.","Nenhuma compra anterior do Daily Levels Pro foi encontrada para esta Conta Apple.","Für diesen Apple Account wurde kein früherer Kauf von Daily Levels Pro gefunden.","Aucun achat antérieur de Daily Levels Pro n’a été trouvé pour ce compte Apple.","このApple Accountでは、Daily Levels Proの以前の購入が見つかりませんでした。")
 
 # --- Hero panel ---
 add("Unlock Pro to evolve","Desbloquea Pro para evolucionar","Desbloqueie o Pro para evoluir","Pro freischalten zum Aufsteigen","Débloquer Pro pour évoluer","Proで進化を解除")
