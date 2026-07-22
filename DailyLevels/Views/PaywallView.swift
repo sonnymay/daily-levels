@@ -30,10 +30,14 @@ struct PaywallView: View {
             Theme.cream.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                SheetCloseRow { dismiss() }
-
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
+                        HStack {
+                            Spacer()
+                            SheetCloseButton { dismiss() }
+                        }
+                        .frame(height: 44)
+
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Daily Levels Pro")
                                 .font(.largeTitle.weight(.bold))
