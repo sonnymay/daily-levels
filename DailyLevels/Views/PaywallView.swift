@@ -13,6 +13,7 @@ import StoreKit
 struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isLoadingPrice = false
     @State private var showNoPurchase = false
 
@@ -65,12 +66,18 @@ struct PaywallView: View {
                         Label("Private and ad-free for everyone", systemImage: "hand.raised.fill")
                             .font(.footnote)
                             .foregroundStyle(Theme.gray)
+
+                        if dynamicTypeSize.isAccessibilitySize {
+                            purchaseFooter
+                        }
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)
                 }
 
-                purchaseFooter
+                if !dynamicTypeSize.isAccessibilitySize {
+                    purchaseFooter
+                }
             }
         }
         .safeAreaInset(edge: .top) {
@@ -114,6 +121,8 @@ struct PaywallView: View {
                         }
                     }
                     .font(.title3.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -136,6 +145,8 @@ struct PaywallView: View {
                         }
                     }
                     .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                 }
@@ -143,7 +154,7 @@ struct PaywallView: View {
                 .disabled(isLoadingPrice)
             }
 
-            Button("Restore Purchases") {
+            Button {
                 Task {
                     await store.restore()
                     if store.isPro {
@@ -152,6 +163,10 @@ struct PaywallView: View {
                         showNoPurchase = true
                     }
                 }
+            } label: {
+                Text("Restore Purchases")
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
