@@ -61,6 +61,9 @@ struct HeroJourneyRow: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.pressable)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Hero Collection"))
+        .accessibilityValue(Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 heroes reached"))
         .accessibilityHint(Text("Opens your hero collection"))
     }
 

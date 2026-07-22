@@ -132,6 +132,7 @@ struct MainView: View {
                 heroScenePanel
             }
             .buttonStyle(.plain)
+            .accessibilityHint("Opens the Pro unlock")
         } else {
             heroScenePanel
         }
