@@ -13,6 +13,7 @@ import StoreKit
 struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isLoadingPrice = false
     @State private var showNoPurchase = false
 
@@ -31,6 +32,12 @@ struct PaywallView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
+                        HStack {
+                            Spacer()
+                            SheetCloseButton { dismiss() }
+                        }
+                        .frame(height: 44)
+
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Daily Levels Pro")
                                 .font(.largeTitle.weight(.bold))
@@ -65,22 +72,19 @@ struct PaywallView: View {
                         Label("Private and ad-free for everyone", systemImage: "hand.raised.fill")
                             .font(.footnote)
                             .foregroundStyle(Theme.gray)
+
+                        if dynamicTypeSize.isAccessibilitySize {
+                            purchaseFooter
+                        }
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 16)
                 }
 
-                purchaseFooter
+                if !dynamicTypeSize.isAccessibilitySize {
+                    purchaseFooter
+                }
             }
-        }
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Spacer()
-                SheetCloseButton { dismiss() }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .background(Theme.cream)
         }
         .alert("Purchase failed", isPresented: showError) {
             Button("OK", role: .cancel) { }
@@ -105,12 +109,17 @@ struct PaywallView: View {
                 } label: {
                     Group {
                         if store.isWorking {
-                            ProgressView().tint(.white)
+                            HStack(spacing: 8) {
+                                ProgressView().tint(.white)
+                                Text("Completing purchase…")
+                            }
                         } else {
                             Text("Unlock 7 heroes · \(price)")
                         }
                     }
                     .font(.title3.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
@@ -124,12 +133,17 @@ struct PaywallView: View {
                 } label: {
                     Group {
                         if isLoadingPrice {
-                            ProgressView().tint(Theme.green)
+                            HStack(spacing: 8) {
+                                ProgressView().tint(Theme.green)
+                                Text("Loading price…")
+                            }
                         } else {
                             Text("Retry loading price")
                         }
                     }
                     .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                 }
@@ -137,7 +151,7 @@ struct PaywallView: View {
                 .disabled(isLoadingPrice)
             }
 
-            Button("Restore Purchases") {
+            Button {
                 Task {
                     await store.restore()
                     if store.isPro {
@@ -146,15 +160,25 @@ struct PaywallView: View {
                         showNoPurchase = true
                     }
                 }
+            } label: {
+                Text("Restore Purchases")
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
             .disabled(store.isWorking)   // no double-tap → no two concurrent AppStore.sync() calls
 
-            HStack(spacing: 16) {
-                Link("Privacy Policy", destination: privacyURL)
-                Text("·").foregroundStyle(Theme.gray)
-                Link("Terms", destination: termsURL)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) {
+                    Link("Privacy Policy", destination: privacyURL)
+                    Text("·").foregroundStyle(Theme.gray)
+                    Link("Terms", destination: termsURL)
+                }
+                VStack(spacing: 8) {
+                    Link("Privacy Policy", destination: privacyURL)
+                    Link("Terms", destination: termsURL)
+                }
             }
             .font(.caption)
             .tint(Theme.gray)

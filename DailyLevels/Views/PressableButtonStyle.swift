@@ -43,3 +43,19 @@ struct SheetCloseButton: View {
         .accessibilityLabel("Close")
     }
 }
+
+struct SheetCloseRow: View {
+    let action: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer()
+            SheetCloseButton(action: action)
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+        .background(Theme.cream)
+        .layoutPriority(1)
+    }
+}

@@ -84,6 +84,8 @@ check_hero_assets() {
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
     -target DailyLevels -configuration Release -showBuildSettings)"
 
+python3 "$root/AppStore/gen_xcstrings.py" --check
+
 [[ "$(setting MARKETING_VERSION)" == "$expected_version" ]] || fail "marketing version is not $expected_version"
 [[ "$(setting CURRENT_PROJECT_VERSION)" == "$expected_build" ]] || fail "build number is not $expected_build"
 [[ "$(setting PRODUCT_BUNDLE_IDENTIFIER)" == "com.santipapmay.DailyLevels" ]] || fail "bundle ID changed"

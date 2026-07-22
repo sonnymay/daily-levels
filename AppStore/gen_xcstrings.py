@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # Generates DailyLevels/Localizable.xcstrings from a translation table.
+# Pass --check to verify the checked-in catalog without rewriting it.
 # Languages: es, pt-BR, de, fr, ja. All non-English flagged needs_review.
 import collections
 import json
+import sys
 from pathlib import Path
 
 LANGS = ["es", "pt-BR", "de", "fr", "ja"]
@@ -62,6 +64,7 @@ add("Welcome to Daily Levels","Te damos la bienvenida a Daily Levels","Boas-vind
 add("Focus to level up — every 5 minutes is one level.","Concéntrate para subir de nivel: cada 5 minutos es un nivel.","Foque para subir de nível — cada 5 minutos é um nível.","Fokussiere, um aufzusteigen — alle 5 Minuten ein Level.","Concentre-toi pour monter de niveau — 5 minutes = un niveau.","集中してレベルアップ — 5分ごとに1レベル。")
 add("Locking counts. Switching apps pauses your hero.","Bloquear el teléfono cuenta. Cambiar de app pausa a tu héroe.","Bloquear o telefone conta. Trocar de app pausa seu herói.","Sperren zählt. Ein App-Wechsel pausiert deinen Helden.","Verrouiller compte. Changer d’app met ton héros en pause.","ロック中もカウント。アプリを切り替えるとヒーローは一時停止します。")
 add("Start focusing","Empezar a concentrarte","Começar a focar","Fokussieren beginnen","Commencer à se concentrer","集中を始める")
+add("Close","Cerrar","Fechar","Schließen","Fermer","閉じる")
 
 # --- Paywall ---
 add("One-time unlock. Yours forever.","Desbloqueo único. Tuyo para siempre.","Desbloqueio único. Seu para sempre.","Einmalige Freischaltung. Für immer deins.","Déblocage unique. À toi pour toujours.","一度の解除で、ずっとあなたのもの。")
@@ -73,12 +76,16 @@ add("One purchase. Yours forever.","Una compra. Tuyo para siempre.","Uma compra.
 add("No subscription and no renewal. Restore it on any device using your Apple Account.","Sin suscripción ni renovación. Restáuralo en cualquier dispositivo con tu cuenta de Apple.","Sem assinatura nem renovação. Restaure em qualquer dispositivo com sua Conta Apple.","Kein Abo und keine Verlängerung. Stelle es mit deinem Apple Account auf jedem Gerät wieder her.","Sans abonnement ni renouvellement. Restaure-le sur tout appareil avec ton compte Apple.","サブスクリプションも更新もありません。Apple Accountでどのデバイスでも復元できます。")
 add("Private and ad-free for everyone","Privado y sin anuncios para todos","Privado e sem anúncios para todos","Privat und werbefrei für alle","Privé et sans publicité pour tout le monde","すべての人にプライベートで広告なし")
 add("Unlock 7 heroes · %@","Desbloquear 7 héroes · %@","Desbloquear 7 heróis · %@","7 Helden freischalten · %@","Débloquer 7 héros · %@","7人のヒーローを解除 · %@")
+add("Completing purchase…","Completando la compra…","Concluindo a compra…","Kauf wird abgeschlossen…","Finalisation de l’achat…","購入手続き中…")
 add("Retry loading price","Reintentar cargar el precio","Tentar carregar o preço novamente","Preis erneut laden","Réessayer de charger le prix","価格を再読み込み")
+add("Loading price…","Cargando el precio…","Carregando o preço…","Preis wird geladen…","Chargement du prix…","価格を読み込み中…")
 add("Restore Purchases","Restaurar compras","Restaurar compras","Käufe wiederherstellen","Restaurer les achats","購入を復元")
 add("Privacy Policy","Política de privacidad","Política de Privacidade","Datenschutzrichtlinie","Politique de confidentialité","プライバシーポリシー")
 add("Terms","Términos","Termos","Nutzungsbedingungen","Conditions","利用規約")
 add("Purchase failed","Error en la compra","Falha na compra","Kauf fehlgeschlagen","Échec de l’achat","購入に失敗しました")
 add("Couldn’t reach the App Store. Check your connection and try again.","No se pudo conectar con la App Store. Revisa tu conexión e inténtalo de nuevo.","Não foi possível acessar a App Store. Verifique sua conexão e tente novamente.","App Store nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.","Impossible de joindre l’App Store. Vérifie ta connexion et réessaie.","App Storeに接続できませんでした。接続を確認して、もう一度お試しください。")
+add("No Purchase Found","No se encontró ninguna compra","Nenhuma compra encontrada","Kein Kauf gefunden","Aucun achat trouvé","購入が見つかりません")
+add("No previous Daily Levels Pro purchase was found for this Apple Account.","No se encontró ninguna compra anterior de Daily Levels Pro para esta cuenta de Apple.","Nenhuma compra anterior do Daily Levels Pro foi encontrada para esta Conta Apple.","Für diesen Apple Account wurde kein früherer Kauf von Daily Levels Pro gefunden.","Aucun achat antérieur de Daily Levels Pro n’a été trouvé pour ce compte Apple.","このApple Accountでは、Daily Levels Proの以前の購入が見つかりませんでした。")
 
 # --- Hero panel ---
 add("Unlock Pro to evolve","Desbloquea Pro para evolucionar","Desbloqueie o Pro para evoluir","Pro freischalten zum Aufsteigen","Débloquer Pro pour évoluer","Proで進化を解除")
@@ -118,7 +125,13 @@ for key, vals in T.items():
 
 catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
 out = Path(__file__).resolve().parents[1] / "DailyLevels" / "Localizable.xcstrings"
-with out.open("w", encoding="utf-8") as f:
-    json.dump(catalog, f, ensure_ascii=False, indent=2)
-    f.write("\n")
-print(f"wrote {out} with {len(strings)} keys × {len(LANGS)} languages")
+rendered = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
+
+if "--check" in sys.argv:
+    if not out.exists() or out.read_text(encoding="utf-8") != rendered:
+        print(f"localization catalog is out of date: run {Path(__file__).name}", file=sys.stderr)
+        raise SystemExit(1)
+    print(f"localization catalog is current: {len(strings)} keys × {len(LANGS)} languages")
+else:
+    out.write_text(rendered, encoding="utf-8")
+    print(f"wrote {out} with {len(strings)} keys × {len(LANGS)} languages")
