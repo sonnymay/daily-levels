@@ -205,6 +205,7 @@ private struct HeaderView: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var levelFontSize: CGFloat = 46
     let levelPulse: Int
     let classPulse: Int
     let celebration: LevelCelebration?
@@ -234,7 +235,7 @@ private struct HeaderView: View {
                 .foregroundStyle(Theme.gray)
 
             Text("Level \(engine.level)")
-                .font(.system(size: 46, weight: .bold))
+                .font(.system(size: levelFontSize, weight: .bold))
                 .foregroundStyle(Theme.ink)
                 .contentTransition(.numericText(value: Double(engine.level)))
                 .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.level)
