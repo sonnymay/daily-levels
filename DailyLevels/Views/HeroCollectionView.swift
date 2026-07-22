@@ -23,38 +23,71 @@ import SwiftUI
 /// everyone sees the ladder they're climbing.
 struct HeroJourneyRow: View {
     @Environment(FocusEngine.self) private var engine
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let action: () -> Void
 
     var body: some View {
         let journeyLevel = engine.journeyLevel
         let nextClass = KnightClass.allCases.first { !$0.isReached(atJourneyLevel: journeyLevel) }
         return Button(action: action) {
-            HStack(spacing: 12) {
-                HeroThumbnail(className: KnightClass.forLevel(journeyLevel).rawValue, size: 44, dimmed: false)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Hero Collection")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Theme.ink)
-                    if let next = nextClass {
-                        Text("\(KnightClass.reachedCount(atJourneyLevel: journeyLevel)) of 10 reached · Next: \(String(localized: next.displayName)) at level \(next.minLevel)")
-                            .font(.caption)
-                            .foregroundStyle(Theme.gray)
-                    } else {
-                        Text("All 10 heroes reached")
-                            .font(.caption)
-                            .foregroundStyle(Theme.gray)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) {
+                            HeroThumbnail(className: KnightClass.forLevel(journeyLevel).rawValue,
+                                          size: 44,
+                                          dimmed: false)
+                            title
+                            Spacer()
+                            chevron
+                        }
+                        journeyStatus(level: journeyLevel, nextClass: nextClass)
+                    }
+                } else {
+                    HStack(spacing: 12) {
+                        HeroThumbnail(className: KnightClass.forLevel(journeyLevel).rawValue,
+                                      size: 44,
+                                      dimmed: false)
+                        VStack(alignment: .leading, spacing: 2) {
+                            title
+                            journeyStatus(level: journeyLevel, nextClass: nextClass)
+                        }
+                        Spacer()
+                        chevron
                     }
                 }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.gray)
             }
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.pressable)
         .accessibilityHint(Text("Opens your hero collection"))
+    }
+
+    private var title: some View {
+        Text("Hero Collection")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.ink)
+    }
+
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Theme.gray)
+    }
+
+    @ViewBuilder
+    private func journeyStatus(level: Int, nextClass: KnightClass?) -> some View {
+        if let nextClass {
+            Text("\(KnightClass.reachedCount(atJourneyLevel: level)) of 10 reached · Next: \(String(localized: nextClass.displayName)) at level \(nextClass.minLevel)")
+                .font(.caption)
+                .foregroundStyle(Theme.gray)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            Text("All 10 heroes reached")
+                .font(.caption)
+                .foregroundStyle(Theme.gray)
+        }
     }
 }
 
