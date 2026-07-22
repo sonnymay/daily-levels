@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # Generates DailyLevels/Localizable.xcstrings from a translation table.
+# Pass --check to verify the checked-in catalog without rewriting it.
 # Languages: es, pt-BR, de, fr, ja. All non-English flagged needs_review.
 import collections
 import json
+import sys
 from pathlib import Path
 
 LANGS = ["es", "pt-BR", "de", "fr", "ja"]
@@ -123,7 +125,13 @@ for key, vals in T.items():
 
 catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
 out = Path(__file__).resolve().parents[1] / "DailyLevels" / "Localizable.xcstrings"
-with out.open("w", encoding="utf-8") as f:
-    json.dump(catalog, f, ensure_ascii=False, indent=2)
-    f.write("\n")
-print(f"wrote {out} with {len(strings)} keys × {len(LANGS)} languages")
+rendered = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
+
+if "--check" in sys.argv:
+    if not out.exists() or out.read_text(encoding="utf-8") != rendered:
+        print(f"localization catalog is out of date: run {Path(__file__).name}", file=sys.stderr)
+        raise SystemExit(1)
+    print(f"localization catalog is current: {len(strings)} keys × {len(LANGS)} languages")
+else:
+    out.write_text(rendered, encoding="utf-8")
+    print(f"wrote {out} with {len(strings)} keys × {len(LANGS)} languages")
