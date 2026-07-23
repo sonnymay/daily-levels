@@ -23,6 +23,13 @@ struct FocusHistoryCard: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
 
+            if let best = engine.personalBest {
+                PersonalBestRow(
+                    day: best,
+                    isToday: best.id == engine.weekHistory.last?.id
+                )
+            }
+
             WeekBarChart(days: engine.weekHistory)
                 .frame(height: 150)
                 .padding(.top, 2)
@@ -42,6 +49,67 @@ struct FocusHistoryCard: View {
         .padding(18)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - Personal best
+
+private struct PersonalBestRow: View {
+    let day: DaySummary
+    let isToday: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "star.fill")
+                .font(.body)
+                .foregroundStyle(Theme.greenDeep)
+                .frame(width: 24, height: 24)
+                .accessibilityHidden(true)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    identity
+                    Spacer(minLength: 8)
+                    result
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    identity
+                    result
+                }
+            }
+        }
+        .padding(12)
+        .background(Theme.greenSoft.opacity(0.25),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Personal best"))
+        .accessibilityValue(Text("\(accessibilitySummary(for: day)), \(dateText)"))
+    }
+
+    private var identity: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Personal best")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+            Text(dateText)
+                .font(.caption)
+                .foregroundStyle(Theme.gray)
+        }
+    }
+
+    private var result: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Level \(day.level)")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.greenDeep)
+            Text("\(day.focusMinutes) min focus time")
+                .font(.caption)
+                .foregroundStyle(Theme.gray)
+        }
+    }
+
+    private var dateText: String {
+        isToday ? String(localized: "Today") : Format.longDate(day.date)
     }
 }
 

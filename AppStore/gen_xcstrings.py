@@ -98,6 +98,7 @@ add("Resting by the campfire","Descansando junto a la fogata","Descansando perto
 # --- History card ---
 add("Focus History","Historial de concentración","Histórico de foco","Fokus-Verlauf","Historique de focus","集中の履歴")
 add("Levels earned each day · resets at midnight","Niveles ganados cada día · se reinicia a medianoche","Níveis ganhos por dia · reinicia à meia-noite","Täglich erreichte Level · Reset um Mitternacht","Niveaux gagnés chaque jour · réinitialisé à minuit","毎日獲得したレベル · 深夜にリセット")
+add("Personal best","Mejor marca personal","Recorde pessoal","Persönliche Bestleistung","Record personnel","自己ベスト")
 add("%lld min focus time","%lld min de foco","%lld min de foco","%lld Min. Fokuszeit","%lld min de focus","集中時間%lld分")
 
 # --- Hero Collection (conversion centerpiece) ---
