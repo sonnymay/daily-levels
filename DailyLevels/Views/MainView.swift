@@ -506,6 +506,17 @@ enum Format {
             : String(format: "%d:%02d", m, sec)
     }
 
+    /// A locale-aware duration for VoiceOver, where "1:05" would otherwise be ambiguous.
+    static func spokenDuration(_ seconds: Int, locale: Locale = .current) -> String {
+        let style = Duration.UnitsFormatStyle(
+            allowedUnits: [.hours, .minutes, .seconds],
+            width: .wide,
+            maximumUnitCount: 3
+        )
+        .locale(locale)
+        return Duration.seconds(max(0, seconds)).formatted(style)
+    }
+
     /// Locale-aware "Jun 6" — day/month order adapts per locale (e.g. "6 juin", "6月6日").
     static func shortDate(_ date: Date) -> String {
         date.formatted(.dateTime.month(.abbreviated).day())
