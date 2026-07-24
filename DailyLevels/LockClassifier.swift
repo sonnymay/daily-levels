@@ -66,6 +66,7 @@ final class LockClassifier {
     var isActive: Bool = false
 
     // Callbacks the engine wires up.
+    var onEnterBackground: ((_ backgroundedAt: Date) -> Void)?
     var onLockDetected: (() -> Void)?
     var onAppSwitchDetected: ((_ backgroundedAt: Date) -> Void)?
     var onEnterForeground: ((_ sawLock: Bool) -> Void)?
@@ -108,12 +109,14 @@ final class LockClassifier {
 
     private func handleEnterBackground() {
         guard isActive else { return }
-        state.enterBackground(at: Date())
+        let backgroundedAt = Date()
+        state.enterBackground(at: backgroundedAt)
 
         // Keep the process alive long enough to observe a lock notification.
         bgTask = UIApplication.shared.beginBackgroundTask(withName: "lock-classify") { [weak self] in
             self?.endBackgroundTask()
         }
+        onEnterBackground?(backgroundedAt)
 
         graceTimer?.invalidate()
         graceTimer = Timer.scheduledTimer(withTimeInterval: graceSeconds, repeats: false) { [weak self] _ in
@@ -128,6 +131,7 @@ final class LockClassifier {
         graceTimer?.invalidate()
         graceTimer = nil
         onLockDetected?()
+        endBackgroundTask()
     }
 
     private func graceExpired() {

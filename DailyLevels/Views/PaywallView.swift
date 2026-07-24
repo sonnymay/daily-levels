@@ -42,6 +42,7 @@ struct PaywallView: View {
                             Text("Daily Levels Pro")
                                 .font(.largeTitle.weight(.bold))
                                 .foregroundStyle(Theme.ink)
+                                .accessibilityAddTraits(.isHeader)
                             Text("One-time unlock. Yours forever.")
                                 .font(.callout)
                                 .foregroundStyle(Theme.gray)
@@ -66,6 +67,7 @@ struct PaywallView: View {
                             Text("Your collection")
                                 .font(.headline)
                                 .foregroundStyle(Theme.ink)
+                                .accessibilityAddTraits(.isHeader)
                             HeroCollectionGrid()
                         }
 

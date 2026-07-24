@@ -139,6 +139,7 @@ struct HeroCollectionSheet: View {
         }
         .padding(.top, 8)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     private var unlockCTA: some View {

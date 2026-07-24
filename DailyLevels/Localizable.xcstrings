@@ -1051,107 +1051,107 @@
         }
       }
     },
-    "Pause focus timer": {
+    "Stops earning focus time until you resume": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pausar el temporizador de concentración"
+            "value": "Deja de ganar tiempo de concentración hasta que reanudes"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Pausar o cronômetro de foco"
+            "value": "Para de ganhar tempo de foco até você retomar"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Fokus-Timer pausieren"
+            "value": "Stoppt die Fokuszeit, bis du fortsetzt"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Mettre en pause le minuteur de focus"
+            "value": "Arrête de cumuler du temps de focus jusqu’à la reprise"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "集中タイマーを一時停止"
+            "value": "再開するまで集中時間の獲得を止めます"
           }
         }
       }
     },
-    "Resume focus timer": {
+    "Continues this focus session": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Reanudar el temporizador de concentración"
+            "value": "Continúa esta sesión de concentración"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Retomar o cronômetro de foco"
+            "value": "Continua esta sessão de foco"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Fokus-Timer fortsetzen"
+            "value": "Setzt diese Fokus-Sitzung fort"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Reprendre le minuteur de focus"
+            "value": "Reprend cette session de focus"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "集中タイマーを再開"
+            "value": "この集中セッションを続けます"
           }
         }
       }
     },
-    "Start focus timer": {
+    "Begins earning one level every five minutes": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Iniciar el temporizador de concentración"
+            "value": "Empieza a ganar un nivel cada cinco minutos"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Iniciar o cronômetro de foco"
+            "value": "Começa a ganhar um nível a cada cinco minutos"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Fokus-Timer starten"
+            "value": "Beginnt alle fünf Minuten ein Level zu verdienen"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Démarrer le minuteur de focus"
+            "value": "Commence à gagner un niveau toutes les cinq minutes"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "集中タイマーを開始"
+            "value": "5分ごとに1レベル獲得し始めます"
           }
         }
       }

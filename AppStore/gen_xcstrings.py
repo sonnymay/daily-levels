@@ -50,9 +50,9 @@ add("Level %lld reached","Nivel %lld alcanzado","Nível %lld alcançado","Level 
 add("Pause","Pausar","Pausar","Pause","Pause","一時停止")
 add("Resume","Reanudar","Retomar","Fortsetzen","Reprendre","再開")
 add("Start","Empezar","Começar","Start","Démarrer","開始")
-add("Pause focus timer","Pausar el temporizador de concentración","Pausar o cronômetro de foco","Fokus-Timer pausieren","Mettre en pause le minuteur de focus","集中タイマーを一時停止")
-add("Resume focus timer","Reanudar el temporizador de concentración","Retomar o cronômetro de foco","Fokus-Timer fortsetzen","Reprendre le minuteur de focus","集中タイマーを再開")
-add("Start focus timer","Iniciar el temporizador de concentración","Iniciar o cronômetro de foco","Fokus-Timer starten","Démarrer le minuteur de focus","集中タイマーを開始")
+add("Stops earning focus time until you resume","Deja de ganar tiempo de concentración hasta que reanudes","Para de ganhar tempo de foco até você retomar","Stoppt die Fokuszeit, bis du fortsetzt","Arrête de cumuler du temps de focus jusqu’à la reprise","再開するまで集中時間の獲得を止めます")
+add("Continues this focus session","Continúa esta sesión de concentración","Continua esta sessão de foco","Setzt diese Fokus-Sitzung fort","Reprend cette session de focus","この集中セッションを続けます")
+add("Begins earning one level every five minutes","Empieza a ganar un nivel cada cinco minutos","Começa a ganhar um nível a cada cinco minutos","Beginnt alle fünf Minuten ein Level zu verdienen","Commence à gagner un niveau toutes les cinq minutes","5分ごとに1レベル獲得し始めます")
 add("Lock your phone — focus keeps counting","Bloquea el teléfono: el foco sigue contando","Bloqueie o telefone — o foco continua contando","Sperre dein Telefon — der Fokus zählt weiter","Verrouille ton téléphone — le focus continue de compter","スマホをロックしても集中はカウント継続")
 
 # --- Unlock Pro row ---

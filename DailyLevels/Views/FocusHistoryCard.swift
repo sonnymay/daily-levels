@@ -18,6 +18,7 @@ struct FocusHistoryCard: View {
             Text("Focus History")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Theme.ink)
+                .accessibilityAddTraits(.isHeader)
 
             Text("Levels earned each day · resets at midnight")
                 .font(.footnote)
@@ -26,7 +27,8 @@ struct FocusHistoryCard: View {
             if let best = engine.personalBest {
                 PersonalBestRow(
                     day: best,
-                    isToday: best.id == engine.weekHistory.last?.id
+                    isToday: best.id == engine.weekHistory.last?.id,
+                    referenceDate: engine.now
                 )
             }
 
@@ -38,7 +40,7 @@ struct FocusHistoryCard: View {
 
             VStack(spacing: 0) {
                 ForEach(engine.recentDays) { day in
-                    DayRow(day: day)
+                    DayRow(day: day, referenceDate: engine.now)
                     if day.id != engine.recentDays.last?.id {
                         Divider().background(Theme.hairline)
                     }
@@ -57,6 +59,7 @@ struct FocusHistoryCard: View {
 private struct PersonalBestRow: View {
     let day: DaySummary
     let isToday: Bool
+    let referenceDate: Date
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -109,7 +112,9 @@ private struct PersonalBestRow: View {
     }
 
     private var dateText: String {
-        isToday ? String(localized: "Today") : Format.longDate(day.date)
+        isToday
+            ? String(localized: "Today")
+            : Format.historyDate(day.date, relativeTo: referenceDate)
     }
 }
 
@@ -193,6 +198,7 @@ private struct Line: Shape {
 private struct DayRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let day: DaySummary
+    let referenceDate: Date
 
     var body: some View {
         Group {
@@ -211,14 +217,18 @@ private struct DayRow: View {
         }
         .padding(.vertical, 12)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(Format.longDate(day.date)))
+        .accessibilityLabel(Text(historyDate))
         .accessibilityValue(Text(accessibilitySummary(for: day)))
     }
 
     private var date: some View {
-        Text(Format.longDate(day.date))
+        Text(historyDate)
             .font(.body)
             .foregroundStyle(Theme.ink)
+    }
+
+    private var historyDate: String {
+        Format.historyDate(day.date, relativeTo: referenceDate)
     }
 
     private var result: some View {
