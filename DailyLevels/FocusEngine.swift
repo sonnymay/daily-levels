@@ -188,6 +188,14 @@ final class FocusEngine {
         return Set(days).sorted(by: >).map { DaySummary(date: $0, focusMinutes: (map[$0] ?? 0) / 60) }
     }
 
+    /// A single kind highlight, never a streak: the strongest focused day on this device.
+    var personalBest: DaySummary? {
+        let days = secondsByDayIncludingLive().map {
+            DaySummary(date: $0.key, focusMinutes: $0.value / 60)
+        }
+        return HistoryMath.personalBest(from: days)
+    }
+
     // MARK: Internals
     private var startOfToday: Date { calendar.startOfDay(for: now) }
 

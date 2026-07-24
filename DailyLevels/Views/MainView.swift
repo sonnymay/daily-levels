@@ -364,16 +364,21 @@ private struct ProgressSection: View {
                 .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
             if engine.isGrinding || engine.isPaused {
-                Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
-                    .font(.caption)
-                    .foregroundStyle(Theme.gray)
-                // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
-                // width so the timer doesn't shift left/right as the seconds tick.
-                // While paused it holds its value; resume continues from here.
-                Text(Format.clock(engine.currentSessionSeconds))
-                    .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
+                        .font(.caption)
+                        .foregroundStyle(Theme.gray)
+                    // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
+                    // width so the timer doesn't shift left/right as the seconds tick.
+                    // While paused it holds its value; resume continues from here.
+                    Text(Format.clock(engine.currentSessionSeconds))
+                        .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(engine.isPaused ? Text("Paused") : Text("Current session"))
+                .accessibilityValue(Text(Format.spokenDuration(engine.currentSessionSeconds)))
             } else {
                 Text("Ready to focus")
                     .font(.footnote)
@@ -472,6 +477,7 @@ private struct IntroSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .accessibilityAction(.escape) { dismiss() }
     }
 }
 
@@ -504,6 +510,17 @@ enum Format {
         return h > 0
             ? String(format: "%d:%02d:%02d", h, m, sec)
             : String(format: "%d:%02d", m, sec)
+    }
+
+    /// A locale-aware duration for VoiceOver, where "1:05" would otherwise be ambiguous.
+    static func spokenDuration(_ seconds: Int, locale: Locale = .current) -> String {
+        let style = Duration.UnitsFormatStyle(
+            allowedUnits: [.hours, .minutes, .seconds],
+            width: .wide,
+            maximumUnitCount: 3
+        )
+        .locale(locale)
+        return Duration.seconds(max(0, seconds)).formatted(style)
     }
 
     /// Locale-aware "Jun 6" — day/month order adapts per locale (e.g. "6 juin", "6月6日").
