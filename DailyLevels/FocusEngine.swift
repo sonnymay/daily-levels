@@ -297,6 +297,14 @@ final class FocusEngine {
         startTicker()
     }
 
+    /// Bank all foreground focus as soon as iOS backgrounds the app. Classification can
+    /// then decide lock vs. app switch without risking this already-earned stretch.
+    func prepareForBackground(at backgroundedAt: Date) {
+        guard mode == .grinding else { return }
+        checkpointActiveSession(at: backgroundedAt, locked: false)
+        stopTicker()
+    }
+
     /// An app switch pauses at the background boundary, but the screen should render using
     /// the current foreground day when the decision is made (especially across midnight).
     func pauseAfterAppSwitch(backgroundedAt: Date, observedAt: Date) {

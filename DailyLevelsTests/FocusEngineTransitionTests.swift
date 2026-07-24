@@ -49,6 +49,43 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testPreparingForBackgroundBanksForegroundFocusWithoutPausing() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let startedAt = engine.now
+        let backgroundedAt = startedAt.addingTimeInterval(2 * 60)
+
+        engine.prepareForBackground(at: backgroundedAt)
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
+        XCTAssertTrue(engine.isGrinding)
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
+        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, backgroundedAt)
+        XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+
+        engine.pause()
+    }
+
+    func testAppSwitchAfterBackgroundCheckpointDoesNotDoubleCount() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let startedAt = engine.now
+        let backgroundedAt = startedAt.addingTimeInterval(2 * 60)
+        let classifiedAt = backgroundedAt.addingTimeInterval(30)
+        engine.prepareForBackground(at: backgroundedAt)
+
+        engine.pauseAfterAppSwitch(backgroundedAt: backgroundedAt, observedAt: classifiedAt)
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
+        XCTAssertTrue(engine.isPaused)
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
+        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+    }
+
     func testAppSwitchPausesAtBackgroundBoundaryAndRefreshesTheCurrentDay() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
