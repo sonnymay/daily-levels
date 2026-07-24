@@ -364,16 +364,21 @@ private struct ProgressSection: View {
                 .animation(reduceMotion ? nil : .snappy(duration: 0.35), value: engine.todayMinutes)
 
             if engine.isGrinding || engine.isPaused {
-                Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
-                    .font(.caption)
-                    .foregroundStyle(Theme.gray)
-                // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
-                // width so the timer doesn't shift left/right as the seconds tick.
-                // While paused it holds its value; resume continues from here.
-                Text(Format.clock(engine.currentSessionSeconds))
-                    .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(engine.isPaused ? LocalizedStringKey("Paused") : LocalizedStringKey("Current session"))
+                        .font(.caption)
+                        .foregroundStyle(Theme.gray)
+                    // Big, prominent session clock. `.monospacedDigit()` fixes each digit's
+                    // width so the timer doesn't shift left/right as the seconds tick.
+                    // While paused it holds its value; resume continues from here.
+                    Text(Format.clock(engine.currentSessionSeconds))
+                        .font(.system(size: sessionClockSize, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(engine.isPaused ? Theme.gray : Theme.ink)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(engine.isPaused ? Text("Paused") : Text("Current session"))
+                .accessibilityValue(Text(Format.spokenDuration(engine.currentSessionSeconds)))
             } else {
                 Text("Ready to focus")
                     .font(.footnote)
