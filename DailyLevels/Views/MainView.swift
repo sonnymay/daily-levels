@@ -448,6 +448,7 @@ private struct IntroSheet: View {
                         Text("Welcome to Daily Levels")
                             .font(.title.weight(.bold))
                             .foregroundStyle(Theme.ink)
+                            .accessibilityAddTraits(.isHeader)
 
                         VStack(alignment: .leading, spacing: 16) {
                             IntroRow(icon: "hourglass",

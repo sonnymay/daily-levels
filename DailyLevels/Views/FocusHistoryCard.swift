@@ -18,6 +18,7 @@ struct FocusHistoryCard: View {
             Text("Focus History")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Theme.ink)
+                .accessibilityAddTraits(.isHeader)
 
             Text("Levels earned each day · resets at midnight")
                 .font(.footnote)
