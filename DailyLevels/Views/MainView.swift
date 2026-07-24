@@ -477,6 +477,7 @@ private struct IntroSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .accessibilityAction(.escape) { dismiss() }
     }
 }
 

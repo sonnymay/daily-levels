@@ -121,6 +121,7 @@ struct HeroCollectionSheet: View {
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
         .presentationDragIndicator(.visible)
+        .accessibilityAction(.escape) { dismiss() }
     }
 
     private var header: some View {

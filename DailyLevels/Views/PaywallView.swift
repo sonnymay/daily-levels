@@ -99,6 +99,7 @@ struct PaywallView: View {
         .task {
             if store.proProduct == nil { await loadPrice() }
         }
+        .accessibilityAction(.escape) { dismiss() }
     }
 
     private var purchaseFooter: some View {
