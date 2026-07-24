@@ -404,8 +404,14 @@ final class FocusEngine {
 
     // MARK: Lock classifier wiring (SPEC §6)
     private func wireClassifier() {
-        // Bank everything earned before suspension, then mark the remaining stretch as
-        // confirmed-locked so a system termination can recover it on next launch.
+        // Bank foreground focus immediately. The classifier can safely wait to distinguish
+        // a lock from an app switch without keeping earned time only in memory.
+        classifier.onEnterBackground = { [weak self] backgroundedAt in
+            self?.prepareForBackground(at: backgroundedAt)
+        }
+
+        // Mark the short stretch since backgrounding as confirmed-locked so a system
+        // termination can recover all subsequent locked time on the next launch.
         classifier.onLockDetected = { [weak self] in
             guard let self, self.mode == .grinding else { return }
             self.checkpointActiveSession(at: Date(), locked: true)
