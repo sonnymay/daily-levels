@@ -46,7 +46,41 @@ final class FormatTests: XCTestCase {
         )
     }
 
+    func testHistoryDateKeepsCurrentYearCompact() {
+        XCTAssertEqual(
+            Format.historyDate(
+                date(year: 2026, month: 1, day: 5),
+                relativeTo: date(year: 2026, month: 7, day: 24),
+                calendar: utcCalendar,
+                locale: english
+            ),
+            "January 5"
+        )
+    }
+
+    func testHistoryDateIncludesYearForOlderRecords() {
+        XCTAssertEqual(
+            Format.historyDate(
+                date(year: 2025, month: 1, day: 5),
+                relativeTo: date(year: 2026, month: 7, day: 24),
+                calendar: utcCalendar,
+                locale: english
+            ),
+            "January 5, 2025"
+        )
+    }
+
     private var english: Locale {
         Locale(identifier: "en_US")
+    }
+
+    private var utcCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    private func date(year: Int, month: Int, day: Int) -> Date {
+        utcCalendar.date(from: DateComponents(year: year, month: month, day: day))!
     }
 }

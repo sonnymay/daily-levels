@@ -531,4 +531,22 @@ enum Format {
     static func longDate(_ date: Date) -> String {
         date.formatted(.dateTime.month(.wide).day())
     }
+
+    /// Keeps current-year history compact while making older records unambiguous.
+    static func historyDate(_ date: Date,
+                            relativeTo referenceDate: Date = Date(),
+                            calendar: Calendar = .autoupdatingCurrent,
+                            locale: Locale = .current) -> String {
+        var style = Date.FormatStyle(
+            locale: locale,
+            calendar: calendar,
+            timeZone: calendar.timeZone
+        )
+        .month(.wide)
+        .day()
+        if !calendar.isDate(date, equalTo: referenceDate, toGranularity: .year) {
+            style = style.year()
+        }
+        return date.formatted(style)
+    }
 }
