@@ -131,6 +131,7 @@ final class LockClassifier {
         graceTimer?.invalidate()
         graceTimer = nil
         onLockDetected?()
+        endBackgroundTask()
     }
 
     private func graceExpired() {
