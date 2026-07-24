@@ -165,6 +165,8 @@ struct PaywallView: View {
                 Text("Restore Purchases")
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .font(.subheadline)
             .foregroundStyle(Theme.gray)
@@ -172,13 +174,15 @@ struct PaywallView: View {
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 16) {
-                    Link("Privacy Policy", destination: privacyURL)
-                    Text("·").foregroundStyle(Theme.gray)
-                    Link("Terms", destination: termsURL)
+                    footerLink("Privacy Policy", destination: privacyURL)
+                    Text("·")
+                        .foregroundStyle(Theme.gray)
+                        .accessibilityHidden(true)
+                    footerLink("Terms", destination: termsURL)
                 }
-                VStack(spacing: 8) {
-                    Link("Privacy Policy", destination: privacyURL)
-                    Link("Terms", destination: termsURL)
+                VStack(spacing: 0) {
+                    footerLink("Privacy Policy", destination: privacyURL)
+                    footerLink("Terms", destination: termsURL)
                 }
             }
             .font(.caption)
@@ -188,6 +192,14 @@ struct PaywallView: View {
         .padding(.top, 12)
         .padding(.bottom, 10)
         .background(Theme.cream)
+    }
+
+    private func footerLink(_ title: LocalizedStringKey, destination: URL) -> some View {
+        Link(destination: destination) {
+            Text(title)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+        }
     }
 
     private func loadPrice() async {
