@@ -420,13 +420,18 @@ private struct StartPauseButton: View {
         }
         .buttonStyle(.pressable(scale: 0.97))
         .accessibilityLabel(label)
-        .accessibilityHint(engine.isGrinding ? "Pause focus timer"
-            : engine.isPaused ? "Resume focus timer" : "Start focus timer")
+        .accessibilityHint(Text(hint))
     }
 
     private var label: LocalizedStringKey {
         if engine.isGrinding { return "Pause" }
         return engine.isPaused ? "Resume" : "Start"
+    }
+
+    private var hint: LocalizedStringKey {
+        if engine.isGrinding { return "Stops earning focus time until you resume" }
+        if engine.isPaused { return "Continues this focus session" }
+        return "Begins earning one level every five minutes"
     }
 }
 
