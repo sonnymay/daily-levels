@@ -1961,37 +1961,37 @@
         }
       }
     },
-    "Purchase failed": {
+    "App Store error": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Error en la compra"
+            "value": "Error de App Store"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Falha na compra"
+            "value": "Erro da App Store"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Kauf fehlgeschlagen"
+            "value": "App Store-Fehler"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Échec de l’achat"
+            "value": "Erreur de l’App Store"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "購入に失敗しました"
+            "value": "App Storeエラー"
           }
         }
       }
@@ -2027,6 +2027,76 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "App Storeに接続できませんでした。接続を確認して、もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "Purchase Pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compra pendiente"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compra pendente"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kauf ausstehend"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Achat en attente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入保留中"
+          }
+        }
+      }
+    },
+    "Your purchase is awaiting approval. Daily Levels Pro will unlock automatically after it is approved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tu compra está esperando aprobación. Daily Levels Pro se desbloqueará automáticamente cuando sea aprobada."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sua compra está aguardando aprovação. O Daily Levels Pro será desbloqueado automaticamente após a aprovação."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dein Kauf wartet auf Genehmigung. Daily Levels Pro wird nach der Genehmigung automatisch freigeschaltet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ton achat attend une approbation. Daily Levels Pro se débloquera automatiquement après son approbation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入は承認待ちです。承認されるとDaily Levels Proが自動的に解除されます。"
           }
         }
       }

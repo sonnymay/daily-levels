@@ -16,6 +16,7 @@ struct PaywallView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isLoadingPrice = false
     @State private var showNoPurchase = false
+    @State private var showPendingPurchase = false
 
     private let privacyURL = URL(string: "https://github.com/sonnymay/daily-levels/blob/main/PRIVACY_POLICY.md")!
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
@@ -88,7 +89,7 @@ struct PaywallView: View {
                 }
             }
         }
-        .alert("Purchase failed", isPresented: showError) {
+        .alert("App Store error", isPresented: showError) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(store.lastError ?? "")
@@ -98,8 +99,16 @@ struct PaywallView: View {
         } message: {
             Text("No previous Daily Levels Pro purchase was found for this Apple Account.")
         }
+        .alert("Purchase Pending", isPresented: $showPendingPurchase) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your purchase is awaiting approval. Daily Levels Pro will unlock automatically after it is approved.")
+        }
         .task {
             if store.proProduct == nil { await loadPrice() }
+        }
+        .onChange(of: store.isPro) { _, isPro in
+            if isPro { dismiss() }
         }
         .accessibilityAction(.escape) { dismiss() }
     }
@@ -108,12 +117,21 @@ struct PaywallView: View {
         VStack(spacing: 12) {
             if let price = store.priceText {
                 Button {
-                    Task { await store.purchase(); if store.isPro { dismiss() } }
+                    Task {
+                        let outcome = await store.purchase()
+                        if store.isPro {
+                            dismiss()
+                        } else if outcome == .pending {
+                            showPendingPurchase = true
+                        }
+                    }
                 } label: {
                     Group {
                         if store.isWorking {
                             HStack(spacing: 8) {
-                                ProgressView().tint(.white)
+                                ProgressView()
+                                    .tint(.white)
+                                    .accessibilityHidden(true)
                                 Text("Completing purchase…")
                             }
                         } else {
@@ -137,7 +155,9 @@ struct PaywallView: View {
                     Group {
                         if isLoadingPrice {
                             HStack(spacing: 8) {
-                                ProgressView().tint(Theme.green)
+                                ProgressView()
+                                    .tint(Theme.green)
+                                    .accessibilityHidden(true)
                                 Text("Loading price…")
                             }
                         } else {

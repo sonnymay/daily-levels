@@ -149,10 +149,14 @@ struct MainView: View {
     private func maybeRequestReview(classChanged: Bool) {
         let now = Date().timeIntervalSince1970
         if firstLaunchAt == 0 { firstLaunchAt = now }
-        let daysIn = (now - firstLaunchAt) / 86_400
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        guard classChanged, daysIn >= 3,
-              version != lastReviewVersion else { return }
+        guard ReviewPromptPolicy.shouldRequest(
+            classChanged: classChanged,
+            firstLaunchAt: firstLaunchAt,
+            now: now,
+            currentVersion: version,
+            lastReviewVersion: lastReviewVersion
+        ) else { return }
         lastReviewVersion = version
         requestReview()
     }

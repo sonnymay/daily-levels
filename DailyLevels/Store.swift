@@ -18,6 +18,13 @@ import StoreKit
 @MainActor
 @Observable
 final class Store {
+    enum PurchaseOutcome: Equatable {
+        case completed
+        case pending
+        case cancelled
+        case failed
+    }
+
     /// Must match the non-consumable product ID created in App Store Connect.
     static let proProductID = "com.santipapmay.DailyLevels.pro"
     /// Build 6 is the first production build intended to be free with a Pro IAP.
@@ -99,30 +106,35 @@ final class Store {
         return build < firstFreemiumBuild
     }
 
-    func purchase() async {
-        guard !isWorking else { return }
+    func purchase() async -> PurchaseOutcome {
+        guard !isWorking else { return .failed }
         lastError = nil
         isWorking = true
         defer { isWorking = false }
         if proProduct == nil { await loadProducts() }   // first-launch / offline retry, then surface failure
         guard let product = proProduct else {
             lastError = String(localized: "Couldn’t reach the App Store. Check your connection and try again.")
-            return
+            return .failed
         }
         do {
             switch try await product.purchase() {
-            case .success(let verification):
-                if case .verified(let t) = verification {
-                    await t.finish()
-                    await updateEntitlements()
-                }
-            case .userCancelled, .pending:
-                break
+            case .success(.verified(let transaction)):
+                await transaction.finish()
+                await updateEntitlements()
+                return .completed
+            case .success(.unverified(_, let error)):
+                lastError = error.localizedDescription
+                return .failed
+            case .userCancelled:
+                return .cancelled
+            case .pending:
+                return .pending
             @unknown default:
-                break
+                return .failed
             }
         } catch {
             lastError = error.localizedDescription
+            return .failed
         }
     }
 
