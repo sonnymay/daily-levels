@@ -14,7 +14,12 @@ struct FocusHistoryCard: View {
     @Environment(FocusEngine.self) private var engine
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let personalBest = engine.personalBest
+        let weekHistory = engine.weekHistory
+        let recentDays = engine.recentDays
+        let referenceDate = engine.now
+
+        return VStack(alignment: .leading, spacing: 14) {
             Text("Focus History")
                 .font(.title3.weight(.bold))
                 .foregroundStyle(Theme.ink)
@@ -24,24 +29,24 @@ struct FocusHistoryCard: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.gray)
 
-            if let best = engine.personalBest {
+            if let best = personalBest {
                 PersonalBestRow(
                     day: best,
-                    isToday: best.id == engine.weekHistory.last?.id,
-                    referenceDate: engine.now
+                    isToday: best.id == weekHistory.last?.id,
+                    referenceDate: referenceDate
                 )
             }
 
-            WeekBarChart(days: engine.weekHistory)
+            WeekBarChart(days: weekHistory)
                 .frame(height: 150)
                 .padding(.top, 2)
                 // Keep this fixed-format chart legible while surrounding prose continues scaling.
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
             VStack(spacing: 0) {
-                ForEach(engine.recentDays) { day in
-                    DayRow(day: day, referenceDate: engine.now)
-                    if day.id != engine.recentDays.last?.id {
+                ForEach(recentDays) { day in
+                    DayRow(day: day, referenceDate: referenceDate)
+                    if day.id != recentDays.last?.id {
                         Divider().background(Theme.hairline)
                     }
                 }
