@@ -2031,6 +2031,76 @@
         }
       }
     },
+    "Purchase Pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compra pendiente"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compra pendente"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kauf ausstehend"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Achat en attente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入保留中"
+          }
+        }
+      }
+    },
+    "Your purchase is awaiting approval. Daily Levels Pro will unlock automatically after it is approved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tu compra está esperando aprobación. Daily Levels Pro se desbloqueará automáticamente cuando sea aprobada."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sua compra está aguardando aprovação. O Daily Levels Pro será desbloqueado automaticamente após a aprovação."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dein Kauf wartet auf Genehmigung. Daily Levels Pro wird nach der Genehmigung automatisch freigeschaltet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ton achat attend une approbation. Daily Levels Pro se débloquera automatiquement après son approbation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入は承認待ちです。承認されるとDaily Levels Proが自動的に解除されます。"
+          }
+        }
+      }
+    },
     "No Purchase Found": {
       "extractionState": "manual",
       "localizations": {
