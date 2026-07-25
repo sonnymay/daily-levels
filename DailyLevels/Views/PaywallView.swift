@@ -129,7 +129,9 @@ struct PaywallView: View {
                     Group {
                         if store.isWorking {
                             HStack(spacing: 8) {
-                                ProgressView().tint(.white)
+                                ProgressView()
+                                    .tint(.white)
+                                    .accessibilityHidden(true)
                                 Text("Completing purchase…")
                             }
                         } else {
@@ -153,7 +155,9 @@ struct PaywallView: View {
                     Group {
                         if isLoadingPrice {
                             HStack(spacing: 8) {
-                                ProgressView().tint(Theme.green)
+                                ProgressView()
+                                    .tint(Theme.green)
+                                    .accessibilityHidden(true)
                                 Text("Loading price…")
                             }
                         } else {
