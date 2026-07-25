@@ -43,7 +43,7 @@ struct FocusHistoryCard: View {
                 // Keep this fixed-format chart legible while surrounding prose continues scaling.
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
 
-            VStack(spacing: 0) {
+            LazyVStack(spacing: 0) {
                 ForEach(recentDays) { day in
                     DayRow(day: day, referenceDate: referenceDate)
                     if day.id != recentDays.last?.id {
