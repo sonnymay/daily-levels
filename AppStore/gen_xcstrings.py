@@ -82,7 +82,7 @@ add("Loading price…","Cargando el precio…","Carregando o preço…","Preis w
 add("Restore Purchases","Restaurar compras","Restaurar compras","Käufe wiederherstellen","Restaurer les achats","購入を復元")
 add("Privacy Policy","Política de privacidad","Política de Privacidade","Datenschutzrichtlinie","Politique de confidentialité","プライバシーポリシー")
 add("Terms","Términos","Termos","Nutzungsbedingungen","Conditions","利用規約")
-add("Purchase failed","Error en la compra","Falha na compra","Kauf fehlgeschlagen","Échec de l’achat","購入に失敗しました")
+add("App Store error","Error de App Store","Erro da App Store","App Store-Fehler","Erreur de l’App Store","App Storeエラー")
 add("Couldn’t reach the App Store. Check your connection and try again.","No se pudo conectar con la App Store. Revisa tu conexión e inténtalo de nuevo.","Não foi possível acessar a App Store. Verifique sua conexão e tente novamente.","App Store nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.","Impossible de joindre l’App Store. Vérifie ta connexion et réessaie.","App Storeに接続できませんでした。接続を確認して、もう一度お試しください。")
 add("Purchase Pending","Compra pendiente","Compra pendente","Kauf ausstehend","Achat en attente","購入保留中")
 add("Your purchase is awaiting approval. Daily Levels Pro will unlock automatically after it is approved.","Tu compra está esperando aprobación. Daily Levels Pro se desbloqueará automáticamente cuando sea aprobada.","Sua compra está aguardando aprovação. O Daily Levels Pro será desbloqueado automaticamente após a aprovação.","Dein Kauf wartet auf Genehmigung. Daily Levels Pro wird nach der Genehmigung automatisch freigeschaltet.","Ton achat attend une approbation. Daily Levels Pro se débloquera automatiquement après son approbation.","購入は承認待ちです。承認されるとDaily Levels Proが自動的に解除されます。")

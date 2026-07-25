@@ -1961,37 +1961,37 @@
         }
       }
     },
-    "Purchase failed": {
+    "App Store error": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Error en la compra"
+            "value": "Error de App Store"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Falha na compra"
+            "value": "Erro da App Store"
           }
         },
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Kauf fehlgeschlagen"
+            "value": "App Store-Fehler"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Échec de l’achat"
+            "value": "Erreur de l’App Store"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "購入に失敗しました"
+            "value": "App Storeエラー"
           }
         }
       }

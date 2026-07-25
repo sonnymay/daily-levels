@@ -89,7 +89,7 @@ struct PaywallView: View {
                 }
             }
         }
-        .alert("Purchase failed", isPresented: showError) {
+        .alert("App Store error", isPresented: showError) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(store.lastError ?? "")
