@@ -107,6 +107,9 @@ struct PaywallView: View {
         .task {
             if store.proProduct == nil { await loadPrice() }
         }
+        .onChange(of: store.isPro) { _, isPro in
+            if isPro { dismiss() }
+        }
         .accessibilityAction(.escape) { dismiss() }
     }
 
