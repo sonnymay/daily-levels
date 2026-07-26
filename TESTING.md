@@ -17,8 +17,10 @@ Run the automated gate before the device checks:
 
 ```bash
 ./AppStore/validate_release.sh 1.1 7
+python3 -m unittest scripts/test_resolve_ios_simulator.py
+simulator_id="$(./scripts/resolve_ios_simulator.py)"
 xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -destination "platform=iOS Simulator,id=$simulator_id" \
   -skipMacroValidation CODE_SIGNING_ALLOWED=NO test
 ```
 

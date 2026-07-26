@@ -128,8 +128,11 @@ open DailyLevels.xcodeproj                 # Xcode 16+, iOS 17.0+
 Or from the command line:
 
 ```bash
+python3 -m unittest scripts/test_resolve_ios_simulator.py
+simulator_id="$(./scripts/resolve_ios_simulator.py)"
 xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
-  -destination 'platform=iOS Simulator,name=iPhone 16' build test
+  -destination "platform=iOS Simulator,id=$simulator_id" \
+  -skipMacroValidation CODE_SIGNING_ALLOWED=NO test
 ```
 
 - **Lock detection needs a physical iPhone with a passcode** — the simulator never fires `protectedDataWillBecomeUnavailable`.
