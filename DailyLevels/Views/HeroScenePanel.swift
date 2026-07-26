@@ -112,14 +112,9 @@ struct HeroScenePanel: View {
 
     private var stillImage: UIImage? {
         if !grinding {
-            let classSleepName = HeroSceneAsset.resourceName(grinding: false, className: className)
-            if let url = Bundle.main.url(forResource: classSleepName, withExtension: "png"),
-               let image = UIImage(contentsOfFile: url.path) {
-                return image
-            }
+            return HeroSceneAsset.sleepImage(for: className)
         }
-        let name = grinding ? "HeroGrinding" : "HeroSleeping"
-        return UIImage(named: name)
+        return UIImage(named: "HeroGrinding")
     }
 
     // Placeholder shown when no class clip/image is present (e.g. a class you haven't made yet).
