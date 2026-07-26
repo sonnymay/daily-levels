@@ -1,6 +1,6 @@
 # Daily Levels release testing
 
-Use this checklist for the release candidate. The 54 unit tests cover level math, local-day
+Use this checklist for the release candidate. The automated test suite covers level math, local-day
 aggregation, midnight splitting, DST and timezone changes, cold-launch recovery, entitlement
 migration, foreground transitions, and the lock-classification state machine. The tests below verify the iOS lifecycle
 behavior that only a physical device can prove.
@@ -17,8 +17,10 @@ Run the automated gate before the device checks:
 
 ```bash
 ./AppStore/validate_release.sh 1.1 7
+python3 -m unittest scripts/test_resolve_ios_simulator.py
+simulator_id="$(./scripts/resolve_ios_simulator.py)"
 xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -destination "platform=iOS Simulator,id=$simulator_id" \
   -skipMacroValidation CODE_SIGNING_ALLOWED=NO test
 ```
 

@@ -15,6 +15,8 @@
 import SwiftUI
 
 enum HeroSceneAsset {
+    private static let sleepImageCache = NSCache<NSString, UIImage>()
+
     static func resourceName(grinding: Bool, className: String) -> String {
         "\(className.lowercased())_\(grinding ? "grind" : "sleep")"
     }
@@ -23,11 +25,19 @@ enum HeroSceneAsset {
     /// `className` is the English `rawValue` (asset key). Falls back to the bundled "HeroSleeping".
     static func sleepImage(for className: String) -> UIImage? {
         let name = resourceName(grinding: false, className: className)
-        if let url = Bundle.main.url(forResource: name, withExtension: "png"),
-           let image = UIImage(contentsOfFile: url.path) {
-            return image
+        let cacheKey = name as NSString
+        if let cachedImage = sleepImageCache.object(forKey: cacheKey) {
+            return cachedImage
         }
-        return UIImage(named: "HeroSleeping")
+
+        let image = Bundle.main.url(forResource: name, withExtension: "png")
+            .flatMap { UIImage(contentsOfFile: $0.path) }
+            ?? UIImage(named: "HeroSleeping")
+
+        if let image {
+            sleepImageCache.setObject(image, forKey: cacheKey)
+        }
+        return image
     }
 }
 
@@ -102,14 +112,9 @@ struct HeroScenePanel: View {
 
     private var stillImage: UIImage? {
         if !grinding {
-            let classSleepName = HeroSceneAsset.resourceName(grinding: false, className: className)
-            if let url = Bundle.main.url(forResource: classSleepName, withExtension: "png"),
-               let image = UIImage(contentsOfFile: url.path) {
-                return image
-            }
+            return HeroSceneAsset.sleepImage(for: className)
         }
-        let name = grinding ? "HeroGrinding" : "HeroSleeping"
-        return UIImage(named: name)
+        return UIImage(named: "HeroGrinding")
     }
 
     // Placeholder shown when no class clip/image is present (e.g. a class you haven't made yet).

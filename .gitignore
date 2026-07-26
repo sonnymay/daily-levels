@@ -9,11 +9,16 @@ DerivedData/
 *.xcarchive
 *.dSYM.zip
 *.dSYM
+*.xcresult
 
 ## Signing and App Store Connect secrets
 *.p8
 *.p12
+*.pem
+*.key
+*.cer
 *.mobileprovision
+*.provisionprofile
 api_key.json
 AppStoreConnectAPIKey*.json
 .env
