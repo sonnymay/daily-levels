@@ -25,4 +25,26 @@ final class HeroSceneAssetTests: XCTestCase {
 
         XCTAssertTrue(first === second)
     }
+
+    func testEveryClassSceneAssetIsBundled() {
+        for knightClass in KnightClass.allCases {
+            let grindingName = HeroSceneAsset.resourceName(
+                grinding: true,
+                className: knightClass.rawValue
+            )
+            let sleepingName = HeroSceneAsset.resourceName(
+                grinding: false,
+                className: knightClass.rawValue
+            )
+
+            XCTAssertNotNil(
+                Bundle.main.url(forResource: grindingName, withExtension: "mp4"),
+                "\(grindingName).mp4 is missing from the app bundle"
+            )
+            XCTAssertNotNil(
+                Bundle.main.url(forResource: sleepingName, withExtension: "png"),
+                "\(sleepingName).png is missing from the app bundle"
+            )
+        }
+    }
 }
