@@ -18,4 +18,11 @@ final class HeroSceneAssetTests: XCTestCase {
         XCTAssertEqual(HeroSceneAsset.resourceName(grinding: false, className: "Novice"), "novice_sleep")
         XCTAssertEqual(HeroSceneAsset.resourceName(grinding: false, className: "Mythic"), "mythic_sleep")
     }
+
+    func testSleepingImageIsReusedFromCache() throws {
+        let first = try XCTUnwrap(HeroSceneAsset.sleepImage(for: "Novice"))
+        let second = try XCTUnwrap(HeroSceneAsset.sleepImage(for: "Novice"))
+
+        XCTAssertTrue(first === second)
+    }
 }
