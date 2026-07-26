@@ -95,8 +95,11 @@ check_screenshot_set "AppStore/screenshots/release_6_9" 1320 2868
 check_screenshot_set "AppStore/screenshots/release_13_inch" 2064 2752
 check_hero_assets
 
-tracked_secrets="$(git -C "$root" ls-files | grep -E '\.(p8|p12|mobileprovision|ipa|xcarchive)$|(^|/)api_key\.json$|AuthKey_' || true)"
-[[ -z "$tracked_secrets" ]] || fail "a signing key, profile, archive, or API credential is tracked"
+tracked_secrets="$(git -C "$root" ls-files |
+    grep -E '\.(p8|p12|pem|key|cer|mobileprovision|provisionprofile|ipa|xcarchive|xcresult)$|(^|/)(api_key\.json|AppStoreConnectAPIKey[^/]*\.json|AuthKey_[^/]*|\.env(\..*)?)$' |
+    grep -Ev '(^|/)\.env\.example$' || true)"
+[[ -z "$tracked_secrets" ]] ||
+    fail "a signing artifact, build archive, environment file, or API credential is tracked"
 
 storekit_config="$root/DailyLevels.storekit"
 scheme="$root/DailyLevels.xcodeproj/xcshareddata/xcschemes/DailyLevels.xcscheme"
