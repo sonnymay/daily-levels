@@ -179,4 +179,42 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.completedSecondsByDay.count, 1)
         XCTAssertEqual(engine.completedSecondsByDay.values.first, 60 * 60)
     }
+
+    func testSignificantForwardClockChangeDoesNotInventForegroundFocus() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let clockJump = engine.now.addingTimeInterval(2 * 60 * 60)
+
+        engine.handleSignificantTimeChange(at: clockJump, calendar: calendar)
+
+        XCTAssertLessThan(engine.currentSessionSeconds, 2)
+        XCTAssertLessThan(engine.todaySeconds, 2)
+        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, clockJump)
+
+        let beforeResume = engine.currentSessionSeconds
+        engine.continueGrindingAfterLock(at: clockJump.addingTimeInterval(5 * 60))
+        XCTAssertEqual(engine.currentSessionSeconds, beforeResume + 5 * 60)
+        _ = container
+        engine.pause()
+    }
+
+    func testSignificantClockChangePreservesConfirmedLockedFocus() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let startedAt = engine.now
+        let backgroundedAt = startedAt.addingTimeInterval(60)
+        engine.prepareForBackground(at: backgroundedAt)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+        let returnedAt = startedAt.addingTimeInterval(60 * 60)
+
+        engine.handleSignificantTimeChange(at: returnedAt, calendar: calendar)
+        engine.continueGrindingAfterLock(at: returnedAt)
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 60 * 60)
+        XCTAssertEqual(engine.currentSessionSeconds, 60 * 60)
+        engine.pause()
+    }
 }

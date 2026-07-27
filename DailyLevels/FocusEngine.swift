@@ -327,6 +327,24 @@ final class FocusEngine {
         reloadSessions()
     }
 
+    /// A manual clock jump must not invent or erase foreground focus. Bank only the
+    /// elapsed time already shown by the ticker, then anchor the live stretch to the new
+    /// wall clock. Confirmed locked time is left intact because locking is earned focus.
+    func handleSignificantTimeChange(at date: Date, calendar: Calendar) {
+        guard mode == .grinding,
+              !defaults.bool(forKey: Self.activeWasLockedKey) else {
+            refreshCurrentEnvironment(at: date, calendar: calendar)
+            return
+        }
+
+        checkpointActiveSession(at: now, locked: false)
+        activeStart = date
+        Self.saveActiveMarker(start: date, locked: false, defaults: defaults)
+        refreshCurrentEnvironment(at: date, calendar: calendar)
+        checkpointDay = calendar.startOfDay(for: date)
+        checkpointLevel = level
+    }
+
     // MARK: Ticker
     private func startTicker() {
         stopTicker()
@@ -433,14 +451,19 @@ final class FocusEngine {
 
     private func wireTimeObservers() {
         let center = NotificationCenter.default
-        let names = [UIApplication.didBecomeActiveNotification,
-                     UIApplication.significantTimeChangeNotification]
-        timeObservers = names.map { name in
-            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+        timeObservers = [
+            center.addObserver(forName: UIApplication.didBecomeActiveNotification,
+                               object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
                     self?.refreshCurrentEnvironment(at: Date(), calendar: .autoupdatingCurrent)
                 }
+            },
+            center.addObserver(forName: UIApplication.significantTimeChangeNotification,
+                               object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    self?.handleSignificantTimeChange(at: Date(), calendar: .autoupdatingCurrent)
+                }
             }
-        }
+        ]
     }
 }
