@@ -98,6 +98,22 @@ check_primary_app_icon() {
     [[ "$format" == "png" ]] || fail "the primary AppIcon.png must be a PNG"
 }
 
+check_privacy_dependencies() {
+    local project="$root/DailyLevels.xcodeproj/project.pbxproj"
+    local tracking_imports
+
+    if grep -Eq 'XCRemoteSwiftPackageReference|XCSwiftPackageProductDependency' "$project"; then
+        fail "remote Swift package dependencies violate the zero-dependency privacy policy"
+    fi
+
+    tracking_imports="$(grep -R -E \
+        --include='*.swift' \
+        '^[[:space:]]*import[[:space:]]+(AdSupport|AppTrackingTransparency)([[:space:]]|$)' \
+        "$root/DailyLevels" || true)"
+    [[ -z "$tracking_imports" ]] ||
+        fail "an advertising or tracking framework is imported"
+}
+
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
     -target DailyLevels -configuration Release -showBuildSettings)"
 
@@ -108,8 +124,11 @@ python3 "$root/AppStore/gen_xcstrings.py" --check
 [[ "$(setting PRODUCT_BUNDLE_IDENTIFIER)" == "com.santipapmay.DailyLevels" ]] || fail "bundle ID changed"
 [[ "$(setting INFOPLIST_KEY_ITSAppUsesNonExemptEncryption)" == "NO" ]] || fail "export-compliance setting changed"
 [[ "$(setting ASSETCATALOG_COMPILER_APPICON_NAME)" == "AppIcon" ]] || fail "the primary app icon set changed"
+[[ -z "$(setting INFOPLIST_KEY_NSUserTrackingUsageDescription)" ]] ||
+    fail "the tracking usage description must remain unset"
 
 check_primary_app_icon
+check_privacy_dependencies
 check_screenshot_set "AppStore/screenshots/release_6_9" 1320 2868
 check_screenshot_set "AppStore/screenshots/release_13_inch" 2064 2752
 check_hero_assets
@@ -143,5 +162,5 @@ grep -q 'identifier = "../../DailyLevels.storekit"' "$scheme" ||
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/DailyLevels/Store.swift" || fail "StoreKit product ID is missing from Store.swift"
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/AppStore/METADATA.md" || fail "StoreKit product ID is missing from METADATA.md"
 
-printf 'Release validation passed: Daily Levels %s (%s), primary app icon, 10 ordered screenshots, 10 hero asset pairs, StoreKit config, no tracked secrets.\n' \
+printf 'Release validation passed: Daily Levels %s (%s), primary app icon, privacy dependency policy, 10 ordered screenshots, 10 hero asset pairs, StoreKit config, no tracked secrets.\n' \
     "$expected_version" "$expected_build"
