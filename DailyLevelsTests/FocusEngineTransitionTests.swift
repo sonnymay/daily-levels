@@ -199,6 +199,24 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testSignificantBackwardClockChangeKeepsForegroundFocusMoving() throws {
+        let (engine, container, defaults, suiteName) = try makeEngine()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let clockCorrection = engine.now.addingTimeInterval(-60 * 60)
+
+        engine.handleSignificantTimeChange(at: clockCorrection, calendar: calendar)
+
+        let earnedBeforeCorrection = engine.currentSessionSeconds
+        engine.continueGrindingAfterLock(at: clockCorrection.addingTimeInterval(3 * 60))
+
+        XCTAssertEqual(engine.currentSessionSeconds, earnedBeforeCorrection + 3 * 60)
+        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date,
+                       clockCorrection.addingTimeInterval(3 * 60))
+        _ = container
+        engine.pause()
+    }
+
     func testSignificantClockChangePreservesConfirmedLockedFocus() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
