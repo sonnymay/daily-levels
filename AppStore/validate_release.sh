@@ -81,6 +81,23 @@ check_hero_assets() {
     done
 }
 
+check_primary_app_icon() {
+    local file="$root/DailyLevels/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+    local metadata width height alpha format
+
+    [[ -s "$file" ]] || fail "the primary AppIcon.png is missing or empty"
+    metadata="$(sips -g pixelWidth -g pixelHeight -g hasAlpha -g format "$file" 2>/dev/null)"
+    width="$(printf '%s\n' "$metadata" | awk '/pixelWidth:/ { print $2 }')"
+    height="$(printf '%s\n' "$metadata" | awk '/pixelHeight:/ { print $2 }')"
+    alpha="$(printf '%s\n' "$metadata" | awk '/hasAlpha:/ { print $2 }')"
+    format="$(printf '%s\n' "$metadata" | awk '/format:/ { print $2 }')"
+
+    [[ "$width" == "1024" && "$height" == "1024" ]] ||
+        fail "the primary AppIcon.png is ${width}x${height}; expected 1024x1024"
+    [[ "$alpha" == "no" ]] || fail "the primary AppIcon.png must be opaque"
+    [[ "$format" == "png" ]] || fail "the primary AppIcon.png must be a PNG"
+}
+
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
     -target DailyLevels -configuration Release -showBuildSettings)"
 
@@ -90,7 +107,9 @@ python3 "$root/AppStore/gen_xcstrings.py" --check
 [[ "$(setting CURRENT_PROJECT_VERSION)" == "$expected_build" ]] || fail "build number is not $expected_build"
 [[ "$(setting PRODUCT_BUNDLE_IDENTIFIER)" == "com.santipapmay.DailyLevels" ]] || fail "bundle ID changed"
 [[ "$(setting INFOPLIST_KEY_ITSAppUsesNonExemptEncryption)" == "NO" ]] || fail "export-compliance setting changed"
+[[ "$(setting ASSETCATALOG_COMPILER_APPICON_NAME)" == "AppIcon" ]] || fail "the primary app icon set changed"
 
+check_primary_app_icon
 check_screenshot_set "AppStore/screenshots/release_6_9" 1320 2868
 check_screenshot_set "AppStore/screenshots/release_13_inch" 2064 2752
 check_hero_assets
@@ -124,5 +143,5 @@ grep -q 'identifier = "../../DailyLevels.storekit"' "$scheme" ||
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/DailyLevels/Store.swift" || fail "StoreKit product ID is missing from Store.swift"
 grep -q 'com\.santipapmay\.DailyLevels\.pro' "$root/AppStore/METADATA.md" || fail "StoreKit product ID is missing from METADATA.md"
 
-printf 'Release validation passed: Daily Levels %s (%s), 10 ordered screenshots, 10 hero asset pairs, StoreKit config, no tracked secrets.\n' \
+printf 'Release validation passed: Daily Levels %s (%s), primary app icon, 10 ordered screenshots, 10 hero asset pairs, StoreKit config, no tracked secrets.\n' \
     "$expected_version" "$expected_build"
