@@ -2591,6 +2591,76 @@
         }
       }
     },
+    "%lld of 10 reached · Next: %@ at level %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld de 10 alcanzados · Siguiente: %@ en el nivel %lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld de 10 alcançados · Próximo: %@ no nível %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld von 10 erreicht · Als Nächstes: %@ auf Level %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld sur 10 atteints · Suivant : %@ au niveau %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "10人中%lld人に到達 · 次: %@（レベル%lld）"
+          }
+        }
+      }
+    },
+    "All 10 heroes reached": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Los 10 héroes alcanzados"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Todos os 10 heróis alcançados"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alle 10 Helden erreicht"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Les 10 héros sont atteints"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "10人のヒーローすべてに到達"
+          }
+        }
+      }
+    },
     "Your journey: lifetime level %lld · %@": {
       "extractionState": "manual",
       "localizations": {

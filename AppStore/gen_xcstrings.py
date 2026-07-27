@@ -106,6 +106,8 @@ add("%lld min focus time","%lld min de foco","%lld min de foco","%lld Min. Fokus
 # --- Hero Collection (conversion centerpiece) ---
 add("Hero Collection","Colección de héroes","Coleção de heróis","Heldensammlung","Collection de héros","ヒーローコレクション")
 add("%lld of 10 heroes reached","%lld de 10 héroes alcanzados","%lld de 10 heróis alcançados","%lld von 10 Helden erreicht","%lld héros sur 10 atteints","10人中%lld人のヒーローに到達")
+add("%lld of 10 reached · Next: %@ at level %lld","%lld de 10 alcanzados · Siguiente: %@ en el nivel %lld","%lld de 10 alcançados · Próximo: %@ no nível %lld","%lld von 10 erreicht · Als Nächstes: %@ auf Level %lld","%lld sur 10 atteints · Suivant : %@ au niveau %lld","10人中%lld人に到達 · 次: %@（レベル%lld）")
+add("All 10 heroes reached","Los 10 héroes alcanzados","Todos os 10 heróis alcançados","Alle 10 Helden erreicht","Les 10 héros sont atteints","10人のヒーローすべてに到達")
 add("Your journey: lifetime level %lld · %@","Tu viaje: nivel total %lld · %@","Sua jornada: nível vitalício %lld · %@","Deine Reise: Gesamtlevel %lld · %@","Ton parcours : niveau cumulé %lld · %@","あなたの旅: 累計レベル%lld · %@")
 add("%lld of 10 reached — keep focusing to climb.","%lld de 10 alcanzados: sigue concentrándote para subir.","%lld de 10 alcançados — continue focando para subir.","%lld von 10 erreicht — bleib fokussiert, um aufzusteigen.","%lld sur 10 atteints — continue à te concentrer pour grimper.","10中%lld到達 — 集中を続けて登ろう。")
 add("Unlock 7 more heroes · %@","Desbloquea 7 héroes más · %@","Desbloqueie mais 7 heróis · %@","7 weitere Helden freischalten · %@","Débloque 7 héros de plus · %@","さらに7人のヒーローを解除 · %@")
