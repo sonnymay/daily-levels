@@ -171,30 +171,24 @@ final class FocusEngine {
     /// `KnightClass.reachedCount` (reading it once per render, not per hero).
     var journeyLevel: Int { min(LevelMath.maxLevel, lifetimeLevels) }
 
-    /// Last 7 days, oldest → newest (rightmost = today) for the bar chart (SPEC §4).
-    var weekHistory: [DaySummary] {
-        let map = secondsByDayIncludingLive()
-        return (0..<7).reversed().map { offset in
-            let day = calendar.date(byAdding: .day, value: -offset, to: startOfToday)!
-            return DaySummary(date: day, focusMinutes: (map[day] ?? 0) / 60)
-        }
+    /// Every history-card projection derived from one completed-plus-live ledger.
+    var historySnapshot: FocusHistorySnapshot {
+        HistoryMath.snapshot(
+            secondsByDay: secondsByDayIncludingLive(),
+            referenceDate: now,
+            calendar: calendar
+        )
     }
+
+    /// Last 7 days, oldest → newest (rightmost = today) for the bar chart (SPEC §4).
+    var weekHistory: [DaySummary] { historySnapshot.weekHistory }
 
     /// Recent days for the list under the chart: today plus any past day with focus time,
     /// newest first (SPEC §4: "Date · Level N · X min focus time").
-    var recentDays: [DaySummary] {
-        let map = secondsByDayIncludingLive()
-        let days = map.keys.filter { $0 < startOfToday && (map[$0] ?? 0) >= 60 } + [startOfToday]
-        return Set(days).sorted(by: >).map { DaySummary(date: $0, focusMinutes: (map[$0] ?? 0) / 60) }
-    }
+    var recentDays: [DaySummary] { historySnapshot.recentDays }
 
     /// A single kind highlight, never a streak: the strongest focused day on this device.
-    var personalBest: DaySummary? {
-        let days = secondsByDayIncludingLive().map {
-            DaySummary(date: $0.key, focusMinutes: $0.value / 60)
-        }
-        return HistoryMath.personalBest(from: days)
-    }
+    var personalBest: DaySummary? { historySnapshot.personalBest }
 
     // MARK: Internals
     private var startOfToday: Date { calendar.startOfDay(for: now) }
