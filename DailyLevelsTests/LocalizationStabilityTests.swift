@@ -33,4 +33,28 @@ final class LocalizationStabilityTests: XCTestCase {
         XCTAssertTrue(KnightClass.knight.isProOnly)
         XCTAssertTrue(KnightClass.mythic.isProOnly)
     }
+
+    func testHeroJourneyStatusHasSpanishTranslations() throws {
+        let spanish = Locale(identifier: "es")
+        let localizationURL = try XCTUnwrap(
+            Bundle.main.url(forResource: "es", withExtension: "lproj")
+        )
+        let localizationBundle = try XCTUnwrap(Bundle(url: localizationURL))
+        let nextClass = "Caballero"
+        let statusKey = "%lld of 10 reached · Next: %@ at level %lld"
+        let statusFormat = localizationBundle.localizedString(
+            forKey: statusKey,
+            value: nil,
+            table: "Localizable"
+        )
+        let status = String(format: statusFormat, locale: spanish, 3, nextClass, 31)
+        let complete = localizationBundle.localizedString(
+            forKey: "All 10 heroes reached",
+            value: nil,
+            table: "Localizable"
+        )
+
+        XCTAssertEqual(status, "3 de 10 alcanzados · Siguiente: Caballero en el nivel 31")
+        XCTAssertEqual(complete, "Los 10 héroes alcanzados")
+    }
 }
