@@ -342,9 +342,13 @@ final class FocusEngine {
     // MARK: Ticker
     private func startTicker() {
         stopTicker()
-        ticker = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick(at: Date()) }
         }
+        // Display updates can arrive a fraction late because elapsed focus uses Date math,
+        // not tick counts. This lets iOS coalesce wakeups and spend less battery.
+        timer.tolerance = 0.1
+        ticker = timer
     }
 
     private func tick(at date: Date) {
