@@ -28,8 +28,11 @@ jobs:
       - name: Validate App Store release inputs
         run: ./AppStore/validate_release.sh 1.1 7
 
-      - name: Test simulator selection
-        run: python3 -m unittest scripts/test_resolve_ios_simulator.py
+      - name: Test release tooling
+        run: |
+          python3 -m unittest \
+            scripts/test_resolve_ios_simulator.py \
+            AppStore/test_validate_metadata.py
 
       - name: Select iOS Simulator
         id: simulator
