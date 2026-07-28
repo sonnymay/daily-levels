@@ -15,7 +15,11 @@
 import SwiftUI
 
 enum HeroSceneAsset {
-    private static let sleepImageCache = NSCache<NSString, UIImage>()
+    private static let sleepImageCache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.totalCostLimit = 32 * 1024 * 1024
+        return cache
+    }()
 
     static func resourceName(grinding: Bool, className: String) -> String {
         "\(className.lowercased())_\(grinding ? "grind" : "sleep")"
@@ -35,7 +39,13 @@ enum HeroSceneAsset {
             ?? UIImage(named: "HeroSleeping")
 
         if let image {
-            sleepImageCache.setObject(image, forKey: cacheKey)
+            let pixelWidth = Int(image.size.width * image.scale)
+            let pixelHeight = Int(image.size.height * image.scale)
+            sleepImageCache.setObject(
+                image,
+                forKey: cacheKey,
+                cost: pixelWidth * pixelHeight * 4
+            )
         }
         return image
     }

@@ -100,7 +100,7 @@ check_primary_app_icon() {
 
 check_privacy_dependencies() {
     local project="$root/DailyLevels.xcodeproj/project.pbxproj"
-    local tracking_imports
+    local network_usage tracking_imports
 
     if grep -Eq 'XCRemoteSwiftPackageReference|XCSwiftPackageProductDependency' "$project"; then
         fail "remote Swift package dependencies violate the zero-dependency privacy policy"
@@ -112,12 +112,20 @@ check_privacy_dependencies() {
         "$root/DailyLevels" || true)"
     [[ -z "$tracking_imports" ]] ||
         fail "an advertising or tracking framework is imported"
+
+    network_usage="$(grep -R -E \
+        --include='*.swift' \
+        '^[[:space:]]*import[[:space:]]+(CloudKit|Network|WebKit)([[:space:]]|$)|(^|[^[:alnum:]_])(CKContainer|NWConnection|URLSession|WKWebView)([^[:alnum:]_]|$)' \
+        "$root/DailyLevels" || true)"
+    [[ -z "$network_usage" ]] ||
+        fail "a direct network, web-view, or CloudKit client violates the on-device-only policy"
 }
 
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
     -target DailyLevels -configuration Release -showBuildSettings)"
 
 python3 "$root/AppStore/gen_xcstrings.py" --check
+python3 "$root/AppStore/validate_metadata.py"
 
 [[ "$(setting MARKETING_VERSION)" == "$expected_version" ]] || fail "marketing version is not $expected_version"
 [[ "$(setting CURRENT_PROJECT_VERSION)" == "$expected_build" ]] || fail "build number is not $expected_build"

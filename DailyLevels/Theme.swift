@@ -13,7 +13,7 @@ enum Theme {
     static let ink       = Color(hex: 0x1B1B1D)   // primary text
     static let gray      = Color(hex: 0x6A6A70)   // secondary text; AA contrast on cream/card
     static let green     = Color(hex: 0x5E8C3E)   // button + accent
-    static let greenDeep = Color(hex: 0x4C7A33)   // filled progress + "Today" bar
+    static let greenDeep = Color(hex: 0x4B7932)   // status text + progress; AA contrast on cream
     static let greenSoft = Color(hex: 0xC3DBA4)   // past-day bars
     static let track     = Color(hex: 0xE4E1D8)   // progress bar track
     static let badgeBg   = Color(hex: 0xE7E4DB)   // class badge pill
