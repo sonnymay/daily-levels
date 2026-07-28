@@ -9,6 +9,14 @@ import SwiftUI
 import StoreKit   // \.requestReview
 import Accessibility
 
+private enum MainSheet: String, Identifiable {
+    case intro
+    case paywall
+    case collection
+
+    var id: String { rawValue }
+}
+
 struct MainView: View {
     @Environment(FocusEngine.self) private var engine
     @Environment(Store.self) private var store
@@ -21,9 +29,7 @@ struct MainView: View {
     @AppStorage("firstLaunchAt") private var firstLaunchAt = 0.0
     @AppStorage("lastReviewVersion") private var lastReviewVersion = ""
     @AppStorage("knightPaywallShown") private var knightPaywallShown = false
-    @State private var showIntro = false
-    @State private var showPaywall = false
-    @State private var showCollection = false
+    @State private var activeSheet: MainSheet?
 
     /// Hero art is gated past the free ceiling until Pro is unlocked.
     private var heroLocked: Bool { !store.isPro && engine.knightClass.isProOnly }
@@ -55,7 +61,7 @@ struct MainView: View {
                     ProgressSection()
                     FocusHistoryCard()
                     // One calm secondary entry point: progress and Pro both live in the collection.
-                    HeroJourneyRow { showCollection = true }
+                    HeroJourneyRow { activeSheet = .collection }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -96,30 +102,35 @@ struct MainView: View {
         }
         .onAppear {
             if firstLaunchAt == 0 { firstLaunchAt = Date().timeIntervalSince1970 }
-            if !hasSeenIntro { showIntro = true }
+            if !hasSeenIntro { activeSheet = .intro }
             #if DEBUG
             let arguments = ProcessInfo.processInfo.arguments
-            if arguments.contains("-showHeroCollection") { showCollection = true }
-            if arguments.contains("-showPaywall") { showPaywall = true }
+            if arguments.contains("-showPaywall") {
+                activeSheet = .paywall
+            } else if arguments.contains("-showHeroCollection") {
+                activeSheet = .collection
+            }
             #endif
         }
-        .sheet(isPresented: $showIntro, onDismiss: { hasSeenIntro = true }) {
-            IntroSheet {
-                engine.start()
-                showIntro = false
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .intro:
+                IntroSheet {
+                    engine.start()
+                    activeSheet = nil
+                }
+                .onDisappear { hasSeenIntro = true }
+            case .paywall:
+                PaywallView()
+            case .collection:
+                HeroCollectionSheet()
             }
-        }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView()
-        }
-        .sheet(isPresented: $showCollection) {
-            HeroCollectionSheet()
         }
         .onChange(of: engine.journeyLevel) { _, new in
             // Ask only once the first paid evolution has actually been earned.
             guard new >= KnightClass.knight.minLevel, !store.isPro, !knightPaywallShown else { return }
             knightPaywallShown = true
-            showPaywall = true
+            if activeSheet == nil { activeSheet = .paywall }
         }
     }
 
@@ -127,7 +138,7 @@ struct MainView: View {
         if heroLocked {
             Button {
                 Haptics.actionTap()
-                showPaywall = true
+                activeSheet = .paywall
             } label: {
                 heroScenePanel
             }
