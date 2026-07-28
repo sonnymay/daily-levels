@@ -100,7 +100,7 @@ check_primary_app_icon() {
 
 check_privacy_dependencies() {
     local project="$root/DailyLevels.xcodeproj/project.pbxproj"
-    local tracking_imports
+    local network_usage tracking_imports
 
     if grep -Eq 'XCRemoteSwiftPackageReference|XCSwiftPackageProductDependency' "$project"; then
         fail "remote Swift package dependencies violate the zero-dependency privacy policy"
@@ -112,6 +112,13 @@ check_privacy_dependencies() {
         "$root/DailyLevels" || true)"
     [[ -z "$tracking_imports" ]] ||
         fail "an advertising or tracking framework is imported"
+
+    network_usage="$(grep -R -E \
+        --include='*.swift' \
+        '^[[:space:]]*import[[:space:]]+(CloudKit|Network|WebKit)([[:space:]]|$)|(^|[^[:alnum:]_])(CKContainer|NWConnection|URLSession|WKWebView)([^[:alnum:]_]|$)' \
+        "$root/DailyLevels" || true)"
+    [[ -z "$network_usage" ]] ||
+        fail "a direct network, web-view, or CloudKit client violates the on-device-only policy"
 }
 
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
