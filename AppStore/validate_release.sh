@@ -100,10 +100,14 @@ check_primary_app_icon() {
 
 check_privacy_dependencies() {
     local project="$root/DailyLevels.xcodeproj/project.pbxproj"
-    local network_usage tracking_imports
+    local network_usage out_of_scope_imports tracking_imports
 
     if grep -Eq 'XCRemoteSwiftPackageReference|XCSwiftPackageProductDependency' "$project"; then
         fail "remote Swift package dependencies violate the zero-dependency privacy policy"
+    fi
+
+    if grep -q 'com\.apple\.product-type\.app-extension' "$project"; then
+        fail "app extensions are outside the one-screen product scope"
     fi
 
     tracking_imports="$(grep -R -E \
@@ -119,6 +123,13 @@ check_privacy_dependencies() {
         "$root/DailyLevels" || true)"
     [[ -z "$network_usage" ]] ||
         fail "a direct network, web-view, or CloudKit client violates the on-device-only policy"
+
+    out_of_scope_imports="$(grep -R -E \
+        --include='*.swift' \
+        '^[[:space:]]*import[[:space:]]+(ActivityKit|UserNotifications|WidgetKit)([[:space:]]|$)' \
+        "$root/DailyLevels" || true)"
+    [[ -z "$out_of_scope_imports" ]] ||
+        fail "widgets, Live Activities, and notifications are outside the minimalist product scope"
 }
 
 build_settings="$(xcodebuild -project "$root/DailyLevels.xcodeproj" \
