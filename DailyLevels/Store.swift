@@ -130,6 +130,7 @@ final class Store {
             case .pending:
                 return .pending
             @unknown default:
+                lastError = String(localized: "The purchase couldn’t be completed. Please try again.")
                 return .failed
             }
         } catch {
