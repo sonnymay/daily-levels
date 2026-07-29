@@ -18,7 +18,7 @@ Read [`SPEC.md`](SPEC.md) before changing product behavior.
 
 - App: **Daily Levels**, App ID `6780007939`, bundle `com.santipapmay.DailyLevels`.
 - Team `57U5D693VS`; App Store Connect Issuer `69a6de7a-0b32-47e3-e053-5b8c7c11a4d1`.
-- Project version: **1.1 build 6**. Build 6 is the first intended free-with-Pro production build.
+- Project version: **1.1 build 7**. Build 6 is the first intended free-with-Pro production build.
 - Monetization: free through Swordsman; one non-consumable Pro unlock for seven evolutions,
   Knight through Mythic. Product ID `com.santipapmay.DailyLevels.pro`.
 - Production customers whose original app build predates build 6 receive Pro automatically through
@@ -50,7 +50,7 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 34 unit tests covering level/class math, midnight/DST/timezone handling, cold-launch recovery,
+`- 83 unit tests covering level/class math, midnight/DST/timezone handling, cold-launch recovery,
    hero assets, localization invariants, Hero Collection gating, and paid-owner entitlement rules.
 ```
 
@@ -66,12 +66,12 @@ is never saved.
 ## Build and test
 
 ```bash
-SIM=C494865D-5987-4B80-A5D4-EE9EAD88FAA5
+SIM="$(./scripts/resolve_ios_simulator.py)"
 xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
   -destination "id=$SIM" CODE_SIGNING_ALLOWED=NO test
 ```
 
-Last verified July 10, 2026: simulator build succeeded and **34/34 tests passed**. Debug screenshot
+Last verified July 29, 2026: simulator build succeeded and **83/83 tests passed**. Debug screenshot
 flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Release gates

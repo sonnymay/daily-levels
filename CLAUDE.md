@@ -8,7 +8,7 @@ five minutes per level, daily reset at local midnight, locked-phone time counts,
 not, and earned progress is never taken away. No streak pressure, coins, shop, ads, notifications,
 accounts, tracking, backend, sync, widgets, or new dependencies.
 
-Release target: **1.1 build 6**, bundle `com.santipapmay.DailyLevels`. Build 6 is the first intended
+Current version/build and release state live only in `AGENTS.md`. Build 6 remains the first intended
 freemium production build. The one-time Pro product is `com.santipapmay.DailyLevels.pro`; verified
 production customers whose original app build is below 6 are grandfathered into Pro. Preserve that
 migration and use StoreKit's localized price only.
