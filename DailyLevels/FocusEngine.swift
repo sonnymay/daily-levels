@@ -14,6 +14,26 @@ import SwiftUI
 import SwiftData
 import Observation
 
+private struct FocusSessionSignature: Hashable {
+    let startAt: Date
+    let endAt: Date
+    let durationSeconds: Int
+
+    init(startAt: Date, endAt: Date, durationSeconds: Int) {
+        self.startAt = startAt
+        self.endAt = endAt
+        self.durationSeconds = durationSeconds
+    }
+
+    init(_ session: FocusSession) {
+        self.init(
+            startAt: session.startAt,
+            endAt: session.endAt,
+            durationSeconds: session.durationSeconds
+        )
+    }
+}
+
 @MainActor
 @Observable
 final class FocusEngine {
@@ -48,12 +68,14 @@ final class FocusEngine {
     // MARK: Init
     init(context: ModelContext,
          calendar: Calendar = .autoupdatingCurrent,
-         defaults: UserDefaults = .standard) {
+         defaults: UserDefaults = .standard,
+         launchDate: Date = Date()) {
         self.context = context
         self.calendar = calendar
         self.defaults = defaults
+        now = launchDate
         reloadSessions()
-        recoverFromColdLaunch()
+        recoverFromColdLaunch(at: launchDate)
         wireClassifier()
         wireTimeObservers()
     }
@@ -218,11 +240,49 @@ final class FocusEngine {
         reloadSessions()
     }
 
+    private func sessionSignatures(start: Date, end: Date) -> [FocusSessionSignature] {
+        DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar).compactMap { seg in
+            let seconds = Int(seg.end.timeIntervalSince(seg.start))
+            guard seconds > 0 else { return nil }
+            return FocusSessionSignature(
+                startAt: seg.start,
+                endAt: seg.end,
+                durationSeconds: seconds
+            )
+        }
+    }
+
     private func persistSession(start: Date, end: Date) {
+        for session in sessionSignatures(start: start, end: end) {
+            context.insert(FocusSession(
+                startAt: session.startAt,
+                endAt: session.endAt,
+                durationSeconds: session.durationSeconds
+            ))
+        }
+    }
+
+    /// Replaying a confirmed locked interval must be idempotent. If the app was terminated
+    /// after SwiftData saved but before the recovery marker cleared, the next launch sees the
+    /// same marker and skips the already-persisted slices instead of crediting them twice.
+    private func persistRecoveredSession(start: Date, end: Date) throws {
+        var existing = Set(
+            try context.fetch(FetchDescriptor<FocusSession>()).map(FocusSessionSignature.init)
+        )
         for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
             let seconds = Int(seg.end.timeIntervalSince(seg.start))
             guard seconds > 0 else { continue }
-            context.insert(FocusSession(startAt: seg.start, endAt: seg.end, durationSeconds: seconds))
+            let signature = FocusSessionSignature(
+                startAt: seg.start,
+                endAt: seg.end,
+                durationSeconds: seconds
+            )
+            guard existing.insert(signature).inserted else { continue }
+            context.insert(FocusSession(
+                startAt: signature.startAt,
+                endAt: signature.endAt,
+                durationSeconds: signature.durationSeconds
+            ))
         }
     }
 
@@ -235,13 +295,25 @@ final class FocusEngine {
     /// A foreground crash keeps only prior checkpoints. If iOS terminated the app while
     /// the phone was confirmed locked, recover that locked stretch generously, capped at
     /// one full daily climb. This favors the user's earned progress over anti-cheat rules.
-    private func recoverFromColdLaunch() {
-        if let interval = Self.coldLaunchRecoveryInterval(defaults: defaults) {
-            persistSession(start: interval.start, end: interval.end)
-            try? context.save()
+    private func recoverFromColdLaunch(at launchDate: Date) {
+        guard let interval = Self.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: launchDate
+        ) else {
+            Self.discardUnprovenActiveStart(defaults: defaults)
+            return
+        }
+
+        do {
+            try persistRecoveredSession(start: interval.start, end: interval.end)
+            try context.save()
+            reloadSessions()
+            Self.discardUnprovenActiveStart(defaults: defaults)
+        } catch {
+            // Keep the confirmed-lock marker so a later launch can retry without losing time.
+            context.rollback()
             reloadSessions()
         }
-        Self.discardUnprovenActiveStart(defaults: defaults)
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
