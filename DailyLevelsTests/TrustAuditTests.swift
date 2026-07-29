@@ -172,7 +172,7 @@ final class TrustAuditTests: XCTestCase {
             context: container.mainContext,
             calendar: cal,
             defaults: defaults,
-            launchDate: launchDate
+            launchDate: launchDate.addingTimeInterval(15 * 60)
         )
 
         let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())

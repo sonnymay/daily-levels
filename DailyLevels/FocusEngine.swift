@@ -14,26 +14,6 @@ import SwiftUI
 import SwiftData
 import Observation
 
-private struct FocusSessionSignature: Hashable {
-    let startAt: Date
-    let endAt: Date
-    let durationSeconds: Int
-
-    init(startAt: Date, endAt: Date, durationSeconds: Int) {
-        self.startAt = startAt
-        self.endAt = endAt
-        self.durationSeconds = durationSeconds
-    }
-
-    init(_ session: FocusSession) {
-        self.init(
-            startAt: session.startAt,
-            endAt: session.endAt,
-            durationSeconds: session.durationSeconds
-        )
-    }
-}
-
 @MainActor
 @Observable
 final class FocusEngine {
@@ -240,50 +220,22 @@ final class FocusEngine {
         reloadSessions()
     }
 
-    private func sessionSignatures(start: Date, end: Date) -> [FocusSessionSignature] {
-        DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar).compactMap { seg in
-            let seconds = Int(seg.end.timeIntervalSince(seg.start))
-            guard seconds > 0 else { return nil }
-            return FocusSessionSignature(
-                startAt: seg.start,
-                endAt: seg.end,
-                durationSeconds: seconds
-            )
-        }
-    }
-
     private func persistSession(start: Date, end: Date) {
-        for session in sessionSignatures(start: start, end: end) {
-            context.insert(FocusSession(
-                startAt: session.startAt,
-                endAt: session.endAt,
-                durationSeconds: session.durationSeconds
-            ))
+        for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
+            let seconds = Int(seg.end.timeIntervalSince(seg.start))
+            guard seconds > 0 else { continue }
+            context.insert(FocusSession(startAt: seg.start, endAt: seg.end, durationSeconds: seconds))
         }
     }
 
     /// Replaying a confirmed locked interval must be idempotent. If the app was terminated
     /// after SwiftData saved but before the recovery marker cleared, the next launch sees the
-    /// same marker and skips the already-persisted slices instead of crediting them twice.
+    /// first saved slice beginning at that marker and skips the replay. A ModelContext save is
+    /// atomic, so that first slice proves the complete recovered interval was committed.
     private func persistRecoveredSession(start: Date, end: Date) throws {
-        var existing = Set(
-            try context.fetch(FetchDescriptor<FocusSession>()).map(FocusSessionSignature.init)
-        )
-        for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
-            let seconds = Int(seg.end.timeIntervalSince(seg.start))
-            guard seconds > 0 else { continue }
-            let signature = FocusSessionSignature(
-                startAt: seg.start,
-                endAt: seg.end,
-                durationSeconds: seconds
-            )
-            guard existing.insert(signature).inserted else { continue }
-            context.insert(FocusSession(
-                startAt: signature.startAt,
-                endAt: signature.endAt,
-                durationSeconds: signature.durationSeconds
-            ))
-        }
+        let existing = try context.fetch(FetchDescriptor<FocusSession>())
+        guard !existing.contains(where: { $0.startAt == start }) else { return }
+        persistSession(start: start, end: end)
     }
 
     private func reloadSessions() {
