@@ -38,11 +38,14 @@ final class Store {
 
     @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
-    init() {
+    init(startObserving: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil) {
         #if DEBUG
         // Reflect immediately (before the async refresh) so previews/screenshots aren't gated.
         if ProcessInfo.processInfo.arguments.contains("-unlockPro") { isPro = true }
         #endif
+        // The XCTest host does not need live App Store state. Skipping StoreKit startup keeps
+        // deterministic unit tests from waiting on sandbox services; production still observes.
+        guard startObserving else { return }
         // Long-running listener for renewals / Ask-to-Buy approvals / refunds (SPEC-grade hygiene).
         updatesTask = Task { [weak self] in
             for await update in Transaction.updates {
