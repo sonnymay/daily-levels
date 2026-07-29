@@ -48,12 +48,14 @@ final class FocusEngine {
     // MARK: Init
     init(context: ModelContext,
          calendar: Calendar = .autoupdatingCurrent,
-         defaults: UserDefaults = .standard) {
+         defaults: UserDefaults = .standard,
+         launchDate: Date = Date()) {
         self.context = context
         self.calendar = calendar
         self.defaults = defaults
+        now = launchDate
         reloadSessions()
-        recoverFromColdLaunch()
+        recoverFromColdLaunch(at: launchDate)
         wireClassifier()
         wireTimeObservers()
     }
@@ -226,6 +228,16 @@ final class FocusEngine {
         }
     }
 
+    /// Replaying a confirmed locked interval must be idempotent. If the app was terminated
+    /// after SwiftData saved but before the recovery marker cleared, the next launch sees the
+    /// first saved slice beginning at that marker and skips the replay. A ModelContext save is
+    /// atomic, so that first slice proves the complete recovered interval was committed.
+    private func persistRecoveredSession(start: Date, end: Date) throws {
+        let existing = try context.fetch(FetchDescriptor<FocusSession>())
+        guard !existing.contains(where: { $0.startAt == start }) else { return }
+        persistSession(start: start, end: end)
+    }
+
     private func reloadSessions() {
         let all = (try? context.fetch(FetchDescriptor<FocusSession>())) ?? []
         let segments = all.map { FocusSegment(startAt: $0.startAt, durationSeconds: $0.durationSeconds) }
@@ -235,13 +247,25 @@ final class FocusEngine {
     /// A foreground crash keeps only prior checkpoints. If iOS terminated the app while
     /// the phone was confirmed locked, recover that locked stretch generously, capped at
     /// one full daily climb. This favors the user's earned progress over anti-cheat rules.
-    private func recoverFromColdLaunch() {
-        if let interval = Self.coldLaunchRecoveryInterval(defaults: defaults) {
-            persistSession(start: interval.start, end: interval.end)
-            try? context.save()
+    private func recoverFromColdLaunch(at launchDate: Date) {
+        guard let interval = Self.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: launchDate
+        ) else {
+            Self.discardUnprovenActiveStart(defaults: defaults)
+            return
+        }
+
+        do {
+            try persistRecoveredSession(start: interval.start, end: interval.end)
+            try context.save()
+            reloadSessions()
+            Self.discardUnprovenActiveStart(defaults: defaults)
+        } catch {
+            // Keep the confirmed-lock marker so a later launch can retry without losing time.
+            context.rollback()
             reloadSessions()
         }
-        Self.discardUnprovenActiveStart(defaults: defaults)
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {

@@ -1,7 +1,16 @@
 import XCTest
 @testable import DailyLevels
 
+@MainActor
 final class StoreEntitlementTests: XCTestCase {
+    func testStoreCanStartWithoutLiveStoreKitObservers() {
+        let store = Store(startObserving: false)
+
+        XCTAssertNil(store.proProduct)
+        XCTAssertFalse(store.isPro)
+        XCTAssertFalse(store.isWorking)
+    }
+
     func testPaidBuildsBeforeFreemiumAreGrandfathered() {
         XCTAssertTrue(Store.isLegacyPaidBuild("1"))
         XCTAssertTrue(Store.isLegacyPaidBuild("2"))

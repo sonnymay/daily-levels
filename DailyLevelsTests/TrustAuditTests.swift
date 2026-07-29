@@ -7,6 +7,7 @@
 //  persisted focus history. No network, no UI, no store.
 //
 
+import SwiftData
 import XCTest
 @testable import DailyLevels
 
@@ -139,6 +140,47 @@ final class TrustAuditTests: XCTestCase {
             Int(recovered.duration),
             LevelMath.maxLevel * LevelMath.secondsPerLevel
         )
+    }
+
+    func testColdLaunchRecoveryDoesNotDuplicateAnAlreadySavedLockedInterval() throws {
+        let cal = calendar("UTC")
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let launchDate = date(cal, 2026, 7, 29, 10, 0)
+        let lockedAt = launchDate.addingTimeInterval(-60 * 60)
+
+        defaults.set(lockedAt, forKey: FocusEngine.activeStartKey)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+        let firstEngine = FocusEngine(
+            context: container.mainContext,
+            calendar: cal,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+        XCTAssertEqual(firstEngine.todaySeconds, 60 * 60)
+
+        // Simulate termination after SwiftData saved but before UserDefaults cleared.
+        defaults.set(lockedAt, forKey: FocusEngine.activeStartKey)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+        let relaunchedEngine = FocusEngine(
+            context: container.mainContext,
+            calendar: cal,
+            defaults: defaults,
+            launchDate: launchDate.addingTimeInterval(15 * 60)
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(sessions.first?.durationSeconds, 60 * 60)
+        XCTAssertEqual(relaunchedEngine.todaySeconds, 60 * 60)
+        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertNil(defaults.object(forKey: FocusEngine.activeWasLockedKey))
     }
 
     func testCompletedSegmentsProduceStableDailyLevelAfterRelaunch() throws {

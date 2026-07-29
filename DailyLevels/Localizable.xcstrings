@@ -2031,6 +2031,41 @@
         }
       }
     },
+    "The purchase couldn’t be completed. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No se pudo completar la compra. Inténtalo de nuevo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Não foi possível concluir a compra. Tente novamente."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Kauf konnte nicht abgeschlossen werden. Versuche es erneut."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "L’achat n’a pas pu être finalisé. Réessaie."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入を完了できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
     "Purchase Pending": {
       "extractionState": "manual",
       "localizations": {
