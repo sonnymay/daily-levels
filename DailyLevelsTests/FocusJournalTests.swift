@@ -162,4 +162,38 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(engine.todaySeconds, 5 * 60)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
+
+    func testEngineReplaysMidnightJournalIntoTheCorrectDays() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 30, hour: 23, minute: 58
+        )))
+        let launchDate = start.addingTimeInterval(5 * 60)
+        let records = FocusJournal.records(
+            start: start,
+            end: launchDate,
+            calendar: calendar
+        )
+        FocusJournal.append(records, defaults: defaults)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 2)
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 5 * 60)
+        XCTAssertEqual(engine.completedSecondsByDay.values.reduce(0, +), 5 * 60)
+        XCTAssertEqual(engine.todaySeconds, 3 * 60)
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
 }
