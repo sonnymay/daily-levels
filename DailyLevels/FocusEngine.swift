@@ -54,6 +54,7 @@ final class FocusEngine {
         self.calendar = calendar
         self.defaults = defaults
         now = launchDate
+        replayPendingJournal()
         reloadSessions()
         recoverFromColdLaunch(at: launchDate)
         wireClassifier()
@@ -216,15 +217,20 @@ final class FocusEngine {
         }
         guard let start = activeStart else { return }
         persistSession(start: start, end: end)
-        try? context.save()
+        saveSessions()
         reloadSessions()
     }
 
     private func persistSession(start: Date, end: Date) {
-        for seg in DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar) {
-            let seconds = Int(seg.end.timeIntervalSince(seg.start))
-            guard seconds > 0 else { continue }
-            context.insert(FocusSession(startAt: seg.start, endAt: seg.end, durationSeconds: seconds))
+        let records = FocusJournal.records(start: start, end: end, calendar: calendar)
+        FocusJournal.append(records, defaults: defaults)
+        for record in records {
+            context.insert(FocusSession(
+                id: record.id,
+                startAt: record.startAt,
+                endAt: record.endAt,
+                durationSeconds: record.durationSeconds
+            ))
         }
     }
 
@@ -236,6 +242,37 @@ final class FocusEngine {
         let existing = try context.fetch(FetchDescriptor<FocusSession>())
         guard !existing.contains(where: { $0.startAt == start }) else { return }
         persistSession(start: start, end: end)
+    }
+
+    /// Reapply any earned slices left behind by a failed save. Stable record IDs make replay
+    /// safe when SwiftData committed successfully but the process ended before journal cleanup.
+    private func replayPendingJournal() {
+        let pending = FocusJournal.load(defaults: defaults)
+        guard !pending.isEmpty,
+              let sessions = try? context.fetch(FetchDescriptor<FocusSession>()) else { return }
+        var existingIDs = Set(sessions.map(\.id))
+        for record in pending where existingIDs.insert(record.id).inserted {
+            context.insert(FocusSession(
+                id: record.id,
+                startAt: record.startAt,
+                endAt: record.endAt,
+                durationSeconds: record.durationSeconds
+            ))
+        }
+        saveSessions()
+    }
+
+    /// A successful context save commits every pending insert atomically. Only then is it safe
+    /// to discard the durable journal; a failure leaves it available for the next launch.
+    @discardableResult
+    private func saveSessions() -> Bool {
+        do {
+            try context.save()
+            FocusJournal.clear(defaults: defaults)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func reloadSessions() {
@@ -258,12 +295,14 @@ final class FocusEngine {
 
         do {
             try persistRecoveredSession(start: interval.start, end: interval.end)
-            try context.save()
+            guard saveSessions() else {
+                reloadSessions()
+                return
+            }
             reloadSessions()
             Self.discardUnprovenActiveStart(defaults: defaults)
         } catch {
             // Keep the confirmed-lock marker so a later launch can retry without losing time.
-            context.rollback()
             reloadSessions()
         }
     }

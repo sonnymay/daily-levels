@@ -45,6 +45,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.currentSessionSeconds, 10 * 60)
         XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, returnedAt)
         XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
 
         engine.pause()
     }
@@ -64,6 +65,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
         XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, backgroundedAt)
         XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
 
         engine.pause()
     }
@@ -84,6 +86,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertTrue(engine.isPaused)
         XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
         XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
     func testAppSwitchPausesAtBackgroundBoundaryAndRefreshesTheCurrentDay() throws {

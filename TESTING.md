@@ -2,8 +2,10 @@
 
 Use this checklist for the release candidate. The automated test suite covers level math, local-day
 aggregation, midnight splitting, DST and timezone changes, cold-launch recovery, entitlement
-migration, foreground transitions, and the lock-classification state machine. The tests below verify the iOS lifecycle
-behavior that only a physical device can prove.
+migration, foreground transitions, the lock-classification state machine, and replay of completed
+focus checkpoints after a local-store interruption. Journal tests must prove replay is idempotent,
+splits at midnight, and preserves paused gaps. The tests below verify the iOS lifecycle behavior
+that only a physical device can prove.
 
 ## Prerequisites
 
