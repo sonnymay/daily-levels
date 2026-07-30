@@ -9,9 +9,10 @@ Nothing. Daily Levels has no account system, no login, no servers, and no analyt
 advertising SDKs. It has no developer-operated network service and never sends focus data off-device.
 
 ## Where your data lives
-Your focus sessions and daily levels are stored **only on your device** using Apple's
-on-device SwiftData storage. This information never leaves your iPhone. Deleting the app
-removes this data.
+Your focus sessions and daily levels are stored **only on your device** using Apple's on-device
+SwiftData storage. A completed session may also be kept briefly in an on-device `UserDefaults`
+recovery journal until its SwiftData save succeeds. This information never leaves your iPhone.
+Deleting the app removes this data.
 
 ## Tracking
 Daily Levels does **not** track you and does not use the Advertising Identifier (IDFA).
