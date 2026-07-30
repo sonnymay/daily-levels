@@ -196,4 +196,52 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(engine.todaySeconds, 3 * 60)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
+
+    func testEngineReplayPreservesPausedGapBetweenCheckpoints() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 30, hour: 10
+        )))
+        let firstStart = launchDate.addingTimeInterval(-10 * 60)
+        let secondStart = launchDate.addingTimeInterval(-3 * 60)
+        let records = [
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: firstStart,
+                endAt: firstStart.addingTimeInterval(2 * 60),
+                durationSeconds: 2 * 60
+            ),
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: secondStart,
+                endAt: launchDate,
+                durationSeconds: 3 * 60
+            )
+        ]
+        FocusJournal.append(records, defaults: defaults)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let descriptor = FetchDescriptor<FocusSession>(
+            sortBy: [SortDescriptor(\.startAt)]
+        )
+        let sessions = try container.mainContext.fetch(descriptor)
+        XCTAssertEqual(sessions.count, 2)
+        XCTAssertEqual(sessions.map(\.durationSeconds), [2 * 60, 3 * 60])
+        XCTAssertEqual(sessions[0].endAt, firstStart.addingTimeInterval(2 * 60))
+        XCTAssertEqual(sessions[1].startAt, secondStart)
+        XCTAssertEqual(engine.todaySeconds, 5 * 60)
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
 }
