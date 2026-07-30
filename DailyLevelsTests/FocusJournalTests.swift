@@ -1,6 +1,8 @@
+import SwiftData
 import XCTest
 @testable import DailyLevels
 
+@MainActor
 final class FocusJournalTests: XCTestCase {
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -87,6 +89,77 @@ final class FocusJournalTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set(Data("not-json".utf8), forKey: FocusJournal.key)
 
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testEngineReplaysPendingRecordAndClearsJournal() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 30, hour: 10
+        )))
+        let record = PendingFocusRecord(
+            id: UUID(),
+            startAt: launchDate.addingTimeInterval(-5 * 60),
+            endAt: launchDate,
+            durationSeconds: 5 * 60
+        )
+        FocusJournal.append([record], defaults: defaults)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.id), [record.id])
+        XCTAssertEqual(engine.todaySeconds, 5 * 60)
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testEngineDoesNotDuplicateJournalRecordAlreadyInSwiftData() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 30, hour: 10
+        )))
+        let record = PendingFocusRecord(
+            id: UUID(),
+            startAt: launchDate.addingTimeInterval(-5 * 60),
+            endAt: launchDate,
+            durationSeconds: 5 * 60
+        )
+        container.mainContext.insert(FocusSession(
+            id: record.id,
+            startAt: record.startAt,
+            endAt: record.endAt,
+            durationSeconds: record.durationSeconds
+        ))
+        try container.mainContext.save()
+        FocusJournal.append([record], defaults: defaults)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(engine.todaySeconds, 5 * 60)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 }
