@@ -123,6 +123,31 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
     }
 
+    func testLoadKeepsFirstRecordWhenStoredIDsRepeat() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let id = UUID()
+        let first = PendingFocusRecord(
+            id: id,
+            startAt: start,
+            endAt: start.addingTimeInterval(60),
+            durationSeconds: 60
+        )
+        let conflictingRetry = PendingFocusRecord(
+            id: id,
+            startAt: start,
+            endAt: start.addingTimeInterval(120),
+            durationSeconds: 120
+        )
+        defaults.set(
+            try JSONEncoder().encode([first, conflictingRetry]),
+            forKey: FocusJournal.key
+        )
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), [first])
+    }
+
     func testEngineReplaysPendingRecordAndClearsJournal() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
