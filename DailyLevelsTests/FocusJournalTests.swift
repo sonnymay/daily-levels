@@ -17,6 +17,22 @@ final class FocusJournalTests: XCTestCase {
         return (defaults, suiteName)
     }
 
+    private func storeJournal(
+        _ records: [PendingFocusRecord],
+        withMalformedEntryAt index: Int,
+        defaults: UserDefaults
+    ) throws {
+        let encoded = try JSONEncoder().encode(records)
+        var objects = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [[String: Any]]
+        )
+        objects.insert(["id": "not-a-uuid"], at: index)
+        defaults.set(
+            try JSONSerialization.data(withJSONObject: objects),
+            forKey: FocusJournal.key
+        )
+    }
+
     func testRecordsSplitAtLocalMidnight() throws {
         let start = try XCTUnwrap(calendar.date(from: DateComponents(
             year: 2026, month: 7, day: 30, hour: 23, minute: 58
@@ -110,15 +126,7 @@ final class FocusJournalTests: XCTestCase {
                 durationSeconds: 60
             )
         ]
-        let encoded = try JSONEncoder().encode(records)
-        var objects = try XCTUnwrap(
-            JSONSerialization.jsonObject(with: encoded) as? [[String: Any]]
-        )
-        objects.insert(["id": "not-a-uuid"], at: 1)
-        defaults.set(
-            try JSONSerialization.data(withJSONObject: objects),
-            forKey: FocusJournal.key
-        )
+        try storeJournal(records, withMalformedEntryAt: 1, defaults: defaults)
 
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
     }
@@ -146,6 +154,47 @@ final class FocusJournalTests: XCTestCase {
         )
 
         XCTAssertEqual(FocusJournal.load(defaults: defaults), [first])
+    }
+
+    func testEngineReplaysValidRecordsFromPartiallyDamagedJournal() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 31, hour: 10
+        )))
+        let records = [
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: launchDate.addingTimeInterval(-3 * 60),
+                endAt: launchDate.addingTimeInterval(-2 * 60),
+                durationSeconds: 60
+            ),
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: launchDate.addingTimeInterval(-60),
+                endAt: launchDate,
+                durationSeconds: 60
+            )
+        ]
+        try storeJournal(records, withMalformedEntryAt: 1, defaults: defaults)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(Set(sessions.map(\.id)), Set(records.map(\.id)))
+        XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
+        XCTAssertEqual(engine.todaySeconds, 2 * 60)
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
     func testEngineReplaysPendingRecordAndClearsJournal() throws {
