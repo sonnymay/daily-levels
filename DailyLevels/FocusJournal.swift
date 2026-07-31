@@ -15,6 +15,14 @@ struct PendingFocusRecord: Codable, Equatable, Hashable {
     let durationSeconds: Int
 }
 
+private struct LossyPendingFocusRecord: Decodable {
+    let record: PendingFocusRecord?
+
+    init(from decoder: Decoder) {
+        record = try? PendingFocusRecord(from: decoder)
+    }
+}
+
 enum FocusJournal {
     static let key = "engine.pendingFocusRecords"
 
@@ -36,9 +44,18 @@ enum FocusJournal {
 
     static func load(defaults: UserDefaults = .standard) -> [PendingFocusRecord] {
         guard let data = defaults.data(forKey: key),
-              let records = try? JSONDecoder().decode([PendingFocusRecord].self, from: data)
+              let decoded = try? JSONDecoder().decode([LossyPendingFocusRecord].self, from: data)
         else { return [] }
-        return records.filter { $0.durationSeconds > 0 && $0.endAt > $0.startAt }
+
+        var ids = Set<UUID>()
+        return decoded.compactMap { item in
+            guard let record = item.record,
+                  record.durationSeconds > 0,
+                  record.endAt > record.startAt,
+                  ids.insert(record.id).inserted
+            else { return nil }
+            return record
+        }
     }
 
     static func append(_ newRecords: [PendingFocusRecord],
