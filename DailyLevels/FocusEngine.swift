@@ -23,7 +23,7 @@ final class FocusEngine {
     // MARK: Stored, observed state
     private(set) var mode: Mode = .idle
     /// Updated every second while grinding; drives all live UI (session clock, progress).
-    private(set) var now: Date = Date()
+    private(set) var now: Date
     /// Completed grinding seconds per local day, cached from SwiftData.
     /// Recomputed on save/launch, not on every tick.
     private(set) var completedSecondsByDay: [Date: Int] = [:]
@@ -32,6 +32,7 @@ final class FocusEngine {
     @ObservationIgnored private let context: ModelContext
     @ObservationIgnored private var calendar: Calendar
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let dateProvider: () -> Date
     @ObservationIgnored private var activeStart: Date?            // start of current grinding stretch
     /// Focused seconds already banked in the *current logical session* from earlier stretches
     /// (before the latest resume). Drives the "Current session" clock so it survives pause/resume.
@@ -49,10 +50,12 @@ final class FocusEngine {
     init(context: ModelContext,
          calendar: Calendar = .autoupdatingCurrent,
          defaults: UserDefaults = .standard,
-         launchDate: Date = Date()) {
+         launchDate: Date = Date(),
+         dateProvider: @escaping () -> Date = Date.init) {
         self.context = context
         self.calendar = calendar
         self.defaults = defaults
+        self.dateProvider = dateProvider
         now = launchDate
         replayPendingJournal()
         reloadSessions()
@@ -91,7 +94,7 @@ final class FocusEngine {
 
     func pause() {
         guard mode == .grinding else { return }
-        let pausedAt = Date()
+        let pausedAt = dateProvider()
         if let s = activeStart {
             sessionAccumulatedSeconds += max(0, Int(pausedAt.timeIntervalSince(s)))  // bank the live stretch
         }
@@ -104,7 +107,7 @@ final class FocusEngine {
 
     /// Shared start/resume mechanics: open a new grinding stretch and start the clock.
     private func beginStretch() {
-        let t = Date()
+        let t = dateProvider()
         activeStart = t
         now = t
         mode = .grinding
@@ -406,7 +409,10 @@ final class FocusEngine {
     private func startTicker() {
         stopTicker()
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.tick(at: Date()) }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.tick(at: self.dateProvider())
+            }
         }
         // Display updates can arrive a fraction late because elapsed focus uses Date math,
         // not tick counts. This lets iOS coalesce wakeups and spend less battery.
@@ -471,8 +477,9 @@ final class FocusEngine {
     }
 
     private func debugStartGrinding(secondsAgo: TimeInterval) {
-        activeStart = Date().addingTimeInterval(-secondsAgo)
-        now = Date()
+        let date = dateProvider()
+        activeStart = date.addingTimeInterval(-secondsAgo)
+        now = date
         mode = .grinding
         classifier.isActive = true
         checkpointDay = calendar.startOfDay(for: now)
@@ -493,20 +500,24 @@ final class FocusEngine {
         // termination can recover all subsequent locked time on the next launch.
         classifier.onLockDetected = { [weak self] in
             guard let self, self.mode == .grinding else { return }
-            self.checkpointActiveSession(at: Date(), locked: true)
+            self.checkpointActiveSession(at: self.dateProvider(), locked: true)
         }
 
         // Confirmed app switch → sleep. End the session at the moment of backgrounding
         // so the time spent in the other app never counts.
         classifier.onAppSwitchDetected = { [weak self] backgroundedAt in
-            self?.pauseAfterAppSwitch(backgroundedAt: backgroundedAt, observedAt: Date())
+            guard let self else { return }
+            self.pauseAfterAppSwitch(
+                backgroundedAt: backgroundedAt,
+                observedAt: self.dateProvider()
+            )
         }
 
         // Returning after a confirmed lock keeps grinding. App switches are paused first,
         // including quick returns that happen before the classifier's grace timer expires.
         classifier.onEnterForeground = { [weak self] wasLocked in
             guard let self, wasLocked else { return }
-            self.continueGrindingAfterLock(at: Date())
+            self.continueGrindingAfterLock(at: self.dateProvider())
         }
     }
 
@@ -516,13 +527,21 @@ final class FocusEngine {
             center.addObserver(forName: UIApplication.didBecomeActiveNotification,
                                object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
-                    self?.refreshCurrentEnvironment(at: Date(), calendar: .autoupdatingCurrent)
+                    guard let self else { return }
+                    self.refreshCurrentEnvironment(
+                        at: self.dateProvider(),
+                        calendar: .autoupdatingCurrent
+                    )
                 }
             },
             center.addObserver(forName: UIApplication.significantTimeChangeNotification,
                                object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
-                    self?.handleSignificantTimeChange(at: Date(), calendar: .autoupdatingCurrent)
+                    guard let self else { return }
+                    self.handleSignificantTimeChange(
+                        at: self.dateProvider(),
+                        calendar: .autoupdatingCurrent
+                    )
                 }
             }
         ]
