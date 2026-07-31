@@ -51,20 +51,22 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 91 unit tests covering level/class math, midnight/DST/timezone handling, cold-launch and
-   save-journal recovery, hero assets, localization invariants, Hero Collection gating, and
-   paid-owner entitlement rules.
+`- 96 unit tests covering level/class math, exact pause/resume accounting,
+   midnight/DST/timezone handling, cold-launch and save-journal recovery, hero assets,
+   localization invariants, Hero Collection gating, and paid-owner entitlement rules.
 ```
 
 `FocusEngine` is the source of truth injected through the SwiftUI environment. Completed focus is
 stored as local `FocusSession` segments. The one-second timer updates display state; wall-clock
-intervals, rather than tick counts, determine earned time.
+intervals, rather than tick counts, determine earned time. One injectable date provider supplies
+every action, timer, and lifecycle timestamp so tests can prove exact accounting deterministically.
 
 While grinding, the engine checkpoints at every earned level and local-day change. A foreground
 crash loses only the unproven remainder. Once a lock is confirmed, a persisted marker allows the
 locked interval to recover after system termination, capped at one full daily climb. App-switch time
 is never saved. Completed checkpoints enter a local `UserDefaults` journal before SwiftData writes;
-stable UUIDs make replay idempotent, and a successful save clears the journal.
+entries decode independently, stable UUIDs make replay idempotent, and a successful save clears the
+journal.
 
 ## Build and test
 
@@ -74,7 +76,7 @@ xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
   -destination "id=$SIM" CODE_SIGNING_ALLOWED=NO test
 ```
 
-Last verified July 30, 2026: simulator build succeeded and **91/91 tests passed**. Debug screenshot
+Last verified July 31, 2026: simulator build succeeded and **96/96 tests passed**. Debug screenshot
 flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Release gates
