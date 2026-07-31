@@ -12,6 +12,18 @@ import XCTest
 
 @MainActor
 final class FocusEngineTransitionTests: XCTestCase {
+    private final class TestClock {
+        var now: Date
+
+        init(now: Date) {
+            self.now = now
+        }
+
+        func advance(by seconds: TimeInterval) {
+            now = now.addingTimeInterval(seconds)
+        }
+    }
+
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -28,6 +40,48 @@ final class FocusEngineTransitionTests: XCTestCase {
                                  calendar: calendar,
                                  defaults: defaults)
         return (engine, container, defaults, suiteName)
+    }
+
+    private func makeClockedEngine(at date: Date) throws -> (
+        FocusEngine, ModelContainer, UserDefaults, String, TestClock
+    ) {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        let clock = TestClock(now: date)
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: date,
+            dateProvider: { clock.now }
+        )
+        return (engine, container, defaults, suiteName, clock)
+    }
+
+    func testPausePersistsExactTimeFromInjectedClock() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 7, day: 31, hour: 10
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        clock.advance(by: 2 * 60 + 5)
+
+        engine.pause()
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(sessions.first?.startAt, start)
+        XCTAssertEqual(sessions.first?.endAt, clock.now)
+        XCTAssertEqual(sessions.first?.durationSeconds, 2 * 60 + 5)
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60 + 5)
+        XCTAssertEqual(engine.todaySeconds, 2 * 60 + 5)
+        XCTAssertTrue(engine.isPaused)
+        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
     func testReturningFromLockPersistsEarnedStretchAndStartsFreshMarker() throws {
