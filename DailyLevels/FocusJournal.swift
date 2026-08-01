@@ -31,8 +31,9 @@ enum FocusJournal {
                         calendar: Calendar = .current,
                         makeID: () -> UUID = UUID.init) -> [PendingFocusRecord] {
         DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar).compactMap { slice in
-            let seconds = Int(slice.end.timeIntervalSince(slice.start))
-            guard seconds > 0 else { return nil }
+            guard let seconds = DateUtils.wholeSeconds(start: slice.start, end: slice.end) else {
+                return nil
+            }
             return PendingFocusRecord(
                 id: makeID(),
                 startAt: slice.start,

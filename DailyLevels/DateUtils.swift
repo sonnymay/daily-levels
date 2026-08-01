@@ -10,6 +10,14 @@ import Foundation
 
 enum DateUtils {
 
+    /// Whole earned seconds in a positive interval. Sub-second, empty, and reversed
+    /// intervals do not create persisted focus records.
+    static func wholeSeconds(start: Date, end: Date) -> Int? {
+        guard end > start else { return nil }
+        let seconds = Int(end.timeIntervalSince(start))
+        return seconds > 0 ? seconds : nil
+    }
+
     /// Split a grinding interval [start, end] into one segment per local calendar day,
     /// cutting at midnight. Each returned segment belongs entirely to a single day, so
     /// each day gets its own minutes (SPEC §5: "split into two sessions at 12:00 AM").
