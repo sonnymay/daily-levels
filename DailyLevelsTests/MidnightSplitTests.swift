@@ -22,6 +22,23 @@ final class MidnightSplitTests: XCTestCase {
         cal.date(from: DateComponents(year: y, month: mo, day: d, hour: h, minute: mi))!
     }
 
+    func testWholeSecondsTruncatesFractionalElapsedTime() {
+        let start = date(2026, 6, 12, 9, 0)
+
+        XCTAssertEqual(
+            DateUtils.wholeSeconds(start: start, end: start.addingTimeInterval(125.9)),
+            125
+        )
+    }
+
+    func testWholeSecondsRejectsUnpersistableIntervals() {
+        let start = date(2026, 6, 12, 9, 0)
+
+        XCTAssertNil(DateUtils.wholeSeconds(start: start, end: start.addingTimeInterval(0.9)))
+        XCTAssertNil(DateUtils.wholeSeconds(start: start, end: start))
+        XCTAssertNil(DateUtils.wholeSeconds(start: start, end: start.addingTimeInterval(-60)))
+    }
+
     func testSingleDaySessionIsNotSplit() {
         let start = date(2026, 6, 12, 9, 0)
         let end   = date(2026, 6, 12, 9, 40)

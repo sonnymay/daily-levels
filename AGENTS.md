@@ -51,7 +51,7 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 96 unit tests covering level/class math, exact pause/resume accounting,
+`- 102 unit tests covering level/class math, exact pause/resume and interval integrity,
    midnight/DST/timezone handling, cold-launch and save-journal recovery, hero assets,
    localization invariants, Hero Collection gating, and paid-owner entitlement rules.
 ```
@@ -66,7 +66,8 @@ crash loses only the unproven remainder. Once a lock is confirmed, a persisted m
 locked interval to recover after system termination, capped at one full daily climb. App-switch time
 is never saved. Completed checkpoints enter a local `UserDefaults` journal before SwiftData writes;
 entries decode independently, stable UUIDs make replay idempotent, and a successful save clears the
-journal.
+journal. Start/end timestamps are authoritative for journal and SwiftData duration reads; damaged
+redundant duration values are repaired, while zero, reversed, and sub-second intervals are ignored.
 
 ## Build and test
 
@@ -76,7 +77,7 @@ xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
   -destination "id=$SIM" CODE_SIGNING_ALLOWED=NO test
 ```
 
-Last verified July 31, 2026: simulator build succeeded and **96/96 tests passed**. Debug screenshot
+Last verified August 1, 2026: simulator build succeeded and **102/102 tests passed**. Debug screenshot
 flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Release gates

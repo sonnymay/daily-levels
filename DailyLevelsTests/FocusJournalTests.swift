@@ -82,6 +82,42 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(FocusJournal.load(defaults: defaults), [first, second])
     }
 
+    func testAppendNormalizesDurationAndSkipsInvalidIntervals() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let validID = UUID()
+        let mismatched = PendingFocusRecord(
+            id: validID,
+            startAt: start,
+            endAt: start.addingTimeInterval(60),
+            durationSeconds: 60 * 60
+        )
+        let reversed = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: start.addingTimeInterval(-60),
+            durationSeconds: 60
+        )
+        let subsecond = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: start.addingTimeInterval(0.5),
+            durationSeconds: 1
+        )
+
+        FocusJournal.append([mismatched, reversed, subsecond], defaults: defaults)
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), [
+            PendingFocusRecord(
+                id: validID,
+                startAt: start,
+                endAt: start.addingTimeInterval(60),
+                durationSeconds: 60
+            )
+        ])
+    }
+
     func testClearRemovesPendingRecords() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -127,6 +163,38 @@ final class FocusJournalTests: XCTestCase {
             )
         ]
         try storeJournal(records, withMalformedEntryAt: 1, defaults: defaults)
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
+    }
+
+    func testLoadRepairsMissingAndMalformedDurationsFromTimestamps() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let records = [
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: start,
+                endAt: start.addingTimeInterval(60),
+                durationSeconds: 60
+            ),
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: start.addingTimeInterval(120),
+                endAt: start.addingTimeInterval(240),
+                durationSeconds: 120
+            )
+        ]
+        let encoded = try JSONEncoder().encode(records)
+        var objects = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [[String: Any]]
+        )
+        objects[0].removeValue(forKey: "durationSeconds")
+        objects[1]["durationSeconds"] = "damaged"
+        defaults.set(
+            try JSONSerialization.data(withJSONObject: objects),
+            forKey: FocusJournal.key
+        )
 
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
     }

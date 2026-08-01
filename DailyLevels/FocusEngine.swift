@@ -280,7 +280,13 @@ final class FocusEngine {
 
     private func reloadSessions() {
         let all = (try? context.fetch(FetchDescriptor<FocusSession>())) ?? []
-        let segments = all.map { FocusSegment(startAt: $0.startAt, durationSeconds: $0.durationSeconds) }
+        let segments = all.compactMap { session -> FocusSegment? in
+            guard let seconds = DateUtils.wholeSeconds(
+                start: session.startAt,
+                end: session.endAt
+            ) else { return nil }
+            return FocusSegment(startAt: session.startAt, durationSeconds: seconds)
+        }
         completedSecondsByDay = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
     }
 

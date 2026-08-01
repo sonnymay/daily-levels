@@ -19,7 +19,38 @@ private struct LossyPendingFocusRecord: Decodable {
     let record: PendingFocusRecord?
 
     init(from decoder: Decoder) {
-        record = try? PendingFocusRecord(from: decoder)
+        guard let payload = try? Payload(from: decoder),
+              let seconds = DateUtils.wholeSeconds(start: payload.startAt, end: payload.endAt)
+        else {
+            record = nil
+            return
+        }
+        record = PendingFocusRecord(
+            id: payload.id,
+            startAt: payload.startAt,
+            endAt: payload.endAt,
+            durationSeconds: seconds
+        )
+    }
+
+    private struct Payload: Decodable {
+        let id: UUID
+        let startAt: Date
+        let endAt: Date
+    }
+}
+
+private extension PendingFocusRecord {
+    var normalized: PendingFocusRecord? {
+        guard let seconds = DateUtils.wholeSeconds(start: startAt, end: endAt) else {
+            return nil
+        }
+        return PendingFocusRecord(
+            id: id,
+            startAt: startAt,
+            endAt: endAt,
+            durationSeconds: seconds
+        )
     }
 }
 
@@ -31,8 +62,9 @@ enum FocusJournal {
                         calendar: Calendar = .current,
                         makeID: () -> UUID = UUID.init) -> [PendingFocusRecord] {
         DateUtils.splitAtMidnights(start: start, end: end, calendar: calendar).compactMap { slice in
-            let seconds = Int(slice.end.timeIntervalSince(slice.start))
-            guard seconds > 0 else { return nil }
+            guard let seconds = DateUtils.wholeSeconds(start: slice.start, end: slice.end) else {
+                return nil
+            }
             return PendingFocusRecord(
                 id: makeID(),
                 startAt: slice.start,
@@ -50,8 +82,6 @@ enum FocusJournal {
         var ids = Set<UUID>()
         return decoded.compactMap { item in
             guard let record = item.record,
-                  record.durationSeconds > 0,
-                  record.endAt > record.startAt,
                   ids.insert(record.id).inserted
             else { return nil }
             return record
@@ -60,10 +90,11 @@ enum FocusJournal {
 
     static func append(_ newRecords: [PendingFocusRecord],
                        defaults: UserDefaults = .standard) {
-        guard !newRecords.isEmpty else { return }
+        let normalizedRecords = newRecords.compactMap(\.normalized)
+        guard !normalizedRecords.isEmpty else { return }
         var records = load(defaults: defaults)
         var ids = Set(records.map(\.id))
-        records.append(contentsOf: newRecords.filter { ids.insert($0.id).inserted })
+        records.append(contentsOf: normalizedRecords.filter { ids.insert($0.id).inserted })
         guard let data = try? JSONEncoder().encode(records) else { return }
         defaults.set(data, forKey: key)
     }
