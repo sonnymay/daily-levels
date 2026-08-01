@@ -221,6 +221,36 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.journeyLevel, 1)
     }
 
+    func testReloadDerivesStoredDurationFromTimestamps() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 1, hour: 10
+        )))
+        let end = start.addingTimeInterval(5 * 60)
+        container.mainContext.insert(FocusSession(
+            startAt: start,
+            endAt: end,
+            durationSeconds: 8 * 60 * 60
+        ))
+        try container.mainContext.save()
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: end
+        )
+
+        XCTAssertEqual(engine.todaySeconds, 5 * 60)
+        XCTAssertEqual(engine.level, 1)
+        XCTAssertEqual(engine.lifetimeLevels, 1)
+        XCTAssertEqual(engine.personalBest?.focusMinutes, 5)
+    }
+
     func testEnvironmentRefreshMovesAnIdleEngineToTheCurrentDay() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
