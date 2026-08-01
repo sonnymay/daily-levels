@@ -131,6 +131,38 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
     }
 
+    func testLoadRepairsMissingAndMalformedDurationsFromTimestamps() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let records = [
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: start,
+                endAt: start.addingTimeInterval(60),
+                durationSeconds: 60
+            ),
+            PendingFocusRecord(
+                id: UUID(),
+                startAt: start.addingTimeInterval(120),
+                endAt: start.addingTimeInterval(240),
+                durationSeconds: 120
+            )
+        ]
+        let encoded = try JSONEncoder().encode(records)
+        var objects = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [[String: Any]]
+        )
+        objects[0].removeValue(forKey: "durationSeconds")
+        objects[1]["durationSeconds"] = "damaged"
+        defaults.set(
+            try JSONSerialization.data(withJSONObject: objects),
+            forKey: FocusJournal.key
+        )
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
+    }
+
     func testLoadKeepsFirstRecordWhenStoredIDsRepeat() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
