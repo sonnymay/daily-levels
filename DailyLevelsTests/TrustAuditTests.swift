@@ -97,6 +97,39 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertEqual(recovered.end, now)
     }
 
+    func testColdLaunchRecoversAtomicLockedMarkerIntoSwiftData() throws {
+        let cal = calendar("UTC")
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let launchDate = date(cal, 2026, 8, 2, 10, 0)
+        let lockedAt = launchDate.addingTimeInterval(-30 * 60)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: lockedAt, isLocked: true),
+            defaults: defaults
+        )
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: cal,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(sessions.first?.startAt, lockedAt)
+        XCTAssertEqual(sessions.first?.endAt, launchDate)
+        XCTAssertEqual(sessions.first?.durationSeconds, 30 * 60)
+        XCTAssertEqual(engine.todaySeconds, 30 * 60)
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
+    }
+
     func testColdLaunchIgnoresMarkerWithoutConfirmedLock() throws {
         let suiteName = "TrustAuditTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
