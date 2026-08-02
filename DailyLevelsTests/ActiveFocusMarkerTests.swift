@@ -73,4 +73,22 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
     }
+
+    func testMalformedCurrentPayloadFallsBackToLegacyMarker() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let startAt = Date(timeIntervalSince1970: 1_700_000_000)
+        defaults.set(Data("not-json".utf8), forKey: ActiveFocusMarkerStore.key)
+        defaults.set(startAt, forKey: ActiveFocusMarkerStore.legacyStartKey)
+        defaults.set(true, forKey: ActiveFocusMarkerStore.legacyLockedKey)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+        let rewrittenData = try XCTUnwrap(defaults.data(forKey: ActiveFocusMarkerStore.key))
+        let rewritten = try JSONDecoder().decode(ActiveFocusMarker.self, from: rewrittenData)
+
+        XCTAssertEqual(marker, ActiveFocusMarker(startAt: startAt, isLocked: true))
+        XCTAssertEqual(rewritten, marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
+    }
 }
