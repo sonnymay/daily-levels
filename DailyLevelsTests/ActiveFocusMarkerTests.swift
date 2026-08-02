@@ -42,4 +42,19 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
     }
+
+    func testLoadMigratesLegacyLockedMarker() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let startAt = Date(timeIntervalSince1970: 1_700_000_000)
+        defaults.set(startAt, forKey: ActiveFocusMarkerStore.legacyStartKey)
+        defaults.set(true, forKey: ActiveFocusMarkerStore.legacyLockedKey)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+
+        XCTAssertEqual(marker, ActiveFocusMarker(startAt: startAt, isLocked: true))
+        XCTAssertNotNil(defaults.data(forKey: ActiveFocusMarkerStore.key))
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
+    }
 }
