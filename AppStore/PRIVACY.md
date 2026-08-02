@@ -28,7 +28,8 @@ verified entitlement and collects no data the developer declares, so the label s
 - Persistence: `ModelContainer(for: FocusSession.self)` — a local on-device SwiftData store.
 - Save recovery: completed focus slices awaiting a successful SwiftData save are journaled in
   `UserDefaults` on the same device and removed immediately after the save succeeds.
-- Crash marker: a `Date` and lock-confirmation flag in `UserDefaults`, local only.
+- Crash marker: a `Date` and lock-confirmation flag stored together in one encoded `UserDefaults`
+  payload, local only and removed after recovery.
 - Lock detection: observes `UIApplication.protectedDataWillBecomeUnavailable` and uses a
   finite-length background task — no data leaves the device.
 - No `URLSession`, no third-party packages (zero dependencies).
