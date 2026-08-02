@@ -43,8 +43,8 @@ final class FocusEngine {
     @ObservationIgnored private let classifier = LockClassifier()
     @ObservationIgnored private var checkpointDay: Date?
     @ObservationIgnored private var checkpointLevel = 0
-    @ObservationIgnored static let activeStartKey = "engine.activeStart"
-    @ObservationIgnored static let activeWasLockedKey = "engine.activeWasLocked"
+    @ObservationIgnored static let activeStartKey = ActiveFocusMarkerStore.legacyStartKey
+    @ObservationIgnored static let activeWasLockedKey = ActiveFocusMarkerStore.legacyLockedKey
 
     // MARK: Init
     init(context: ModelContext,
@@ -317,28 +317,31 @@ final class FocusEngine {
     }
 
     static func discardUnprovenActiveStart(defaults: UserDefaults = .standard) {
-        defaults.removeObject(forKey: activeStartKey)
-        defaults.removeObject(forKey: activeWasLockedKey)
+        ActiveFocusMarkerStore.clear(defaults: defaults)
     }
 
     static func coldLaunchRecoveryInterval(defaults: UserDefaults = .standard,
                                            now: Date = Date()) -> DateInterval? {
-        guard defaults.bool(forKey: activeWasLockedKey),
-              let start = defaults.object(forKey: activeStartKey) as? Date,
-              start < now else { return nil }
+        guard let marker = ActiveFocusMarkerStore.load(defaults: defaults),
+              marker.isLocked,
+              marker.startAt < now else { return nil }
         let maximum = TimeInterval(LevelMath.maxLevel * LevelMath.secondsPerLevel)
-        return DateInterval(start: start, end: min(now, start.addingTimeInterval(maximum)))
+        return DateInterval(
+            start: marker.startAt,
+            end: min(now, marker.startAt.addingTimeInterval(maximum))
+        )
     }
 
     private static func saveActiveMarker(start: Date, locked: Bool,
                                          defaults: UserDefaults = .standard) {
-        defaults.set(start, forKey: activeStartKey)
-        defaults.set(locked, forKey: activeWasLockedKey)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: start, isLocked: locked),
+            defaults: defaults
+        )
     }
 
     private static func clearActiveMarker(defaults: UserDefaults = .standard) {
-        defaults.removeObject(forKey: activeStartKey)
-        defaults.removeObject(forKey: activeWasLockedKey)
+        ActiveFocusMarkerStore.clear(defaults: defaults)
     }
 
     /// Bank the current stretch without ending the user's logical focus session.
@@ -398,7 +401,7 @@ final class FocusEngine {
     /// wall clock. Confirmed locked time is left intact because locking is earned focus.
     func handleSignificantTimeChange(at date: Date, calendar: Calendar) {
         guard mode == .grinding,
-              !defaults.bool(forKey: Self.activeWasLockedKey) else {
+              ActiveFocusMarkerStore.load(defaults: defaults)?.isLocked != true else {
             refreshCurrentEnvironment(at: date, calendar: calendar)
             return
         }

@@ -80,7 +80,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.currentSessionSeconds, 2 * 60 + 5)
         XCTAssertEqual(engine.todaySeconds, 2 * 60 + 5)
         XCTAssertTrue(engine.isPaused)
-        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
@@ -123,8 +123,10 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 10 * 60)
         XCTAssertEqual(engine.completedSecondsByDay[calendar.startOfDay(for: startedAt)], 10 * 60)
         XCTAssertEqual(engine.currentSessionSeconds, 10 * 60)
-        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, returnedAt)
-        XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: returnedAt, isLocked: false)
+        )
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
 
         engine.pause()
@@ -143,8 +145,10 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
         XCTAssertTrue(engine.isGrinding)
         XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
-        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, backgroundedAt)
-        XCTAssertFalse(defaults.bool(forKey: FocusEngine.activeWasLockedKey))
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: backgroundedAt, isLocked: false)
+        )
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
 
         engine.pause()
@@ -165,7 +169,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
         XCTAssertTrue(engine.isPaused)
         XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
-        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
@@ -186,7 +190,7 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.now, returnedAt)
         XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: returnedAt))
         XCTAssertEqual(engine.todaySeconds, 0)
-        XCTAssertNil(defaults.object(forKey: FocusEngine.activeStartKey))
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
     }
 
     func testJourneyCarriesPartialFocusAcrossLocalDays() throws {
@@ -342,7 +346,10 @@ final class FocusEngineTransitionTests: XCTestCase {
 
         XCTAssertLessThan(engine.currentSessionSeconds, 2)
         XCTAssertLessThan(engine.todaySeconds, 2)
-        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date, clockJump)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: clockJump, isLocked: false)
+        )
 
         let beforeResume = engine.currentSessionSeconds
         engine.continueGrindingAfterLock(at: clockJump.addingTimeInterval(5 * 60))
@@ -363,8 +370,13 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.continueGrindingAfterLock(at: clockCorrection.addingTimeInterval(3 * 60))
 
         XCTAssertEqual(engine.currentSessionSeconds, earnedBeforeCorrection + 3 * 60)
-        XCTAssertEqual(defaults.object(forKey: FocusEngine.activeStartKey) as? Date,
-                       clockCorrection.addingTimeInterval(3 * 60))
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(
+                startAt: clockCorrection.addingTimeInterval(3 * 60),
+                isLocked: false
+            )
+        )
         _ = container
         engine.pause()
     }
@@ -376,7 +388,10 @@ final class FocusEngineTransitionTests: XCTestCase {
         let startedAt = engine.now
         let backgroundedAt = startedAt.addingTimeInterval(60)
         engine.prepareForBackground(at: backgroundedAt)
-        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: backgroundedAt, isLocked: true),
+            defaults: defaults
+        )
         let returnedAt = startedAt.addingTimeInterval(60 * 60)
 
         engine.handleSignificantTimeChange(at: returnedAt, calendar: calendar)
