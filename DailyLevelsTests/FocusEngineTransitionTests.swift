@@ -225,6 +225,40 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.journeyLevel, 1)
     }
 
+    func testReloadCountsOverlappingStoredSessionsOnlyOnce() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 3, hour: 10
+        )))
+        container.mainContext.insert(FocusSession(
+            startAt: start,
+            endAt: start.addingTimeInterval(10 * 60),
+            durationSeconds: 10 * 60
+        ))
+        container.mainContext.insert(FocusSession(
+            startAt: start.addingTimeInterval(5 * 60),
+            endAt: start.addingTimeInterval(15 * 60),
+            durationSeconds: 10 * 60
+        ))
+        try container.mainContext.save()
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: start.addingTimeInterval(60 * 60)
+        )
+
+        XCTAssertEqual(engine.todaySeconds, 15 * 60)
+        XCTAssertEqual(engine.level, 3)
+        XCTAssertEqual(engine.lifetimeLevels, 3)
+        XCTAssertEqual(engine.personalBest?.focusMinutes, 15)
+    }
+
     func testReloadDerivesStoredDurationFromTimestamps() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: FocusSession.self, configurations: configuration)

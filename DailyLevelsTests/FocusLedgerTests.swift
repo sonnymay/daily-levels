@@ -32,6 +32,75 @@ final class FocusLedgerTests: XCTestCase {
         XCTAssertEqual(result, [day: 25 * 60])
     }
 
+    func testAdjacentSegmentsPreserveEveryEarnedSecond() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 13, hour: 9),
+                durationSeconds: 5 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 9, minute: 5),
+                durationSeconds: 7 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [day: 12 * 60])
+    }
+
+    func testDuplicateSegmentsCountOnce() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let duplicate = FocusSegment(
+            startAt: date(day: 13, hour: 9),
+            durationSeconds: 10 * 60
+        )
+
+        let result = FocusLedger.secondsByDay(
+            segments: [duplicate, duplicate],
+            calendar: calendar
+        )
+
+        XCTAssertEqual(result, [day: 10 * 60])
+    }
+
+    func testPartiallyOverlappingSegmentsCountOnlyTheirUnion() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 13, hour: 9, minute: 5),
+                durationSeconds: 10 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 9),
+                durationSeconds: 10 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [day: 15 * 60])
+    }
+
+    func testContainedSegmentCannotInflateItsOuterInterval() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 13, hour: 9, minute: 10),
+                durationSeconds: 5 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 9),
+                durationSeconds: 30 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [day: 30 * 60])
+    }
+
     func testSegmentsRemainSeparatedByLocalDay() {
         let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
         let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
@@ -71,5 +140,24 @@ final class FocusLedgerTests: XCTestCase {
         let result = FocusLedger.secondsByDay(segments: [segment], calendar: calendar)
 
         XCTAssertEqual(result, [firstDay: 60, secondDay: 60])
+    }
+
+    func testOverlappingSegmentsAcrossMidnightDoNotInflateEitherDay() {
+        let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
+        let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 12, hour: 23, minute: 50),
+                durationSeconds: 20 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 0),
+                durationSeconds: 20 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [firstDay: 10 * 60, secondDay: 20 * 60])
     }
 }
