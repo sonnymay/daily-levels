@@ -47,6 +47,24 @@ final class FocusLedgerTests: XCTestCase {
         XCTAssertEqual(result, [day: 10 * 60])
     }
 
+    func testPartiallyOverlappingSegmentsCountOnlyTheirUnion() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 13, hour: 9, minute: 5),
+                durationSeconds: 10 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 9),
+                durationSeconds: 10 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [day: 15 * 60])
+    }
+
     func testSegmentsRemainSeparatedByLocalDay() {
         let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
         let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
