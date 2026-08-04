@@ -102,4 +102,15 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertNil(marker)
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.key))
     }
+
+    func testWrongTypeCurrentPayloadIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("not-marker-data", forKey: ActiveFocusMarkerStore.key)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+
+        XCTAssertNil(marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.key))
+    }
 }
