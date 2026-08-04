@@ -91,4 +91,15 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
     }
+
+    func testMalformedCurrentPayloadWithoutLegacyMarkerIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(Data("not-json".utf8), forKey: ActiveFocusMarkerStore.key)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+
+        XCTAssertNil(marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.key))
+    }
 }
