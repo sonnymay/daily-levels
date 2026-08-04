@@ -36,7 +36,7 @@ DailyLevels/
 |- FocusEngine.swift       @Observable @MainActor timer, checkpoints, SwiftData persistence
 |- LockClassifier.swift    protected-data lock vs app-switch classification
 |- FocusLedger.swift       pure overlap-safe per-day aggregation
-|- FocusJournal.swift      durable retry journal for completed focus checkpoints
+|- FocusJournal.swift      self-healing retry journal for completed focus checkpoints
 |- ActiveFocusMarker.swift atomic checkpoint and lock-confirmation persistence
 |- DateUtils.swift         local-midnight interval splitting
 |- LevelMath.swift         five-minute level math and level-100 cap
@@ -52,7 +52,7 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 116 unit tests covering level/class math, exact pause/resume and interval integrity,
+`- 123 unit tests covering level/class math, exact pause/resume and interval integrity,
    midnight/DST/timezone handling, cold-launch and save-journal recovery, hero assets,
    localization invariants, Hero Collection gating, and paid-owner entitlement rules.
 ```
@@ -68,9 +68,10 @@ locked interval to recover after system termination, capped at one full daily cl
 and lock flag share one encoded payload; legacy two-key markers migrate automatically. App-switch
 time is never saved. Completed checkpoints enter a local `UserDefaults` journal before SwiftData
 writes; entries decode independently, stable UUIDs make replay idempotent, and a successful save
-clears the journal. Start/end timestamps are authoritative for journal and SwiftData duration reads.
-Duplicate or overlapping intervals are unioned before aggregation, redundant duration values are
-repaired, and zero, reversed, or sub-second intervals are ignored.
+clears the journal. Unusable marker and journal payloads remove themselves, while valid records in a
+partially damaged journal remain recoverable. Start/end timestamps are authoritative for journal
+and SwiftData duration reads. Duplicate or overlapping intervals are unioned before aggregation,
+redundant duration values are repaired, and zero, reversed, or sub-second intervals are ignored.
 
 ## Build and test
 
@@ -80,7 +81,7 @@ xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
   -destination "id=$SIM" CODE_SIGNING_ALLOWED=NO test
 ```
 
-Last verified August 3, 2026: simulator build succeeded and **116/116 tests passed**. Debug screenshot
+Last verified August 4, 2026: simulator build succeeded and **123/123 tests passed**. Debug screenshot
 flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Release gates
