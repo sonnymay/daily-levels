@@ -83,6 +83,24 @@ final class FocusLedgerTests: XCTestCase {
         XCTAssertEqual(result, [day: 15 * 60])
     }
 
+    func testContainedSegmentCannotInflateItsOuterInterval() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 13, hour: 9, minute: 10),
+                durationSeconds: 5 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 9),
+                durationSeconds: 30 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [day: 30 * 60])
+    }
+
     func testSegmentsRemainSeparatedByLocalDay() {
         let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
         let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
