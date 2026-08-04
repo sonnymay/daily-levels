@@ -163,6 +163,15 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
+    func testJournalWithNoRecoverableRecordsIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        try storeJournal([], withMalformedEntryAt: 0, defaults: defaults)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
