@@ -142,6 +142,7 @@ final class FocusJournalTests: XCTestCase {
         defaults.set(Data("not-json".utf8), forKey: FocusJournal.key)
 
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
