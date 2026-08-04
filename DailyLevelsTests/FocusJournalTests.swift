@@ -294,6 +294,32 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
+    func testEngineLaunchClearsUnusableJournalWithoutCreatingFocus() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        defaults.set(Data("not-json".utf8), forKey: FocusJournal.key)
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 4, hour: 10
+        )))
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertTrue(sessions.isEmpty)
+        XCTAssertEqual(engine.todaySeconds, 0)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testEngineReplaysPendingRecordAndClearsJournal() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
