@@ -105,4 +105,23 @@ final class FocusLedgerTests: XCTestCase {
 
         XCTAssertEqual(result, [firstDay: 60, secondDay: 60])
     }
+
+    func testOverlappingSegmentsAcrossMidnightDoNotInflateEitherDay() {
+        let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
+        let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
+        let segments = [
+            FocusSegment(
+                startAt: date(day: 12, hour: 23, minute: 50),
+                durationSeconds: 20 * 60
+            ),
+            FocusSegment(
+                startAt: date(day: 13, hour: 0),
+                durationSeconds: 20 * 60
+            )
+        ]
+
+        let result = FocusLedger.secondsByDay(segments: segments, calendar: calendar)
+
+        XCTAssertEqual(result, [firstDay: 10 * 60, secondDay: 20 * 60])
+    }
 }
