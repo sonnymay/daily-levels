@@ -25,6 +25,25 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
     }
 
+    func testValidCurrentMarkerRemovesStaleLegacyValues() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let marker = ActiveFocusMarker(
+            startAt: Date(timeIntervalSince1970: 1_700_000_000),
+            isLocked: true
+        )
+        ActiveFocusMarkerStore.save(marker, defaults: defaults)
+        defaults.set(
+            marker.startAt.addingTimeInterval(-60),
+            forKey: ActiveFocusMarkerStore.legacyStartKey
+        )
+        defaults.set(false, forKey: ActiveFocusMarkerStore.legacyLockedKey)
+
+        XCTAssertEqual(ActiveFocusMarkerStore.load(defaults: defaults), marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
+    }
+
     func testClearRemovesCurrentAndLegacyMarkerValues() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -90,5 +109,27 @@ final class ActiveFocusMarkerTests: XCTestCase {
         XCTAssertEqual(rewritten, marker)
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyStartKey))
         XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.legacyLockedKey))
+    }
+
+    func testMalformedCurrentPayloadWithoutLegacyMarkerIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(Data("not-json".utf8), forKey: ActiveFocusMarkerStore.key)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+
+        XCTAssertNil(marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.key))
+    }
+
+    func testWrongTypeCurrentPayloadIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("not-marker-data", forKey: ActiveFocusMarkerStore.key)
+
+        let marker = ActiveFocusMarkerStore.load(defaults: defaults)
+
+        XCTAssertNil(marker)
+        XCTAssertNil(defaults.object(forKey: ActiveFocusMarkerStore.key))
     }
 }

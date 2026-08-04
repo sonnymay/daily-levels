@@ -142,6 +142,34 @@ final class FocusJournalTests: XCTestCase {
         defaults.set(Data("not-json".utf8), forKey: FocusJournal.key)
 
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
+    func testWrongTypeJournalIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("not-journal-data", forKey: FocusJournal.key)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
+    func testEncodedEmptyJournalIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(try JSONEncoder().encode([PendingFocusRecord]()), forKey: FocusJournal.key)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
+    func testJournalWithNoRecoverableRecordsIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        try storeJournal([], withMalformedEntryAt: 0, defaults: defaults)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
@@ -165,6 +193,7 @@ final class FocusJournalTests: XCTestCase {
         try storeJournal(records, withMalformedEntryAt: 1, defaults: defaults)
 
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
+        XCTAssertNotNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testLoadRepairsMissingAndMalformedDurationsFromTimestamps() throws {
@@ -263,6 +292,32 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
         XCTAssertEqual(engine.todaySeconds, 2 * 60)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testEngineLaunchClearsUnusableJournalWithoutCreatingFocus() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        defaults.set(Data("not-json".utf8), forKey: FocusJournal.key)
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 4, hour: 10
+        )))
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertTrue(sessions.isEmpty)
+        XCTAssertEqual(engine.todaySeconds, 0)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testEngineReplaysPendingRecordAndClearsJournal() throws {

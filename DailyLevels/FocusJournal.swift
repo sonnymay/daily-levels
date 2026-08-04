@@ -75,17 +75,25 @@ enum FocusJournal {
     }
 
     static func load(defaults: UserDefaults = .standard) -> [PendingFocusRecord] {
-        guard let data = defaults.data(forKey: key),
+        guard let storedValue = defaults.object(forKey: key) else { return [] }
+        guard let data = storedValue as? Data,
               let decoded = try? JSONDecoder().decode([LossyPendingFocusRecord].self, from: data)
-        else { return [] }
+        else {
+            clear(defaults: defaults)
+            return []
+        }
 
         var ids = Set<UUID>()
-        return decoded.compactMap { item in
+        let records: [PendingFocusRecord] = decoded.compactMap { item in
             guard let record = item.record,
                   ids.insert(record.id).inserted
             else { return nil }
             return record
         }
+        if records.isEmpty {
+            clear(defaults: defaults)
+        }
+        return records
     }
 
     static func append(_ newRecords: [PendingFocusRecord],

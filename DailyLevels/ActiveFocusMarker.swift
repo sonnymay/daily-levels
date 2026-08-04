@@ -18,12 +18,18 @@ enum ActiveFocusMarkerStore {
     static let legacyLockedKey = "engine.activeWasLocked"
 
     static func load(defaults: UserDefaults = .standard) -> ActiveFocusMarker? {
-        if let data = defaults.data(forKey: key),
+        let currentValue = defaults.object(forKey: key)
+        if let data = currentValue as? Data,
            let marker = try? JSONDecoder().decode(ActiveFocusMarker.self, from: data) {
+            defaults.removeObject(forKey: legacyStartKey)
+            defaults.removeObject(forKey: legacyLockedKey)
             return marker
         }
 
         guard let startAt = defaults.object(forKey: legacyStartKey) as? Date else {
+            if currentValue != nil || defaults.object(forKey: legacyLockedKey) != nil {
+                clear(defaults: defaults)
+            }
             return nil
         }
         let marker = ActiveFocusMarker(
