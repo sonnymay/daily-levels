@@ -32,6 +32,21 @@ final class FocusLedgerTests: XCTestCase {
         XCTAssertEqual(result, [day: 25 * 60])
     }
 
+    func testDuplicateSegmentsCountOnce() {
+        let day = calendar.startOfDay(for: date(day: 13, hour: 9))
+        let duplicate = FocusSegment(
+            startAt: date(day: 13, hour: 9),
+            durationSeconds: 10 * 60
+        )
+
+        let result = FocusLedger.secondsByDay(
+            segments: [duplicate, duplicate],
+            calendar: calendar
+        )
+
+        XCTAssertEqual(result, [day: 10 * 60])
+    }
+
     func testSegmentsRemainSeparatedByLocalDay() {
         let firstDay = calendar.startOfDay(for: date(day: 12, hour: 23))
         let secondDay = calendar.startOfDay(for: date(day: 13, hour: 0))
