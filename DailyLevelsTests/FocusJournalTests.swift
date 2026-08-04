@@ -193,6 +193,7 @@ final class FocusJournalTests: XCTestCase {
         try storeJournal(records, withMalformedEntryAt: 1, defaults: defaults)
 
         XCTAssertEqual(FocusJournal.load(defaults: defaults), records)
+        XCTAssertNotNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testLoadRepairsMissingAndMalformedDurationsFromTimestamps() throws {
