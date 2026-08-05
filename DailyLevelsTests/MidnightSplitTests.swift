@@ -130,4 +130,13 @@ final class MidnightSplitTests: XCTestCase {
         )
     }
 
+    func testIndeterminateDateReturnsNothing() {
+        let finite = date(2026, 6, 12, 9, 0)
+        let indeterminate = Date(timeIntervalSinceReferenceDate: .nan)
+
+        XCTAssertNil(DateUtils.wholeSeconds(start: finite, end: indeterminate))
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: finite, end: indeterminate, calendar: cal).isEmpty
+        )
+    }
 }
