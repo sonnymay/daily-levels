@@ -188,6 +188,28 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
+    func testLoadSalvagesValidRecordAroundOutOfRangeInterval() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let valid = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: start.addingTimeInterval(60),
+            durationSeconds: 60
+        )
+        let outOfRange = PendingFocusRecord(
+            id: UUID(),
+            startAt: Date(timeIntervalSinceReferenceDate: 0),
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([outOfRange, valid]), forKey: FocusJournal.key)
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), [valid])
+        XCTAssertNotNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
