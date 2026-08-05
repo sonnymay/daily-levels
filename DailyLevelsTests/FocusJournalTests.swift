@@ -172,6 +172,22 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
+    func testJournalWithOutOfRangeIntervalIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let record = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([record]), forKey: FocusJournal.key)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
