@@ -10,8 +10,8 @@ import Foundation
 
 enum DateUtils {
 
-    /// Whole earned seconds in a positive interval. Sub-second, empty, and reversed
-    /// intervals do not create persisted focus records.
+    /// Whole earned seconds in a positive interval. Sub-second, empty, reversed,
+    /// non-finite, and integer-out-of-range intervals do not create focus records.
     static func wholeSeconds(start: Date, end: Date) -> Int? {
         guard end > start else { return nil }
         let elapsed = end.timeIntervalSince(start)
@@ -26,8 +26,8 @@ enum DateUtils {
     /// cutting at midnight. Each returned segment belongs entirely to a single day, so
     /// each day gets its own minutes (SPEC §5: "split into two sessions at 12:00 AM").
     ///
-    /// Returns [] for empty/negative intervals. Uses `calendar.date(byAdding: .day)`
-    /// for the boundary so DST day-length changes stay correct.
+    /// Returns [] for empty, negative, or non-finite intervals. Uses
+    /// `calendar.date(byAdding: .day)` for the boundary so DST day lengths stay correct.
     static func splitAtMidnights(start: Date,
                                  end: Date,
                                  calendar: Calendar = .current) -> [(start: Date, end: Date)] {
