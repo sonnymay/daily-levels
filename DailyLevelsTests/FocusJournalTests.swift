@@ -332,6 +332,44 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
+    func testEngineReplaysValidRecordBesideOutOfRangeJournalInterval() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 5, hour: 10
+        )))
+        let valid = PendingFocusRecord(
+            id: UUID(),
+            startAt: launchDate.addingTimeInterval(-60),
+            endAt: launchDate,
+            durationSeconds: 60
+        )
+        let outOfRange = PendingFocusRecord(
+            id: UUID(),
+            startAt: Date(timeIntervalSinceReferenceDate: 0),
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([outOfRange, valid]), forKey: FocusJournal.key)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.id), [valid.id])
+        XCTAssertEqual(engine.todaySeconds, 60)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testEngineLaunchClearsUnusableJournalWithoutCreatingFocus() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
