@@ -328,6 +328,39 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.personalBest?.focusMinutes, 1)
     }
 
+    func testReloadIgnoresOutOfRangeIntervalWithoutHidingValidFocus() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 5, hour: 9
+        )))
+        container.mainContext.insert(FocusSession(
+            startAt: start,
+            endAt: start.addingTimeInterval(60),
+            durationSeconds: 60
+        ))
+        container.mainContext.insert(FocusSession(
+            startAt: Date(timeIntervalSinceReferenceDate: 0),
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        ))
+        try container.mainContext.save()
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: start.addingTimeInterval(5 * 60)
+        )
+
+        XCTAssertEqual(engine.todaySeconds, 60)
+        XCTAssertEqual(engine.completedSecondsByDay.values.reduce(0, +), 60)
+        XCTAssertEqual(engine.personalBest?.focusMinutes, 1)
+    }
+
     func testEnvironmentRefreshMovesAnIdleEngineToTheCurrentDay() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }

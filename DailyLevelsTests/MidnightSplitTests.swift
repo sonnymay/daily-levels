@@ -39,6 +39,26 @@ final class MidnightSplitTests: XCTestCase {
         XCTAssertNil(DateUtils.wholeSeconds(start: start, end: start.addingTimeInterval(-60)))
     }
 
+    func testWholeSecondsRejectsNonFiniteAndOutOfRangeDurations() {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let infiniteEnd = Date(timeIntervalSinceReferenceDate: .infinity)
+        let outOfRangeEnd = Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max))
+
+        XCTAssertNil(DateUtils.wholeSeconds(start: start, end: infiniteEnd))
+        XCTAssertNil(DateUtils.wholeSeconds(start: start, end: outOfRangeEnd))
+    }
+
+    func testWholeSecondsAcceptsLargestRepresentableSafeDuration() {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let largestSafeDuration = TimeInterval(Int.max).nextDown
+        let end = Date(timeIntervalSinceReferenceDate: largestSafeDuration)
+
+        XCTAssertEqual(
+            DateUtils.wholeSeconds(start: start, end: end),
+            Int(largestSafeDuration)
+        )
+    }
+
     func testSingleDaySessionIsNotSplit() {
         let start = date(2026, 6, 12, 9, 0)
         let end   = date(2026, 6, 12, 9, 40)
@@ -95,5 +115,28 @@ final class MidnightSplitTests: XCTestCase {
         let t = date(2026, 6, 12, 9, 0)
         XCTAssertTrue(DateUtils.splitAtMidnights(start: t, end: t, calendar: cal).isEmpty)
         XCTAssertTrue(DateUtils.splitAtMidnights(start: t, end: t.addingTimeInterval(-60), calendar: cal).isEmpty)
+    }
+
+    func testNonFiniteIntervalsReturnNothing() {
+        let finite = date(2026, 6, 12, 9, 0)
+        let positiveInfinity = Date(timeIntervalSinceReferenceDate: .infinity)
+        let negativeInfinity = Date(timeIntervalSinceReferenceDate: -.infinity)
+
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: finite, end: positiveInfinity, calendar: cal).isEmpty
+        )
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: negativeInfinity, end: finite, calendar: cal).isEmpty
+        )
+    }
+
+    func testIndeterminateDateReturnsNothing() {
+        let finite = date(2026, 6, 12, 9, 0)
+        let indeterminate = Date(timeIntervalSinceReferenceDate: .nan)
+
+        XCTAssertNil(DateUtils.wholeSeconds(start: finite, end: indeterminate))
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: finite, end: indeterminate, calendar: cal).isEmpty
+        )
     }
 }

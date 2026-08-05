@@ -172,6 +172,44 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
+    func testJournalWithOutOfRangeIntervalIsRemoved() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let record = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([record]), forKey: FocusJournal.key)
+
+        XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
+    }
+
+    func testLoadSalvagesValidRecordAroundOutOfRangeInterval() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let valid = PendingFocusRecord(
+            id: UUID(),
+            startAt: start,
+            endAt: start.addingTimeInterval(60),
+            durationSeconds: 60
+        )
+        let outOfRange = PendingFocusRecord(
+            id: UUID(),
+            startAt: Date(timeIntervalSinceReferenceDate: 0),
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([outOfRange, valid]), forKey: FocusJournal.key)
+
+        XCTAssertEqual(FocusJournal.load(defaults: defaults), [valid])
+        XCTAssertNotNil(defaults.object(forKey: FocusJournal.key))
+    }
+
     func testLoadSalvagesValidRecordsAroundMalformedEntry() throws {
         let (defaults, suiteName) = try defaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -292,6 +330,44 @@ final class FocusJournalTests: XCTestCase {
         XCTAssertEqual(sessions.map(\.durationSeconds).reduce(0, +), 2 * 60)
         XCTAssertEqual(engine.todaySeconds, 2 * 60)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testEngineReplaysValidRecordBesideOutOfRangeJournalInterval() throws {
+        let (defaults, suiteName) = try defaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let launchDate = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 5, hour: 10
+        )))
+        let valid = PendingFocusRecord(
+            id: UUID(),
+            startAt: launchDate.addingTimeInterval(-60),
+            endAt: launchDate,
+            durationSeconds: 60
+        )
+        let outOfRange = PendingFocusRecord(
+            id: UUID(),
+            startAt: Date(timeIntervalSinceReferenceDate: 0),
+            endAt: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            durationSeconds: 1
+        )
+        defaults.set(try JSONEncoder().encode([outOfRange, valid]), forKey: FocusJournal.key)
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.id), [valid.id])
+        XCTAssertEqual(engine.todaySeconds, 60)
+        XCTAssertNil(defaults.object(forKey: FocusJournal.key))
     }
 
     func testEngineLaunchClearsUnusableJournalWithoutCreatingFocus() throws {
