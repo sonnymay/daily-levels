@@ -48,6 +48,17 @@ final class MidnightSplitTests: XCTestCase {
         XCTAssertNil(DateUtils.wholeSeconds(start: start, end: outOfRangeEnd))
     }
 
+    func testWholeSecondsAcceptsLargestRepresentableSafeDuration() {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let largestSafeDuration = TimeInterval(Int.max).nextDown
+        let end = Date(timeIntervalSinceReferenceDate: largestSafeDuration)
+
+        XCTAssertEqual(
+            DateUtils.wholeSeconds(start: start, end: end),
+            Int(largestSafeDuration)
+        )
+    }
+
     func testSingleDaySessionIsNotSplit() {
         let start = date(2026, 6, 12, 9, 0)
         let end   = date(2026, 6, 12, 9, 40)
@@ -118,4 +129,5 @@ final class MidnightSplitTests: XCTestCase {
             DateUtils.splitAtMidnights(start: negativeInfinity, end: finite, calendar: cal).isEmpty
         )
     }
+
 }
