@@ -14,8 +14,12 @@ enum DateUtils {
     /// intervals do not create persisted focus records.
     static func wholeSeconds(start: Date, end: Date) -> Int? {
         guard end > start else { return nil }
-        let seconds = Int(end.timeIntervalSince(start))
-        return seconds > 0 ? seconds : nil
+        let elapsed = end.timeIntervalSince(start)
+        guard elapsed.isFinite,
+              elapsed >= 1,
+              elapsed < TimeInterval(Int.max)
+        else { return nil }
+        return Int(elapsed)
     }
 
     /// Split a grinding interval [start, end] into one segment per local calendar day,
