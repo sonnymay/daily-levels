@@ -31,7 +31,10 @@ enum DateUtils {
     static func splitAtMidnights(start: Date,
                                  end: Date,
                                  calendar: Calendar = .current) -> [(start: Date, end: Date)] {
-        guard end > start else { return [] }
+        guard start.timeIntervalSinceReferenceDate.isFinite,
+              end.timeIntervalSinceReferenceDate.isFinite,
+              end > start
+        else { return [] }
 
         var segments: [(start: Date, end: Date)] = []
         var segStart = start
@@ -39,7 +42,9 @@ enum DateUtils {
         while segStart < end {
             let dayStart = calendar.startOfDay(for: segStart)
             // Next midnight = start of the following day.
-            guard let nextMidnight = calendar.date(byAdding: .day, value: 1, to: dayStart) else {
+            guard let nextMidnight = calendar.date(byAdding: .day, value: 1, to: dayStart),
+                  nextMidnight > segStart
+            else {
                 segments.append((segStart, end))
                 break
             }

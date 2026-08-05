@@ -105,4 +105,17 @@ final class MidnightSplitTests: XCTestCase {
         XCTAssertTrue(DateUtils.splitAtMidnights(start: t, end: t, calendar: cal).isEmpty)
         XCTAssertTrue(DateUtils.splitAtMidnights(start: t, end: t.addingTimeInterval(-60), calendar: cal).isEmpty)
     }
+
+    func testNonFiniteIntervalsReturnNothing() {
+        let finite = date(2026, 6, 12, 9, 0)
+        let positiveInfinity = Date(timeIntervalSinceReferenceDate: .infinity)
+        let negativeInfinity = Date(timeIntervalSinceReferenceDate: -.infinity)
+
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: finite, end: positiveInfinity, calendar: cal).isEmpty
+        )
+        XCTAssertTrue(
+            DateUtils.splitAtMidnights(start: negativeInfinity, end: finite, calendar: cal).isEmpty
+        )
+    }
 }
