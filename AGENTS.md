@@ -52,7 +52,7 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 131 unit tests covering level/class math, exact pause/resume and interval integrity,
+`- 137 unit tests covering level/class math, exact pause/resume and interval integrity,
    midnight/DST/timezone handling, cold-launch and save-journal recovery, hero assets,
    localization invariants, Hero Collection gating, and paid-owner entitlement rules.
 ```
@@ -64,9 +64,10 @@ every action, timer, and lifecycle timestamp so tests can prove exact accounting
 
 While grinding, the engine checkpoints at every earned level and local-day change. A foreground
 crash loses only the unproven remainder. Once a lock is confirmed, a persisted marker allows the
-locked interval to recover after system termination, capped at one full daily climb. Its checkpoint
-and lock flag share one encoded payload; legacy two-key markers migrate automatically. App-switch
-time is never saved. Completed checkpoints enter a local `UserDefaults` journal before SwiftData
+locked interval to recover after system termination, capped at one full daily climb. Recovery also
+requires finite timestamps and at least one whole second. Its checkpoint and lock flag share one
+encoded payload; legacy two-key markers migrate automatically. App-switch time is never saved.
+Completed checkpoints enter a local `UserDefaults` journal before SwiftData
 writes; entries decode independently, stable UUIDs make replay idempotent, and a successful save
 clears the journal. Unusable marker and journal payloads remove themselves, while valid records in a
 partially damaged journal remain recoverable. Start/end timestamps are authoritative for journal
