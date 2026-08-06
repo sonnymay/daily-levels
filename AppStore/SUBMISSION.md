@@ -23,7 +23,8 @@ This checklist is for **version 1.1 build 7** of App Store Connect app `67800079
   `AppTransaction`.
 - Listing copy: [`METADATA.md`](METADATA.md).
 - Privacy answers: [`PRIVACY.md`](PRIVACY.md) - Data Not Collected, no tracking.
-- Unit tests cover midnight, DST, timezone changes, cold-launch recovery, and entitlement migration.
+- Unit tests cover midnight, DST, timezone changes, cold-launch recovery including unsafe timestamp
+  markers, and entitlement migration.
 
 ## Required checks before submission
 
