@@ -249,6 +249,24 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertNil(recovered)
     }
 
+    func testColdLaunchIgnoresNonfiniteLegacyMarker() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(
+            Date(timeIntervalSinceReferenceDate: -.infinity),
+            forKey: FocusEngine.activeStartKey
+        )
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        XCTAssertNil(recovered)
+    }
+
     func testColdLaunchLockedRecoveryCapsAtDailyMaximum() throws {
         let suiteName = "TrustAuditTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
