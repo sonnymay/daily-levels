@@ -267,6 +267,24 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertNil(recovered)
     }
 
+    func testColdLaunchIgnoresMarkerWhenDailyCapCannotAdvanceItsDate() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: -1e25)
+        let maximum = TimeInterval(LevelMath.maxLevel * LevelMath.secondsPerLevel)
+        defaults.set(start, forKey: FocusEngine.activeStartKey)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        XCTAssertEqual(start.addingTimeInterval(maximum), start)
+        XCTAssertNil(recovered)
+    }
+
     func testColdLaunchLockedRecoveryCapsAtDailyMaximum() throws {
         let suiteName = "TrustAuditTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
