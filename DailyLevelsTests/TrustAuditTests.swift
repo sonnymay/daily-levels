@@ -231,6 +231,25 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertNil(recovered)
     }
 
+    func testColdLaunchRecoversMinimumWholeLockedSecond() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: start, isLocked: true),
+            defaults: defaults
+        )
+
+        let recovered = try XCTUnwrap(FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: start.addingTimeInterval(1)
+        ))
+
+        XCTAssertEqual(recovered.start, start)
+        XCTAssertEqual(recovered.duration, 1)
+    }
+
     func testColdLaunchIgnoresNonfiniteLaunchClock() throws {
         let suiteName = "TrustAuditTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
