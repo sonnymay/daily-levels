@@ -130,6 +130,38 @@ final class TrustAuditTests: XCTestCase {
         XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
     }
 
+    func testColdLaunchClearsSubsecondLockedMarkerWithoutSavingHistory() throws {
+        let cal = calendar("UTC")
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: FocusSession.self,
+            configurations: configuration
+        )
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let launchDate = date(cal, 2026, 8, 6, 10, 0)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(
+                startAt: launchDate.addingTimeInterval(-0.5),
+                isLocked: true
+            ),
+            defaults: defaults
+        )
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: cal,
+            defaults: defaults,
+            launchDate: launchDate
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertTrue(sessions.isEmpty)
+        XCTAssertEqual(engine.todaySeconds, 0)
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
+    }
+
     func testColdLaunchClearsMalformedAtomicMarker() throws {
         let cal = calendar("UTC")
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -210,6 +242,97 @@ final class TrustAuditTests: XCTestCase {
 
         let recovered = FocusEngine.coldLaunchRecoveryInterval(defaults: defaults, now: now)
 
+        XCTAssertNil(recovered)
+    }
+
+    func testColdLaunchIgnoresSubsecondLockedInterval() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: start, isLocked: true),
+            defaults: defaults
+        )
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: start.addingTimeInterval(0.5)
+        )
+
+        XCTAssertNil(recovered)
+    }
+
+    func testColdLaunchRecoversMinimumWholeLockedSecond() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: start, isLocked: true),
+            defaults: defaults
+        )
+
+        let recovered = try XCTUnwrap(FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: start.addingTimeInterval(1)
+        ))
+
+        XCTAssertEqual(recovered.start, start)
+        XCTAssertEqual(recovered.duration, 1)
+    }
+
+    func testColdLaunchIgnoresNonfiniteLaunchClock() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        ActiveFocusMarkerStore.save(
+            ActiveFocusMarker(startAt: start, isLocked: true),
+            defaults: defaults
+        )
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: Date(timeIntervalSinceReferenceDate: .infinity)
+        )
+
+        XCTAssertNil(recovered)
+    }
+
+    func testColdLaunchIgnoresNonfiniteLegacyMarker() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(
+            Date(timeIntervalSinceReferenceDate: -.infinity),
+            forKey: FocusEngine.activeStartKey
+        )
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        XCTAssertNil(recovered)
+    }
+
+    func testColdLaunchIgnoresMarkerWhenDailyCapCannotAdvanceItsDate() throws {
+        let suiteName = "TrustAuditTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSinceReferenceDate: -1e25)
+        let maximum = TimeInterval(LevelMath.maxLevel * LevelMath.secondsPerLevel)
+        defaults.set(start, forKey: FocusEngine.activeStartKey)
+        defaults.set(true, forKey: FocusEngine.activeWasLockedKey)
+
+        let recovered = FocusEngine.coldLaunchRecoveryInterval(
+            defaults: defaults,
+            now: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        XCTAssertEqual(start.addingTimeInterval(maximum), start)
         XCTAssertNil(recovered)
     }
 
