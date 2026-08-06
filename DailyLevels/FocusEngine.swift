@@ -322,14 +322,15 @@ final class FocusEngine {
 
     static func coldLaunchRecoveryInterval(defaults: UserDefaults = .standard,
                                            now: Date = Date()) -> DateInterval? {
-        guard let marker = ActiveFocusMarkerStore.load(defaults: defaults),
+        guard now.timeIntervalSinceReferenceDate.isFinite,
+              let marker = ActiveFocusMarkerStore.load(defaults: defaults),
               marker.isLocked,
+              marker.startAt.timeIntervalSinceReferenceDate.isFinite,
               marker.startAt < now else { return nil }
         let maximum = TimeInterval(LevelMath.maxLevel * LevelMath.secondsPerLevel)
-        return DateInterval(
-            start: marker.startAt,
-            end: min(now, marker.startAt.addingTimeInterval(maximum))
-        )
+        let end = min(now, marker.startAt.addingTimeInterval(maximum))
+        guard DateUtils.wholeSeconds(start: marker.startAt, end: end) != nil else { return nil }
+        return DateInterval(start: marker.startAt, end: end)
     }
 
     private static func saveActiveMarker(start: Date, locked: Bool,
