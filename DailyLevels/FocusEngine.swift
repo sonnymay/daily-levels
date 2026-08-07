@@ -369,15 +369,19 @@ final class FocusEngine {
     /// Bank the current stretch without ending the user's logical focus session.
     private func checkpointActiveSession(at end: Date, locked: Bool) {
         guard mode == .grinding, let start = activeStart else { return }
-        now = end
-        if end > start {
-            sessionAccumulatedSeconds += Int(end.timeIntervalSince(start))
-            endActiveSession(at: end)
+        let boundary = safeSessionBoundary(end, from: start)
+        now = boundary.date
+        if boundary.seconds > 0 {
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+            endActiveSession(at: boundary.date)
         }
-        activeStart = end
-        checkpointDay = calendar.startOfDay(for: end)
+        activeStart = boundary.date
+        checkpointDay = calendar.startOfDay(for: boundary.date)
         checkpointLevel = level
-        Self.saveActiveMarker(start: end, locked: locked, defaults: defaults)
+        Self.saveActiveMarker(start: boundary.date, locked: locked, defaults: defaults)
     }
 
     /// A confirmed lock is earned focus. Persist that completed locked stretch as soon as

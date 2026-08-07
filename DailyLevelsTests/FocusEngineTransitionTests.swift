@@ -215,6 +215,34 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testBackgroundCheckpointUsesLastFiniteBoundaryWhenClockIsInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 11
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(75)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.prepareForBackground(
+            at: Date(timeIntervalSinceReferenceDate: .infinity)
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [75])
+        XCTAssertEqual(engine.currentSessionSeconds, 75)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isGrinding)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: displayedAt, isLocked: false)
+        )
+
+        clock.now = displayedAt
+        engine.pause()
+    }
+
     func testAppSwitchAfterBackgroundCheckpointDoesNotDoubleCount() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
