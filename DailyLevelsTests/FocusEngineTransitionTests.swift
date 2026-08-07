@@ -282,6 +282,30 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
     }
 
+    func testAppSwitchPreservesFiniteFocusWhenCallbackClocksAreInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 12
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(60)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.pauseAfterAppSwitch(
+            backgroundedAt: Date(timeIntervalSinceReferenceDate: .infinity),
+            observedAt: Date(timeIntervalSinceReferenceDate: .nan)
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [60])
+        XCTAssertEqual(engine.currentSessionSeconds, 60)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isPaused)
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
+        _ = clock
+    }
+
     func testJourneyCarriesPartialFocusAcrossLocalDays() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: FocusSession.self, configurations: configuration)

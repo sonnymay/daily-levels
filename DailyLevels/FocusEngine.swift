@@ -404,14 +404,26 @@ final class FocusEngine {
     /// the current foreground day when the decision is made (especially across midnight).
     func pauseAfterAppSwitch(backgroundedAt: Date, observedAt: Date) {
         guard mode == .grinding else { return }
+        let pausedAt: Date
         if let start = activeStart {
-            sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(start)))
+            let boundary = safeSessionBoundary(backgroundedAt, from: start)
+            pausedAt = boundary.date
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+        } else {
+            pausedAt = backgroundedAt.timeIntervalSinceReferenceDate.isFinite ? backgroundedAt : now
         }
-        endActiveSession(at: backgroundedAt)
+        endActiveSession(at: pausedAt)
         mode = .paused
         classifier.isActive = false
         stopTicker()
-        now = observedAt
+        if DateUtils.nonnegativeWholeSeconds(start: pausedAt, end: observedAt) != nil {
+            now = observedAt
+        } else {
+            now = pausedAt
+        }
     }
 
     /// Refresh cached day attribution whenever iOS reports a meaningful clock change or
