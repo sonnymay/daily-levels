@@ -480,7 +480,8 @@ final class FocusEngine {
         ticker = timer
     }
 
-    private func tick(at date: Date) {
+    func tick(at date: Date) {
+        guard date.timeIntervalSinceReferenceDate.isFinite else { return }
         now = date
         guard mode == .grinding else { return }
         let day = calendar.startOfDay(for: date)
