@@ -56,10 +56,15 @@ final class FocusEngine {
         self.calendar = calendar
         self.defaults = defaults
         self.dateProvider = dateProvider
-        now = launchDate
+        if launchDate.timeIntervalSinceReferenceDate.isFinite {
+            now = launchDate
+        } else {
+            let fallback = dateProvider()
+            now = fallback.timeIntervalSinceReferenceDate.isFinite ? fallback : Date()
+        }
         replayPendingJournal()
         reloadSessions()
-        recoverFromColdLaunch(at: launchDate)
+        recoverFromColdLaunch(at: now)
         wireClassifier()
         wireTimeObservers()
     }

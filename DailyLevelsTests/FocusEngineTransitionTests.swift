@@ -61,6 +61,29 @@ final class FocusEngineTransitionTests: XCTestCase {
         return (engine, container, defaults, suiteName, clock)
     }
 
+    func testInvalidLaunchDateUsesFiniteInjectedClock() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let fallback = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 8
+        )))
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: Date(timeIntervalSinceReferenceDate: .nan),
+            dateProvider: { fallback }
+        )
+
+        XCTAssertEqual(engine.now, fallback)
+        XCTAssertTrue(engine.now.timeIntervalSinceReferenceDate.isFinite)
+        XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: fallback))
+    }
+
     func testPausePersistsExactTimeFromInjectedClock() throws {
         let start = try XCTUnwrap(calendar.date(from: DateComponents(
             year: 2026, month: 7, day: 31, hour: 10
