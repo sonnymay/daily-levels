@@ -179,7 +179,7 @@ final class FocusEngine {
     /// Complete five-minute blocks across all focus time (SPEC §2 "Hero lifetime level").
     /// Partial blocks carry across midnight, so earned journey progress is never discarded.
     var lifetimeLevels: Int {
-        let totalSeconds = secondsByDayIncludingLive().values.reduce(0, +)
+        let totalSeconds = FocusSeconds.sum(secondsByDayIncludingLive().values)
         return LevelMath.earnedLevels(forFocusSeconds: totalSeconds)
     }
 
@@ -233,7 +233,11 @@ final class FocusEngine {
         if mode == .grinding, let s = activeStart {
             for seg in DateUtils.splitAtMidnights(start: s, end: now, calendar: calendar) {
                 let day = calendar.startOfDay(for: seg.start)
-                map[day, default: 0] += Int(seg.end.timeIntervalSince(seg.start))
+                guard let seconds = DateUtils.nonnegativeWholeSeconds(
+                    start: seg.start,
+                    end: seg.end
+                ) else { continue }
+                map[day] = FocusSeconds.adding(map[day, default: 0], seconds)
             }
         }
         return map
