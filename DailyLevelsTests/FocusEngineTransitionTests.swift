@@ -110,6 +110,23 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
+    func testCurrentSessionIgnoresOutOfRangeLiveClock() throws {
+        let start = Date(timeIntervalSinceReferenceDate: -1_000_000_000)
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, 0)
+
+        _ = container
+        _ = clock
+        engine.pause()
+    }
+
     func testReturningFromLockPersistsEarnedStretchAndStartsFreshMarker() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }

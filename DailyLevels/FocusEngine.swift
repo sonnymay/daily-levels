@@ -137,7 +137,7 @@ final class FocusEngine {
     var currentSessionSeconds: Int {
         let live: Int
         if mode == .grinding, let activeStart {
-            live = max(0, Int(now.timeIntervalSince(activeStart)))
+            live = DateUtils.nonnegativeWholeSeconds(start: activeStart, end: now) ?? 0
         } else {
             live = 0
         }
