@@ -10,16 +10,27 @@ import Foundation
 
 enum DateUtils {
 
-    /// Whole earned seconds in a positive interval. Sub-second, empty, reversed,
-    /// non-finite, and integer-out-of-range intervals do not create focus records.
-    static func wholeSeconds(start: Date, end: Date) -> Int? {
-        guard end > start else { return nil }
+    /// Whole elapsed seconds for a valid forward-or-equal wall-clock interval. A legitimate
+    /// sub-second interval returns zero; unsafe timestamps and unrepresentable durations fail.
+    static func nonnegativeWholeSeconds(start: Date, end: Date) -> Int? {
+        guard start.timeIntervalSinceReferenceDate.isFinite,
+              end.timeIntervalSinceReferenceDate.isFinite,
+              end >= start
+        else { return nil }
         let elapsed = end.timeIntervalSince(start)
         guard elapsed.isFinite,
-              elapsed >= 1,
+              elapsed >= 0,
               elapsed < TimeInterval(Int.max)
         else { return nil }
         return Int(elapsed)
+    }
+
+    /// Whole earned seconds in a positive interval. Sub-second, empty, reversed,
+    /// non-finite, and integer-out-of-range intervals do not create focus records.
+    static func wholeSeconds(start: Date, end: Date) -> Int? {
+        guard let elapsed = nonnegativeWholeSeconds(start: start, end: end),
+              elapsed >= 1 else { return nil }
+        return elapsed
     }
 
     /// Split a grinding interval [start, end] into one segment per local calendar day,
