@@ -24,8 +24,15 @@ enum FocusLedger {
                 calendar: calendar
             ) {
                 let day = calendar.startOfDay(for: slice.start)
-                let seconds = Int(slice.end.timeIntervalSince(slice.start).rounded())
-                secondsByDay[day, default: 0] += seconds
+                let roundedSeconds = slice.end.timeIntervalSince(slice.start).rounded()
+                guard roundedSeconds.isFinite,
+                      roundedSeconds >= 0,
+                      roundedSeconds < TimeInterval(Int.max)
+                else { continue }
+                secondsByDay[day] = FocusSeconds.adding(
+                    secondsByDay[day, default: 0],
+                    Int(roundedSeconds)
+                )
             }
         }
         return secondsByDay

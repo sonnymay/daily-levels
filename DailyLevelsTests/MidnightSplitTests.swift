@@ -31,6 +31,40 @@ final class MidnightSplitTests: XCTestCase {
         )
     }
 
+    func testNonnegativeWholeSecondsKeepsValidSubsecondAsZero() {
+        let start = date(2026, 6, 12, 9, 0)
+
+        XCTAssertEqual(
+            DateUtils.nonnegativeWholeSeconds(
+                start: start,
+                end: start.addingTimeInterval(0.9)
+            ),
+            0
+        )
+        XCTAssertEqual(DateUtils.nonnegativeWholeSeconds(start: start, end: start), 0)
+    }
+
+    func testNonnegativeWholeSecondsRejectsUnsafeIntervals() {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+
+        XCTAssertNil(DateUtils.nonnegativeWholeSeconds(
+            start: start,
+            end: start.addingTimeInterval(-1)
+        ))
+        XCTAssertNil(DateUtils.nonnegativeWholeSeconds(
+            start: start,
+            end: Date(timeIntervalSinceReferenceDate: .infinity)
+        ))
+        XCTAssertNil(DateUtils.nonnegativeWholeSeconds(
+            start: start,
+            end: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max))
+        ))
+        XCTAssertNil(DateUtils.nonnegativeWholeSeconds(
+            start: Date(timeIntervalSinceReferenceDate: .nan),
+            end: start
+        ))
+    }
+
     func testWholeSecondsRejectsUnpersistableIntervals() {
         let start = date(2026, 6, 12, 9, 0)
 

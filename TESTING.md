@@ -5,7 +5,9 @@ aggregation, midnight splitting, DST and timezone changes, cold-launch recovery,
 migration, foreground transitions, the lock-classification state machine, and replay of completed
 focus checkpoints after a local-store interruption. Cold-launch tests reject malformed, non-finite,
 sub-second, and precision-limited markers while preserving normal confirmed-lock recovery. Journal
-tests must prove replay is idempotent, splits at midnight, and preserves paused gaps. The tests below
+tests must prove replay is idempotent, splits at midnight, and preserves paused gaps. Live-clock
+tests also cover malformed launch, ticker, action, background, app-switch, and significant-time-change
+timestamps, preserving the last finite focus boundary without inventing progress. The tests below
 verify the iOS lifecycle behavior that only a physical device can prove.
 
 ## Prerequisites

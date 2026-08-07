@@ -39,6 +39,7 @@ DailyLevels/
 |- FocusJournal.swift      self-healing retry journal for completed focus checkpoints
 |- ActiveFocusMarker.swift atomic checkpoint and lock-confirmation persistence
 |- DateUtils.swift         local-midnight interval splitting
+|- FocusSeconds.swift      overflow-safe nonnegative focus arithmetic
 |- LevelMath.swift         five-minute level math and level-100 cap
 |- KnightClass.swift       ten-class ladder and Pro boundary
 |- Store.swift             StoreKit 2 purchase, restore, entitlement, paid-owner migration
@@ -52,9 +53,10 @@ DailyLevels/
    `- PaywallView.swift         one-time unlock with StoreKit-localized price
 
 DailyLevelsTests/
-`- 137 unit tests covering level/class math, exact pause/resume and interval integrity,
+`- 151 unit tests covering level/class math, exact pause/resume and interval integrity,
    midnight/DST/timezone handling, cold-launch and save-journal recovery, hero assets,
-   localization invariants, Hero Collection gating, and paid-owner entitlement rules.
+   invalid live clocks, localization invariants, Hero Collection gating, and paid-owner
+   entitlement rules.
 ```
 
 `FocusEngine` is the source of truth injected through the SwiftUI environment. Completed focus is
@@ -74,6 +76,8 @@ partially damaged journal remain recoverable. Start/end timestamps are authorita
 and SwiftData duration reads. Duplicate or overlapping intervals are unioned before aggregation,
 redundant duration values are repaired, and zero, reversed, sub-second, non-finite, or
 integer-out-of-range intervals are ignored without hiding valid neighboring focus.
+Malformed live clock samples preserve the last finite boundary, and all focus-second additions
+saturate safely instead of overflowing.
 
 ## Build and test
 
@@ -83,7 +87,7 @@ xcodebuild -project DailyLevels.xcodeproj -scheme DailyLevels \
   -destination "id=$SIM" CODE_SIGNING_ALLOWED=NO test
 ```
 
-Last verified August 5, 2026: simulator build succeeded and **131/131 tests passed**. Debug screenshot
+Last verified August 7, 2026: simulator build succeeded and **151/151 tests passed**. Debug screenshot
 flags: `-seedDemoData -autoStart -todayMinutes N -unlockPro`.
 
 ## Release gates

@@ -56,10 +56,15 @@ final class FocusEngine {
         self.calendar = calendar
         self.defaults = defaults
         self.dateProvider = dateProvider
-        now = launchDate
+        if launchDate.timeIntervalSinceReferenceDate.isFinite {
+            now = launchDate
+        } else {
+            let fallback = dateProvider()
+            now = fallback.timeIntervalSinceReferenceDate.isFinite ? fallback : Date()
+        }
         replayPendingJournal()
         reloadSessions()
-        recoverFromColdLaunch(at: launchDate)
+        recoverFromColdLaunch(at: now)
         wireClassifier()
         wireTimeObservers()
     }
@@ -94,9 +99,17 @@ final class FocusEngine {
 
     func pause() {
         guard mode == .grinding else { return }
-        let pausedAt = dateProvider()
-        if let s = activeStart {
-            sessionAccumulatedSeconds += max(0, Int(pausedAt.timeIntervalSince(s)))  // bank the live stretch
+        let requestedAt = dateProvider()
+        let pausedAt: Date
+        if let start = activeStart {
+            let boundary = safeSessionBoundary(requestedAt, from: start)
+            pausedAt = boundary.date
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+        } else {
+            pausedAt = requestedAt.timeIntervalSinceReferenceDate.isFinite ? requestedAt : now
         }
         endActiveSession(at: pausedAt)
         mode = .paused
@@ -107,7 +120,8 @@ final class FocusEngine {
 
     /// Shared start/resume mechanics: open a new grinding stretch and start the clock.
     private func beginStretch() {
-        let t = dateProvider()
+        let requested = dateProvider()
+        let t = requested.timeIntervalSinceReferenceDate.isFinite ? requested : now
         activeStart = t
         now = t
         mode = .grinding
@@ -137,11 +151,11 @@ final class FocusEngine {
     var currentSessionSeconds: Int {
         let live: Int
         if mode == .grinding, let activeStart {
-            live = max(0, Int(now.timeIntervalSince(activeStart)))
+            live = DateUtils.nonnegativeWholeSeconds(start: activeStart, end: now) ?? 0
         } else {
             live = 0
         }
-        return sessionAccumulatedSeconds + live
+        return FocusSeconds.adding(sessionAccumulatedSeconds, live)
     }
 
     /// True once the daily level cap (100 = Mythic) is reached — the UI shows a max state.
@@ -165,7 +179,7 @@ final class FocusEngine {
     /// Complete five-minute blocks across all focus time (SPEC §2 "Hero lifetime level").
     /// Partial blocks carry across midnight, so earned journey progress is never discarded.
     var lifetimeLevels: Int {
-        let totalSeconds = secondsByDayIncludingLive().values.reduce(0, +)
+        let totalSeconds = FocusSeconds.sum(secondsByDayIncludingLive().values)
         return LevelMath.earnedLevels(forFocusSeconds: totalSeconds)
     }
 
@@ -199,6 +213,19 @@ final class FocusEngine {
     // MARK: Internals
     private var startOfToday: Date { calendar.startOfDay(for: now) }
 
+    /// Prefer a requested lifecycle timestamp, then the last finite displayed timestamp.
+    /// Falling back to the stretch start preserves proven focus without inventing time.
+    private func safeSessionBoundary(_ requested: Date,
+                                     from start: Date) -> (date: Date, seconds: Int) {
+        if let seconds = DateUtils.nonnegativeWholeSeconds(start: start, end: requested) {
+            return (requested, seconds)
+        }
+        if let seconds = DateUtils.nonnegativeWholeSeconds(start: start, end: now) {
+            return (now, seconds)
+        }
+        return (start, 0)
+    }
+
     /// completedSecondsByDay + the active session's live seconds, attributed to the
     /// correct day(s) at the midnight boundary.
     private func secondsByDayIncludingLive() -> [Date: Int] {
@@ -206,7 +233,11 @@ final class FocusEngine {
         if mode == .grinding, let s = activeStart {
             for seg in DateUtils.splitAtMidnights(start: s, end: now, calendar: calendar) {
                 let day = calendar.startOfDay(for: seg.start)
-                map[day, default: 0] += Int(seg.end.timeIntervalSince(seg.start))
+                guard let seconds = DateUtils.nonnegativeWholeSeconds(
+                    start: seg.start,
+                    end: seg.end
+                ) else { continue }
+                map[day] = FocusSeconds.adding(map[day, default: 0], seconds)
             }
         }
         return map
@@ -348,15 +379,19 @@ final class FocusEngine {
     /// Bank the current stretch without ending the user's logical focus session.
     private func checkpointActiveSession(at end: Date, locked: Bool) {
         guard mode == .grinding, let start = activeStart else { return }
-        now = end
-        if end > start {
-            sessionAccumulatedSeconds += Int(end.timeIntervalSince(start))
-            endActiveSession(at: end)
+        let boundary = safeSessionBoundary(end, from: start)
+        now = boundary.date
+        if boundary.seconds > 0 {
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+            endActiveSession(at: boundary.date)
         }
-        activeStart = end
-        checkpointDay = calendar.startOfDay(for: end)
+        activeStart = boundary.date
+        checkpointDay = calendar.startOfDay(for: boundary.date)
         checkpointLevel = level
-        Self.saveActiveMarker(start: end, locked: locked, defaults: defaults)
+        Self.saveActiveMarker(start: boundary.date, locked: locked, defaults: defaults)
     }
 
     /// A confirmed lock is earned focus. Persist that completed locked stretch as soon as
@@ -379,21 +414,35 @@ final class FocusEngine {
     /// the current foreground day when the decision is made (especially across midnight).
     func pauseAfterAppSwitch(backgroundedAt: Date, observedAt: Date) {
         guard mode == .grinding else { return }
+        let pausedAt: Date
         if let start = activeStart {
-            sessionAccumulatedSeconds += max(0, Int(backgroundedAt.timeIntervalSince(start)))
+            let boundary = safeSessionBoundary(backgroundedAt, from: start)
+            pausedAt = boundary.date
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+        } else {
+            pausedAt = backgroundedAt.timeIntervalSinceReferenceDate.isFinite ? backgroundedAt : now
         }
-        endActiveSession(at: backgroundedAt)
+        endActiveSession(at: pausedAt)
         mode = .paused
         classifier.isActive = false
         stopTicker()
-        now = observedAt
+        if DateUtils.nonnegativeWholeSeconds(start: pausedAt, end: observedAt) != nil {
+            now = observedAt
+        } else {
+            now = pausedAt
+        }
     }
 
     /// Refresh cached day attribution whenever iOS reports a meaningful clock change or
     /// the app returns. This keeps idle/paused screens correct across midnight and timezone moves.
     func refreshCurrentEnvironment(at date: Date, calendar: Calendar) {
         self.calendar = calendar
-        now = date
+        if date.timeIntervalSinceReferenceDate.isFinite {
+            now = date
+        }
         reloadSessions()
     }
 
@@ -401,17 +450,18 @@ final class FocusEngine {
     /// elapsed time already shown by the ticker, then anchor the live stretch to the new
     /// wall clock. Confirmed locked time is left intact because locking is earned focus.
     func handleSignificantTimeChange(at date: Date, calendar: Calendar) {
+        let correctedAt = date.timeIntervalSinceReferenceDate.isFinite ? date : now
         guard mode == .grinding,
               ActiveFocusMarkerStore.load(defaults: defaults)?.isLocked != true else {
-            refreshCurrentEnvironment(at: date, calendar: calendar)
+            refreshCurrentEnvironment(at: correctedAt, calendar: calendar)
             return
         }
 
         checkpointActiveSession(at: now, locked: false)
-        activeStart = date
-        Self.saveActiveMarker(start: date, locked: false, defaults: defaults)
-        refreshCurrentEnvironment(at: date, calendar: calendar)
-        checkpointDay = calendar.startOfDay(for: date)
+        activeStart = correctedAt
+        Self.saveActiveMarker(start: correctedAt, locked: false, defaults: defaults)
+        refreshCurrentEnvironment(at: correctedAt, calendar: calendar)
+        checkpointDay = calendar.startOfDay(for: correctedAt)
         checkpointLevel = level
     }
 
@@ -430,7 +480,8 @@ final class FocusEngine {
         ticker = timer
     }
 
-    private func tick(at date: Date) {
+    func tick(at date: Date) {
+        guard date.timeIntervalSinceReferenceDate.isFinite else { return }
         now = date
         guard mode == .grinding else { return }
         let day = calendar.startOfDay(for: date)

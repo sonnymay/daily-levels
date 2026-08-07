@@ -61,6 +61,77 @@ final class FocusEngineTransitionTests: XCTestCase {
         return (engine, container, defaults, suiteName, clock)
     }
 
+    func testInvalidLaunchDateUsesFiniteInjectedClock() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
+        let suiteName = "FocusEngineTransitionTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let fallback = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 8
+        )))
+
+        let engine = FocusEngine(
+            context: container.mainContext,
+            calendar: calendar,
+            defaults: defaults,
+            launchDate: Date(timeIntervalSinceReferenceDate: .nan),
+            dateProvider: { fallback }
+        )
+
+        XCTAssertEqual(engine.now, fallback)
+        XCTAssertTrue(engine.now.timeIntervalSinceReferenceDate.isFinite)
+        XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: fallback))
+    }
+
+    func testStartAndResumeIgnoreInvalidInjectedClocks() throws {
+        let launch = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 9
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: launch)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        clock.now = Date(timeIntervalSinceReferenceDate: .infinity)
+
+        engine.start()
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: launch, isLocked: false)
+        )
+        engine.pause()
+        clock.now = Date(timeIntervalSinceReferenceDate: .nan)
+
+        engine.resume()
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: launch, isLocked: false)
+        )
+        XCTAssertTrue(engine.isGrinding)
+        _ = container
+    }
+
+    func testTickerIgnoresInvalidClockSample() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 9
+        )))
+        let (engine, container, defaults, suiteName, _) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(60)
+        engine.tick(at: displayedAt)
+
+        engine.tick(at: Date(timeIntervalSinceReferenceDate: .infinity))
+
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertEqual(engine.currentSessionSeconds, 60)
+        XCTAssertEqual(engine.todaySeconds, 60)
+        XCTAssertTrue(engine.isGrinding)
+        _ = container
+    }
+
     func testPausePersistsExactTimeFromInjectedClock() throws {
         let start = try XCTUnwrap(calendar.date(from: DateComponents(
             year: 2026, month: 7, day: 31, hour: 10
@@ -82,6 +153,29 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertTrue(engine.isPaused)
         XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testPausePreservesLastFiniteDisplayWhenClockIsInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 10
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(90)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+        clock.now = Date(timeIntervalSinceReferenceDate: .infinity)
+
+        engine.pause()
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(sessions.first?.startAt, start)
+        XCTAssertEqual(sessions.first?.endAt, displayedAt)
+        XCTAssertEqual(sessions.first?.durationSeconds, 90)
+        XCTAssertEqual(engine.currentSessionSeconds, 90)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isPaused)
     }
 
     func testResumeExcludesPausedTimeFromInjectedClock() throws {
@@ -108,6 +202,44 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.level, 1)
         XCTAssertTrue(engine.isPaused)
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
+    }
+
+    func testCurrentSessionIgnoresOutOfRangeLiveClock() throws {
+        let start = Date(timeIntervalSinceReferenceDate: -1_000_000_000)
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max)),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, 0)
+
+        _ = container
+        _ = clock
+        engine.pause()
+    }
+
+    func testCurrentSessionClampsAccumulatedAndLiveOverflow() throws {
+        let start = Date(timeIntervalSinceReferenceDate: -3_000)
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        clock.advance(by: 2_000)
+        engine.pause()
+        clock.now = Date(timeIntervalSinceReferenceDate: 0)
+        engine.resume()
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max).nextDown),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, Int.max)
+
+        _ = container
+        clock.now = Date(timeIntervalSinceReferenceDate: 0)
+        engine.pause()
     }
 
     func testReturningFromLockPersistsEarnedStretchAndStartsFreshMarker() throws {
@@ -154,6 +286,34 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testBackgroundCheckpointUsesLastFiniteBoundaryWhenClockIsInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 11
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(75)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.prepareForBackground(
+            at: Date(timeIntervalSinceReferenceDate: .infinity)
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [75])
+        XCTAssertEqual(engine.currentSessionSeconds, 75)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isGrinding)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: displayedAt, isLocked: false)
+        )
+
+        clock.now = displayedAt
+        engine.pause()
+    }
+
     func testAppSwitchAfterBackgroundCheckpointDoesNotDoubleCount() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -191,6 +351,30 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: returnedAt))
         XCTAssertEqual(engine.todaySeconds, 0)
         XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
+    }
+
+    func testAppSwitchPreservesFiniteFocusWhenCallbackClocksAreInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 12
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(60)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.pauseAfterAppSwitch(
+            backgroundedAt: Date(timeIntervalSinceReferenceDate: .infinity),
+            observedAt: Date(timeIntervalSinceReferenceDate: .nan)
+        )
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [60])
+        XCTAssertEqual(engine.currentSessionSeconds, 60)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isPaused)
+        XCTAssertNil(ActiveFocusMarkerStore.load(defaults: defaults))
+        _ = clock
     }
 
     func testJourneyCarriesPartialFocusAcrossLocalDays() throws {
@@ -374,6 +558,25 @@ final class FocusEngineTransitionTests: XCTestCase {
         _ = container
     }
 
+    func testEnvironmentRefreshIgnoresInvalidDateAndKeepsCalendarUpdate() throws {
+        let launch = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 23
+        )))
+        let (engine, container, defaults, suiteName, _) = try makeClockedEngine(at: launch)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: .nan),
+            calendar: tokyo
+        )
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(engine.weekHistory.last?.date, tokyo.startOfDay(for: launch))
+        _ = container
+    }
+
     func testEnvironmentRefreshReattributesHistoryAfterTimezoneChange() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: FocusSession.self, configurations: configuration)
@@ -423,6 +626,35 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.currentSessionSeconds, beforeResume + 5 * 60)
         _ = container
         engine.pause()
+    }
+
+    func testInvalidSignificantClockChangePreservesDisplayedFocus() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 13
+        )))
+        let (engine, container, defaults, suiteName, _) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(2 * 60)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.handleSignificantTimeChange(
+            at: Date(timeIntervalSinceReferenceDate: .nan),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: displayedAt, isLocked: false)
+        )
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [2 * 60])
+
+        engine.continueGrindingAfterLock(at: displayedAt.addingTimeInterval(3 * 60))
+
+        XCTAssertEqual(engine.currentSessionSeconds, 5 * 60)
     }
 
     func testSignificantBackwardClockChangeKeepsForegroundFocusMoving() throws {

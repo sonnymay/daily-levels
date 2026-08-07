@@ -10,6 +10,17 @@ import XCTest
 
 final class LevelMathTests: XCTestCase {
 
+    func testFocusSecondsAdditionClampsOverflow() {
+        XCTAssertEqual(FocusSeconds.adding(Int.max - 10, 20), Int.max)
+        XCTAssertEqual(FocusSeconds.sum([Int.max - 10, 5, 6]), Int.max)
+    }
+
+    func testFocusSecondsAdditionIgnoresNegativeValues() {
+        XCTAssertEqual(FocusSeconds.adding(-20, 15), 15)
+        XCTAssertEqual(FocusSeconds.adding(15, -20), 15)
+        XCTAssertEqual(FocusSeconds.sum([-20, 10, 5]), 15)
+    }
+
     func testSpecExamples() {
         XCTAssertEqual(LevelMath.level(forFocusMinutes: 20), 4)   // 20 min = Level 4
         XCTAssertEqual(LevelMath.level(forFocusMinutes: 25), 5)   // 25 min = Level 5
