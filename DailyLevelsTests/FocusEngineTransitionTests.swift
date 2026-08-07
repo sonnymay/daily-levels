@@ -127,6 +127,27 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testCurrentSessionClampsAccumulatedAndLiveOverflow() throws {
+        let start = Date(timeIntervalSinceReferenceDate: -3_000)
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        clock.advance(by: 2_000)
+        engine.pause()
+        clock.now = Date(timeIntervalSinceReferenceDate: 0)
+        engine.resume()
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: TimeInterval(Int.max).nextDown),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, Int.max)
+
+        _ = container
+        clock.now = Date(timeIntervalSinceReferenceDate: 0)
+        engine.pause()
+    }
+
     func testReturningFromLockPersistsEarnedStretchAndStartsFreshMarker() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }

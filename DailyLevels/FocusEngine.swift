@@ -141,7 +141,7 @@ final class FocusEngine {
         } else {
             live = 0
         }
-        return sessionAccumulatedSeconds + live
+        return FocusSeconds.adding(sessionAccumulatedSeconds, live)
     }
 
     /// True once the daily level cap (100 = Mythic) is reached — the UI shows a max state.
