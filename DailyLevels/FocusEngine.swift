@@ -120,7 +120,8 @@ final class FocusEngine {
 
     /// Shared start/resume mechanics: open a new grinding stretch and start the clock.
     private func beginStretch() {
-        let t = dateProvider()
+        let requested = dateProvider()
+        let t = requested.timeIntervalSinceReferenceDate.isFinite ? requested : now
         activeStart = t
         now = t
         mode = .grinding

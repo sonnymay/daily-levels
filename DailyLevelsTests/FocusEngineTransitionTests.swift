@@ -84,6 +84,35 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertEqual(engine.weekHistory.last?.date, calendar.startOfDay(for: fallback))
     }
 
+    func testStartAndResumeIgnoreInvalidInjectedClocks() throws {
+        let launch = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 9
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: launch)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        clock.now = Date(timeIntervalSinceReferenceDate: .infinity)
+
+        engine.start()
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: launch, isLocked: false)
+        )
+        engine.pause()
+        clock.now = Date(timeIntervalSinceReferenceDate: .nan)
+
+        engine.resume()
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: launch, isLocked: false)
+        )
+        XCTAssertTrue(engine.isGrinding)
+        _ = container
+    }
+
     func testPausePersistsExactTimeFromInjectedClock() throws {
         let start = try XCTUnwrap(calendar.date(from: DateComponents(
             year: 2026, month: 7, day: 31, hour: 10
