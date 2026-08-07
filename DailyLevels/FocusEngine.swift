@@ -94,9 +94,17 @@ final class FocusEngine {
 
     func pause() {
         guard mode == .grinding else { return }
-        let pausedAt = dateProvider()
-        if let s = activeStart {
-            sessionAccumulatedSeconds += max(0, Int(pausedAt.timeIntervalSince(s)))  // bank the live stretch
+        let requestedAt = dateProvider()
+        let pausedAt: Date
+        if let start = activeStart {
+            let boundary = safeSessionBoundary(requestedAt, from: start)
+            pausedAt = boundary.date
+            sessionAccumulatedSeconds = FocusSeconds.adding(
+                sessionAccumulatedSeconds,
+                boundary.seconds
+            )
+        } else {
+            pausedAt = requestedAt.timeIntervalSinceReferenceDate.isFinite ? requestedAt : now
         }
         endActiveSession(at: pausedAt)
         mode = .paused
@@ -198,6 +206,19 @@ final class FocusEngine {
 
     // MARK: Internals
     private var startOfToday: Date { calendar.startOfDay(for: now) }
+
+    /// Prefer a requested lifecycle timestamp, then the last finite displayed timestamp.
+    /// Falling back to the stretch start preserves proven focus without inventing time.
+    private func safeSessionBoundary(_ requested: Date,
+                                     from start: Date) -> (date: Date, seconds: Int) {
+        if let seconds = DateUtils.nonnegativeWholeSeconds(start: start, end: requested) {
+            return (requested, seconds)
+        }
+        if let seconds = DateUtils.nonnegativeWholeSeconds(start: start, end: now) {
+            return (now, seconds)
+        }
+        return (start, 0)
+    }
 
     /// completedSecondsByDay + the active session's live seconds, attributed to the
     /// correct day(s) at the midnight boundary.

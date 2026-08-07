@@ -84,6 +84,29 @@ final class FocusEngineTransitionTests: XCTestCase {
         XCTAssertTrue(FocusJournal.load(defaults: defaults).isEmpty)
     }
 
+    func testPausePreservesLastFiniteDisplayWhenClockIsInvalid() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 10
+        )))
+        let (engine, container, defaults, suiteName, clock) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(90)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+        clock.now = Date(timeIntervalSinceReferenceDate: .infinity)
+
+        engine.pause()
+
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.count, 1)
+        XCTAssertEqual(sessions.first?.startAt, start)
+        XCTAssertEqual(sessions.first?.endAt, displayedAt)
+        XCTAssertEqual(sessions.first?.durationSeconds, 90)
+        XCTAssertEqual(engine.currentSessionSeconds, 90)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertTrue(engine.isPaused)
+    }
+
     func testResumeExcludesPausedTimeFromInjectedClock() throws {
         let start = try XCTUnwrap(calendar.date(from: DateComponents(
             year: 2026, month: 7, day: 31, hour: 10
