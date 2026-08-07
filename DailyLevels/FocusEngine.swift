@@ -446,17 +446,18 @@ final class FocusEngine {
     /// elapsed time already shown by the ticker, then anchor the live stretch to the new
     /// wall clock. Confirmed locked time is left intact because locking is earned focus.
     func handleSignificantTimeChange(at date: Date, calendar: Calendar) {
+        let correctedAt = date.timeIntervalSinceReferenceDate.isFinite ? date : now
         guard mode == .grinding,
               ActiveFocusMarkerStore.load(defaults: defaults)?.isLocked != true else {
-            refreshCurrentEnvironment(at: date, calendar: calendar)
+            refreshCurrentEnvironment(at: correctedAt, calendar: calendar)
             return
         }
 
         checkpointActiveSession(at: now, locked: false)
-        activeStart = date
-        Self.saveActiveMarker(start: date, locked: false, defaults: defaults)
-        refreshCurrentEnvironment(at: date, calendar: calendar)
-        checkpointDay = calendar.startOfDay(for: date)
+        activeStart = correctedAt
+        Self.saveActiveMarker(start: correctedAt, locked: false, defaults: defaults)
+        refreshCurrentEnvironment(at: correctedAt, calendar: calendar)
+        checkpointDay = calendar.startOfDay(for: correctedAt)
         checkpointLevel = level
     }
 

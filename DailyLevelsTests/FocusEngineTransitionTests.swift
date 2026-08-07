@@ -609,6 +609,35 @@ final class FocusEngineTransitionTests: XCTestCase {
         engine.pause()
     }
 
+    func testInvalidSignificantClockChangePreservesDisplayedFocus() throws {
+        let start = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 13
+        )))
+        let (engine, container, defaults, suiteName, _) = try makeClockedEngine(at: start)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        engine.start()
+        let displayedAt = start.addingTimeInterval(2 * 60)
+        engine.refreshCurrentEnvironment(at: displayedAt, calendar: calendar)
+
+        engine.handleSignificantTimeChange(
+            at: Date(timeIntervalSinceReferenceDate: .nan),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(engine.currentSessionSeconds, 2 * 60)
+        XCTAssertEqual(engine.now, displayedAt)
+        XCTAssertEqual(
+            ActiveFocusMarkerStore.load(defaults: defaults),
+            ActiveFocusMarker(startAt: displayedAt, isLocked: false)
+        )
+        let sessions = try container.mainContext.fetch(FetchDescriptor<FocusSession>())
+        XCTAssertEqual(sessions.map(\.durationSeconds), [2 * 60])
+
+        engine.continueGrindingAfterLock(at: displayedAt.addingTimeInterval(3 * 60))
+
+        XCTAssertEqual(engine.currentSessionSeconds, 5 * 60)
+    }
+
     func testSignificantBackwardClockChangeKeepsForegroundFocusMoving() throws {
         let (engine, container, defaults, suiteName) = try makeEngine()
         defer { defaults.removePersistentDomain(forName: suiteName) }
