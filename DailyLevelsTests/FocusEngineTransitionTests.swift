@@ -539,6 +539,25 @@ final class FocusEngineTransitionTests: XCTestCase {
         _ = container
     }
 
+    func testEnvironmentRefreshIgnoresInvalidDateAndKeepsCalendarUpdate() throws {
+        let launch = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 7, hour: 23
+        )))
+        let (engine, container, defaults, suiteName, _) = try makeClockedEngine(at: launch)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+
+        engine.refreshCurrentEnvironment(
+            at: Date(timeIntervalSinceReferenceDate: .nan),
+            calendar: tokyo
+        )
+
+        XCTAssertEqual(engine.now, launch)
+        XCTAssertEqual(engine.weekHistory.last?.date, tokyo.startOfDay(for: launch))
+        _ = container
+    }
+
     func testEnvironmentRefreshReattributesHistoryAfterTimezoneChange() throws {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: FocusSession.self, configurations: configuration)

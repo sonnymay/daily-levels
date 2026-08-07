@@ -436,7 +436,9 @@ final class FocusEngine {
     /// the app returns. This keeps idle/paused screens correct across midnight and timezone moves.
     func refreshCurrentEnvironment(at date: Date, calendar: Calendar) {
         self.calendar = calendar
-        now = date
+        if date.timeIntervalSinceReferenceDate.isFinite {
+            now = date
+        }
         reloadSessions()
     }
 
